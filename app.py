@@ -9,7 +9,7 @@ from google.genai import types
 import edge_tts
 
 # ---------------------------------------------------------
-# 1. PAGE SETUP & MODERN EXECUTIVE STUDIO UI
+# 1. PAGE SETUP & MODERN CLEAN STUDIO UI
 # ---------------------------------------------------------
 st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="centered", initial_sidebar_state="collapsed")
 
@@ -22,12 +22,12 @@ st.markdown("""
     .stApp { 
         background-color: #080B11 !important; 
         background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important; 
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important; 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; 
         color: #E2E8F0 !important; 
         -webkit-font-smoothing: antialiased !important;
     }
     
-    .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; max-width: 700px !important; }
+    .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; max-width: 720px !important; }
     
     div[data-testid="stExpander"] { 
         background: #0E1626 !important; 
@@ -39,7 +39,6 @@ st.markdown("""
     div[data-testid="stExpander"] summary { 
         background: #111B30 !important; 
         color: #38BDF8 !important; 
-        font-family: 'Plus Jakarta Sans', sans-serif !important; 
         font-size: 13px !important; 
         font-weight: 700 !important; 
         letter-spacing: 0.02em !important;
@@ -47,9 +46,8 @@ st.markdown("""
     
     label[data-testid="stWidgetLabel"] p { 
         color: #94A3B8 !important; 
-        font-family: 'Plus Jakarta Sans', sans-serif !important; 
         font-size: 12px !important; 
-        font-weight: 600 !important; 
+        font-weight: 700 !important; 
         text-transform: uppercase !important; 
         letter-spacing: 0.04em !important;
     }
@@ -59,7 +57,7 @@ st.markdown("""
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         color: #F8FAFC !important; 
         border-radius: 8px !important; 
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-size: 14px !important;
         line-height: 1.6 !important;
     }
@@ -69,7 +67,6 @@ st.markdown("""
         color: #FFF !important; 
         border-radius: 10px !important; 
         height: 3.4rem !important; 
-        font-family: 'Plus Jakarta Sans', sans-serif !important; 
         font-weight: 700 !important; 
         font-size: 14px !important;
         letter-spacing: 0.02em !important;
@@ -82,7 +79,6 @@ st.markdown("""
         color: #E2E8F0 !important; 
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         border-radius: 8px !important; 
-        font-family: 'Plus Jakarta Sans', sans-serif !important; 
         font-weight: 600 !important; 
     }
     
@@ -91,7 +87,6 @@ st.markdown("""
         color: white !important; 
         border-radius: 10px !important; 
         height: 3.2rem !important; 
-        font-family: 'Plus Jakarta Sans', sans-serif !important; 
         font-weight: 700 !important; 
         width: 100% !important; 
     }
@@ -115,14 +110,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. WORKSPACE, FONTS & DYNAMIC MUSIC SCANNER
+# 2. FILE PATHWAYS (ANCHORED TO REPO ROOT)
 # ---------------------------------------------------------
-DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR = (
-    os.path.join(os.getcwd(), "data"),
-    os.path.join(os.getcwd(), "tmp"),
-    os.path.join(os.getcwd(), "fonts"),
-    os.path.join(os.getcwd(), "music")
-)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+TMP_DIR = os.path.join(BASE_DIR, "tmp")
+FONTS_DIR = os.path.join(BASE_DIR, "fonts")
+MUSIC_DIR = os.path.join(BASE_DIR, "music")
+
 for d in [DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR]: 
     os.makedirs(d, exist_ok=True)
 
@@ -154,10 +149,10 @@ SUBTITLE_ARCHETYPES = {
 }
 
 def get_library_tracks():
-    """Scans the music/ folder for all available MP3 tracks."""
+    """Scans the music/ folder for MP3 audio tracks."""
     if not os.path.exists(MUSIC_DIR):
         return []
-    return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith(".mp3")])
+    return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith((".mp3", ".wav", ".m4a"))])
 
 def resolve_background_track(choice_key, archetype_key):
     """Dynamically matches audio files from the music/ folder based on archetype prefix."""
@@ -179,15 +174,15 @@ def resolve_background_track(choice_key, archetype_key):
     return None, "None"
 
 def to_unicode_bold(text):
-    """Converts text to mathematical Unicode bold characters without spacing anomalies."""
+    """Converts text to mathematical sans-serif bold characters without spacing anomalies."""
     res = []
     for char in text:
         if 'A' <= char <= 'Z':
-            res.append(chr(0x1D400 + ord(char) - ord('A')))
+            res.append(chr(0x1D5D4 + ord(char) - ord('A')))
         elif 'a' <= char <= 'z':
-            res.append(chr(0x1D41A + ord(char) - ord('a')))
+            res.append(chr(0x1D5EE + ord(char) - ord('a')))
         elif '0' <= char <= '9':
-            res.append(chr(0x1D7CE + ord(char) - ord('0')))
+            res.append(chr(0x1D7EC + ord(char) - ord('0')))
         else:
             res.append(char)
     return ''.join(res)
@@ -278,7 +273,7 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE SYNCHRONIZER (WITH ACOUSTIC SAFETY FALLBACK)
+# 5. SUBTITLE ENGINE (PROVEN COLAB SPEC WITH LEAD DELAY)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
@@ -297,7 +292,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
     events = []
     
-    # Check if word boundary events are present
+    # Priority 1: Exact acoustic word boundaries from Edge-TTS
     if timed_words and len(timed_words) >= 5:
         clean_words = []
         for tw in timed_words:
@@ -330,6 +325,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             if txt:
                 events.append((st_t, en_t, txt))
     else:
+        # Priority 2: Linear distribution with 0.35s speech onset lead delay
         tokens = script_text.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
         vocal_start = 0.35
@@ -427,7 +423,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v3.8 // FAULT-TOLERANT</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v3.9 // PERMANENT ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -439,7 +435,7 @@ st.markdown(f"""
 <div style="margin-bottom: 14px;">
     <span class="badge badge-green">● ENGINE ONLINE</span>
     <span class="badge badge-purple">🛡️ {fresh_count} FRESH THEMES</span>
-    <span class="badge badge-blue">🎵 {track_count} AUDIO TRACKS</span>
+    <span class="badge badge-blue">🎵 {track_count} AUDIO TRACKS IN VAULT</span>
     <span class="badge badge-amber">📅 {target_d} @ {target_t} IST ({target_s})</span>
 </div>
 """, unsafe_allow_html=True)
@@ -472,7 +468,7 @@ def render_copy(bid, label, text):
     b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
     components.html(f"""
     <div style="margin: 0; padding: 0;">
-        <button id="b_{bid}" onclick="copyFromB64('{bid}', '{b64_val}', '{label}')" style="width:100%;height:2.6rem;background:rgba(56,189,248,0.12);color:#38BDF8;border:1px solid rgba(56,189,248,0.35);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:0.02em;transition:all 0.2s;">
+        <button id="b_{bid}" onclick="copyFromB64('{bid}', '{b64_val}', '{label}')" style="width:100%;height:2.6rem;background:rgba(56,189,248,0.12);color:#38BDF8;border:1px solid rgba(56,189,248,0.35);border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:0.02em;transition:all 0.2s;">
             📋 {label}
         </button>
     </div>
@@ -544,10 +540,10 @@ with tab1:
         pkg = p_data.get("pkg", {})
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
-        st.markdown(f"**🏛️ Pillar:** `{p_data.get('p', 'Relentless Focus')}` | **Palette:** `{SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}`")
-        st.markdown(f"**🎬 Setting:** `{p_data.get('s', 'Citadel Colonnades')}`")
-        st.markdown(f"**🔍 Scene 2 Metaphor:** `{p_data.get('m', 'Flint and steel')}`")
-        st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
+        st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
+        st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')}")
+        st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
+        st.info(f"🎯 **Hook:** {pkg.get('hook_banner')}\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
         if os.path.exists(DRAFT_AUDIO_PATH):
             st.audio(DRAFT_AUDIO_PATH)
@@ -575,7 +571,7 @@ with tab2:
 
     if uploaded_clips:
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
-        st.markdown(f'<div style="color: {"#34D399" if len(uploaded_clips) == 4 else "#FBBF24"}; font-family: monospace; font-size: 12px; margin-bottom: 8px;">📁 Files loaded: {len(uploaded_clips)}/4 — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color: {"#34D399" if len(uploaded_clips) == 4 else "#FBBF24"}; font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {len(uploaded_clips)}/4 — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
     st.markdown("### 🎵 2. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
@@ -596,15 +592,21 @@ with tab2:
         bgm_vol_level = st.slider("Music Bed Loudness", min_value=-36, max_value=-22, value=-28, step=1, help="-28 LUFS is broadcast standard. Sidechain auto-ducks during speech.")
 
     custom_music_file = None
-    if chosen_bgm_mode == "UPLOAD":
-        custom_music_file = st.file_uploader("Upload MP3 Track", type=["mp3"])
+    if chosen_bgm_mode == "UPLOAD" or len(avail_tracks) == 0:
+        custom_music_file = st.file_uploader("Upload / Direct-Add MP3 Track to Vault", type=["mp3"])
+        if custom_music_file:
+            save_dest = os.path.join(MUSIC_DIR, custom_music_file.name)
+            with open(save_dest, "wb") as f:
+                f.write(custom_music_file.read())
+            st.success(f"✓ Saved '{custom_music_file.name}' to music library!")
+            st.rerun()
 
     # Track readiness indicator
     res_path, res_name = resolve_background_track(chosen_bgm_mode, current_arch_key)
     if res_path and os.path.exists(res_path):
-        st.markdown(f'<div style="color: #34D399; font-family: monospace; font-size: 11px; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color: #34D399; font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
     elif chosen_bgm_mode != "NONE":
-        st.markdown('<div style="color: #FBBF24; font-family: monospace; font-size: 11px; margin-top: -6px; margin-bottom: 8px;">ℹ️ No matching MP3 found in music/ folder. Render will proceed with clean narration.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color: #FBBF24; font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">ℹ️ Library empty ({len(avail_tracks)} tracks). Upload an MP3 above or commit tracks to GitHub.</div>', unsafe_allow_html=True)
 
     st.markdown("### 🖼️ 3. Thumbnail Watermark Elimination (Lossless Aspect-Ratio Crop)")
     thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
@@ -658,17 +660,19 @@ with tab2:
                 ass_p = os.path.join(TMP_DIR, "subtitles.ass")
                 build_ass_subtitles(timings, pkg["script"], ass_p, dur, arch_key)
                 clean_ass_path = ass_p.replace("'", "\\'").replace(":", "\\:")
+                clean_fonts_dir = FONTS_DIR.replace("'", "\\'").replace(":", "\\:")
 
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
+                # Proven Colab filter with explicit fontsdir
                 v_filters = [
                     f"[0:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v0];",
                     f"[1:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v1];",
                     f"[2:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v2];",
                     f"[3:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v3];",
                     f"[v0][v1][v2][v3]concat=n=4:v=1:a=0[vb];",
-                    f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',subtitles='{clean_ass_path}'[vsub]"
+                    f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]"
                 ]
                 
                 inputs = ['-i', c_paths[0], '-i', c_paths[1], '-i', c_paths[2], '-i', c_paths[3], '-i', a_path]
@@ -682,9 +686,7 @@ with tab2:
 
                 active_bgm_path = None
                 if chosen_bgm_mode == "UPLOAD" and custom_music_file:
-                    custom_p = os.path.join(TMP_DIR, "custom_bgm.mp3")
-                    with open(custom_p, "wb") as f: f.write(custom_music_file.read())
-                    active_bgm_path = custom_p
+                    active_bgm_path = os.path.join(MUSIC_DIR, custom_music_file.name)
                 else:
                     active_bgm_path, _ = resolve_background_track(chosen_bgm_mode, arch_key)
 
