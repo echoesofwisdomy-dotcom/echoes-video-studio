@@ -9,7 +9,7 @@ from google.genai import types
 import edge_tts
 
 # ---------------------------------------------------------
-# 1. PAGE SETUP & DARK OBSIDIAN UI
+# 1. PAGE SETUP & OBSIDIAN TERMINAL UI
 # ---------------------------------------------------------
 st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="centered", initial_sidebar_state="collapsed")
 
@@ -34,7 +34,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. WORKSPACE, FONTS & MUSIC REPOSITORY
+# 2. WORKSPACE, FONTS & DYNAMIC MUSIC SCANNER
 # ---------------------------------------------------------
 DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR = (
     os.path.join(os.getcwd(), "data"),
@@ -66,54 +66,39 @@ def ensure_dejavu_font():
 
 ensure_dejavu_font()
 
-# Royalty-free curated ambient soundscapes
-CURATED_MUSIC_CATALOG = {
-    "IMPERIAL_GOLD": {
-        "title": "👑 Imperial Gold (Atmospheric Cello & Strings)",
-        "filename": "imperial_gold_ambient.mp3",
-        "url": "https://ia800108.us.archive.org/11/items/ambient_drone_cc0/ambient_strings_warm.mp3"
-    },
-    "GLACIAL_ICE": {
-        "title": "❄️ Glacial Ice (Cold Detached Drone)",
-        "filename": "glacial_ice_ambient.mp3",
-        "url": "https://ia800108.us.archive.org/11/items/ambient_drone_cc0/glacial_cold_stillness.mp3"
-    },
-    "FORGE_AMBER": {
-        "title": "🔥 Forge Amber (Dark Focus Pulse)",
-        "filename": "forge_amber_ambient.mp3",
-        "url": "https://ia800108.us.archive.org/11/items/ambient_drone_cc0/deep_focus_pulse.mp3"
-    }
+SUBTITLE_ARCHETYPES = {
+    "IMPERIAL_GOLD": {"label": "👑 Imperial Gold", "ass_primary": "&H0000E5FF", "banner_hex": "0xFFE500", "prefix": "gold_"},
+    "GLACIAL_ICE":   {"label": "❄️ Glacial Ice",   "ass_primary": "&H00FFF500", "banner_hex": "0x00F5FF", "prefix": "ice_"},
+    "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
 }
 
+def get_library_tracks():
+    """Scans the music/ folder for all available MP3 tracks."""
+    if not os.path.exists(MUSIC_DIR):
+        return []
+    return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith(".mp3")])
+
 def resolve_background_track(choice_key, archetype_key):
+    """Dynamically resolves and rotates background tracks based on theme archetype."""
     if choice_key == "NONE":
         return None
-    target_key = archetype_key if choice_key == "AUTO" else choice_key
-    info = CURATED_MUSIC_CATALOG.get(target_key, CURATED_MUSIC_CATALOG["IMPERIAL_GOLD"])
-    dest_path = os.path.join(MUSIC_DIR, info["filename"])
+    all_tracks = get_library_tracks()
+    if not all_tracks:
+        return None
     
-    if not os.path.exists(dest_path) or os.path.getsize(dest_path) < 5000:
-        try:
-            r = requests.get(info["url"], timeout=10)
-            if r.status_code == 200 and len(r.content) > 5000:
-                with open(dest_path, "wb") as f:
-                    f.write(r.content)
-        except Exception:
-            pass
-            
-    if os.path.exists(dest_path) and os.path.getsize(dest_path) > 5000:
-        return dest_path
+    if choice_key == "AUTO":
+        target_prefix = SUBTITLE_ARCHETYPES.get(archetype_key, {}).get("prefix", "gold_")
+        matched = [f for f in all_tracks if f.lower().startswith(target_prefix)]
+        pool = matched if matched else all_tracks
+        return os.path.join(MUSIC_DIR, random.choice(pool))
+    
+    if choice_key in all_tracks:
+        return os.path.join(MUSIC_DIR, choice_key)
     return None
 
 def to_unicode_bold(text):
-    n, b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
+    n, b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶遭𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
     return text.translate(str.maketrans(n, b))
-
-SUBTITLE_ARCHETYPES = {
-    "IMPERIAL_GOLD": {"label": "👑 Imperial Gold", "ass_primary": "&H0000E5FF", "banner_hex": "0xFFE500"},
-    "GLACIAL_ICE":   {"label": "❄️ Glacial Ice",   "ass_primary": "&H00FFF500", "banner_hex": "0x00F5FF"},
-    "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900"}
-}
 
 # ---------------------------------------------------------
 # 3. 24 THEMES & ROTATING METAPHORS MATRIX
@@ -160,7 +145,7 @@ SETTINGS_MATRIX = [
 ]
 
 # ---------------------------------------------------------
-# 4. CADENCE & DRAFT VAULT PERSISTENCE
+# 4. CADENCE & PERSISTENT DRAFT VAULT
 # ---------------------------------------------------------
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
 def load_db():
@@ -200,95 +185,89 @@ def get_next_slot(base_d=None, base_s=None):
 
 target_d, target_s, target_t = get_next_slot()
 
-# Pre-load recovery: restore "The Discipline Engine" draft if none exists
-def init_draft_vault():
-    if not os.path.exists(DRAFT_JSON_PATH):
-        sample_pkg = {
-            "title_concept": "The Discipline Engine",
-            "hook_banner": "ACTION CURES SELF-PITY",
-            "subtitle_archetype": "FORGE_AMBER",
-            "script": "Action cures self-pity. Waiting to feel inspired is a dangerous trap forged by comfort. Emotions are fragile allies that abandon you the moment duty demands sacrifice. A disciplined man advances even when his flesh rebels. Do not wait for fire; relentless motion strikes the spark. Silence your excuses, endure the bitter friction, and when inner weakness tempts you to surrender, rise up immediately and remember that...",
-            "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle standing resolute within towering monolithic ancient stone colonnades.",
-            "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Flint and steel striking violently to generate a sudden bright spark in moody chiaroscuro lighting.",
-            "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] An original fictional mature man in dark woolen mantle turning with calm stoic resolve in atmospheric stone corridors.",
-            "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Close up portrait of an original fictional mature man with weathered beard and calm focused gaze in dignified silent composure.",
-            "thumbnail_prompt": "[Vertical 9:16 cinematic portrait photograph] A striking high-contrast portrait of an original fictional mature man with weathered lined face and beard in dark woolen mantle standing in citadel colonnades with clean negative space.",
-            "youtube_title": "ACTION Cures Self-Pity | The Stoic Power of Discipline #shorts #stoicism",
-            "youtube_description": "Waiting to feel inspired is a trap forged by comfort. A disciplined man advances even when his flesh rebels.\n\nSubscribe to @EchoesOfWisdomOfficial\n#stoicism #discipline #focus #shorts",
-            "youtube_pinned_comment": "When discipline is tested: 1️⃣ Strike the spark and move immediately, or 2️⃣ Wait until motivation arrives? Drop 1 or 2 below. 👇",
-            "facebook_title": "Action Cures Self-Pity | Stoic Discipline",
-            "caption_hook": "ACTION CURES SELF-PITY",
-            "caption_lesson": "Waiting to feel inspired is a trap forged by comfort. A disciplined man advances even when his emotions rebel.",
-            "debate_question": "When duty calls and comfort tempts:",
-            "choice_1": "Act immediately without waiting",
-            "choice_2": "Wait for inspiration to strike",
-            "facebook_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Focus #Reels"
-        }
-        draft_payload = {
-            "pkg": sample_pkg,
-            "t_id": "MYTH_OF_WAITING",
-            "p": "Relentless Focus",
-            "m": "Flint and steel striking violently to generate a sudden bright spark",
-            "s": "The Ancient Citadel Colonnades",
-            "date": target_d,
-            "slot": target_s,
-            "time": target_t
-        }
-        with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
-            json.dump(draft_payload, f, indent=2)
-
-init_draft_vault()
-
 # ---------------------------------------------------------
-# 5. AUDIO & SUBTITLE ENGINE (BUG FIXED)
+# 5. ACOUSTIC-LOCKED SUBTITLE SYNCHRONIZER
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
     timings = []
     with open(audio_path, "wb") as f:
         async for chunk in comm.stream():
-            if chunk["type"] == "audio": f.write(chunk["data"])
+            if chunk["type"] == "audio": 
+                f.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
                 st_s = chunk["offset"] / 10_000_000.0
-                timings.append({"word": chunk.get("text", ""), "start": round(st_s, 3), "end": round(st_s + (chunk["duration"] / 10_000_000.0), 3)})
+                dur_s = chunk["duration"] / 10_000_000.0
+                timings.append({"word": chunk.get("text", ""), "start": round(st_s, 3), "end": round(st_s + dur_s, 3)})
     return timings
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
     events = []
-    if not timed_words or len(timed_words) < 5:
-        tokens = script_text.split()
-        groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
-        step = max(0.5, (total_dur - 0.8) / max(1, len(groups)))
-        for i, g in enumerate(groups):
-            events.append((i * step, min(total_dur, (i + 1) * step), re.sub(r'[^\w\s\',.!?-]', '', " ".join(g)).upper()))
-    else:
-        chunk = []
-        for i, tw in enumerate(timed_words):
-            chunk.append({'word': re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper(), 'start': tw['start'], 'end': tw['end']})
-            if any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';']) or (i + 1 < len(timed_words) and timed_words[i + 1]['start'] - tw['end'] >= 0.25) or len(chunk) >= 3:
-                events.append((chunk[0]['start'], min(total_dur, max(chunk[-1]['end'], chunk[0]['start'] + 0.35)), " ".join([c['word'] for c in chunk]).strip()))
-                chunk = []
-        if chunk: events.append((chunk[0]['start'], min(total_dur, max(chunk[-1]['end'], chunk[0]['start'] + 0.35)), " ".join([c['word'] for c in chunk]).strip()))
+    
+    clean_words = []
+    for tw in timed_words:
+        w_txt = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper().strip()
+        if w_txt:
+            clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
+
+    chunk = []
+    for i, tw in enumerate(clean_words):
+        chunk.append(tw)
+        is_punct = any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';'])
+        has_pause = (i + 1 < len(clean_words)) and (clean_words[i + 1]['start'] - tw['end'] >= 0.25)
+        
+        if is_punct or has_pause or len(chunk) >= 3:
+            st_t = chunk[0]['start']
+            if i + 1 < len(clean_words):
+                en_t = clean_words[i + 1]['start']
+            else:
+                en_t = min(total_dur, chunk[-1]['end'] + 0.25)
+            
+            txt = " ".join([c['word'] for c in chunk]).strip()
+            if txt:
+                events.append((st_t, en_t, txt))
+            chunk = []
+            
+    if chunk:
+        st_t = chunk[0]['start']
+        en_t = min(total_dur, chunk[-1]['end'] + 0.25)
+        txt = " ".join([c['word'] for c in chunk]).strip()
+        if txt:
+            events.append((st_t, en_t, txt))
 
     def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
-    ass_doc = f"[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,DejaVu Sans,76,{color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
-    for st_t, en_t, txt in events: ass_doc += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
     
-    # FIXED: Write to ass_path, not ass_doc string
+    ass_doc = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,DejaVu Sans,76,{color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+    for st_t, en_t, txt in events: 
+        ass_doc += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
+    
     with open(ass_path, "w", encoding="utf-8") as f: 
         f.write(ass_doc)
     return events
 
-# Load persistent draft into session
+# Persistent Draft Loader (Maintains acoustic timings in disk vault)
 if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH):
     try:
         with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f:
             d_data = json.load(f)
-        if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000:
-            asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH))
+        if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000 or not d_data.get("timings"):
+            timings = asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH))
+            d_data["timings"] = timings
+            with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as fw: json.dump(d_data, fw, indent=2)
         d_data["audio"] = DRAFT_AUDIO_PATH
-        d_data["timings"] = []
         st.session_state["active_video_pkg"] = d_data
     except Exception: pass
 
@@ -316,7 +295,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c})",\n'
         '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action",\n'
         '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up",\n'
-        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting",\n'
+        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion",\n'
         '  "youtube_title": "High CTR Title #shorts #stoicism",\n'
         '  "youtube_description": "Description with handles and hashtags",\n'
         '  "youtube_pinned_comment": "Binary debate question with 1️⃣/2️⃣ options",\n'
@@ -336,20 +315,22 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
             parsed = json.loads(r.text)
             if "script" in parsed: return parsed, None
         except Exception: continue
-    return None, "Gemini API error. Check your API credentials."
+    return None, "Gemini API error. Check credentials."
 
 # ---------------------------------------------------------
-# 7. TELEMETRY & CADENCE ACCORDION
+# 7. TELEMETRY BAR & CADENCE MANAGER
 # ---------------------------------------------------------
-st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.4 // DESKTOP EDITION</span></div>', unsafe_allow_html=True)
+st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.6 // PRODUCTION</span></div>', unsafe_allow_html=True)
 
 recent_ids = db.get("used_theme_ids", [])[-14:]
 fresh_count = len(THEMES_DATABASE) - len(set(recent_ids))
+track_count = len(get_library_tracks())
 
 st.markdown(f"""
 <div style="margin-bottom: 14px;">
     <span class="badge badge-green">● ENGINE ONLINE</span>
     <span class="badge badge-purple">🛡️ {fresh_count} FRESH THEMES</span>
+    <span class="badge badge-blue">🎵 {track_count} AUDIO TRACKS</span>
     <span class="badge badge-amber">📅 {target_d} @ {target_t} IST ({target_s})</span>
 </div>
 """, unsafe_allow_html=True)
@@ -405,11 +386,11 @@ def render_copy(bid, label, text):
     """, height=44)
 
 # ---------------------------------------------------------
-# 8. TABS WORKSPACE
+# 8. WORKSPACE TABS
 # ---------------------------------------------------------
 tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER"])
 
-# --- TAB 1: SCRIPT GENERATOR ---
+# --- TAB 1: SCRIPT & GOOGLE FLOW PROMPTS ---
 with tab1:
     theme_opts = ["🎲 Smart AI Rotation (Cooldown-Protected)"] + THEMES_DATABASE
     chosen_theme = st.selectbox("Stoic Core Theme", theme_opts, format_func=lambda x: "🎲 Smart AI Rotation" if isinstance(x, str) else f"{'⏳' if x['id'] in recent_ids else '✨'} {x['t']} ({x['p']})")
@@ -472,49 +453,62 @@ with tab1:
             if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
             st.rerun()
 
-# --- TAB 2: COMPOSE & RENDER (UNIFIED SINGLE DROPZONE + AUTO BGM) ---
+# --- TAB 2: COMPOSE & RENDER MASTER REEL ---
 with tab2:
     st.markdown("### 📥 1. Upload Your 4 Google Flow Clips")
     uploaded_clips = st.file_uploader(
-        "Drop or select all 4 video clips at once (scene1 to scene4)",
+        "Drop all 4 clips (scene1.mp4 to scene4.mp4)",
         type=["mp4", "mov"],
         accept_multiple_files=True
     )
 
     if uploaded_clips:
-        # Sort naturally by filename so scene1, scene2, scene3, scene4 sequence is guaranteed
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
         st.markdown(f'<div style="color: {"#34D399" if len(uploaded_clips) == 4 else "#FBBF24"}; font-family: monospace; font-size: 12px; margin-bottom: 8px;">📁 Files loaded: {len(uploaded_clips)}/4 — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
-    st.markdown("### 🎵 2. Royalty-Free Background Music (Ambient Soundscapes)")
+    st.markdown("### 🎵 2. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
     
+    avail_tracks = get_library_tracks()
     bgm_options = {
-        "AUTO": f"🤖 Auto-Match Theme ({SUBTITLE_ARCHETYPES.get(current_arch_key, SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']})",
-        "IMPERIAL_GOLD": "👑 Imperial Gold (Solemn Strings & Ambient Drone)",
-        "GLACIAL_ICE": "❄️ Glacial Ice (Cold Detached Atmospheric Drone)",
-        "FORGE_AMBER": "🔥 Forge Amber (Dark Focus & Rhythmic Pulse)",
-        "CUSTOM": "📁 Upload Custom MP3 File",
-        "NONE": "🔇 Narration Only (Silent background)"
+        "AUTO": f"🤖 Auto-Rotate by Theme ({SUBTITLE_ARCHETYPES.get(current_arch_key, {})['label']})",
+        "NONE": "🔇 Narration Only (Silent background)",
+        "UPLOAD": "📁 Upload New MP3 File"
     }
-    chosen_bgm = st.selectbox("Select Background Music Mode", list(bgm_options.keys()), format_func=lambda x: bgm_options[x])
-    
-    custom_music_file = None
-    if chosen_bgm == "CUSTOM":
-        custom_music_file = st.file_uploader("Select Custom MP3 Track", type=["mp3"])
+    for t in avail_tracks:
+        bgm_options[t] = f"🎵 {t}"
 
-    st.markdown("### 🖼️ 3. Optional: Watermark Cleaner")
-    thumb = st.file_uploader("Upload raw Google Flow thumbnail (clean_thumbnail.png)", type=["png", "jpg", "jpeg", "webp"])
+    col_bg1, col_bg2 = st.columns([3, 2])
+    with col_bg1:
+        chosen_bgm_mode = st.selectbox("Background Music Source", list(bgm_options.keys()), format_func=lambda x: bgm_options[x])
+    with col_bg2:
+        bgm_vol_level = st.slider("Music Bed Loudness", min_value=-36, max_value=-22, value=-28, step=1, help="-28 LUFS is broadcast standard. Sidechain auto-ducks during speech.")
+
+    custom_music_file = None
+    if chosen_bgm_mode == "UPLOAD":
+        custom_music_file = st.file_uploader("Upload MP3 Track", type=["mp3"])
+
+    st.markdown("### 🖼️ 3. Thumbnail Watermark Elimination (Lossless Aspect-Ratio Crop)")
+    thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
     if thumb:
         try:
             im = Image.open(thumb).convert("RGB")
             w, h = im.size
-            draw = ImageDraw.Draw(im)
-            draw.rectangle([int(w * 0.92), int(h * 0.955), w, h], fill=im.getpixel((int(w * 0.90), int(h * 0.97))))
+            
+            # Lossless crop: trim bottom 5.5% (watermark area) while preserving true 9:16 aspect ratio
+            crop_h = h - int(h * 0.055)
+            target_aspect = 9.0 / 16.0
+            crop_w = int(crop_h * target_aspect)
+            margin_x = (w - crop_w) // 2
+            
+            clean_im = im.crop((margin_x, 0, margin_x + crop_w, crop_h)).resize((1080, 1920), Image.Resampling.LANCZOS)
+            
             buf = io.BytesIO()
-            im.save(buf, format="PNG", quality=98)
-            st.download_button("💾 Download Clean Thumbnail", buf.getvalue(), f"{target_d.replace('-','')}_clean_thumbnail.png", "image/png")
-        except Exception: pass
+            clean_im.save(buf, format="PNG", quality=98)
+            st.download_button("💾 Download Cleaned Master Thumbnail", buf.getvalue(), f"{target_d.replace('-','')}_clean_thumbnail.png", "image/png")
+            st.caption("✓ Bottom watermark cleanly cropped out; true 9:16 vertical framing preserved with zero patch boxes.")
+        except Exception as e: 
+            st.warning(f"Could not crop thumbnail: {e}")
 
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
         if "active_video_pkg" not in st.session_state:
@@ -522,22 +516,25 @@ with tab2:
         elif not uploaded_clips or len(uploaded_clips) < 4:
             st.error(f"Please upload all 4 clips above. (Currently loaded: {len(uploaded_clips) if uploaded_clips else 0}/4)")
         else:
-            with st.spinner("⚡ Assembling video, balancing background music & burning subtitles..."):
+            with st.spinner("⚡ Normalizing audio loudness, syncing subtitles & rendering 1080x1920 reel..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
-                timings = p_data.get("timings", [])
                 a_path = DRAFT_AUDIO_PATH
                 arch_key = pkg.get("subtitle_archetype", "FORGE_AMBER")
                 arch = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["FORGE_AMBER"])
                 
-                # Save uploaded clips locally in filename-sorted order
+                # Guarantee acoustic word timings exist
+                timings = p_data.get("timings", [])
+                if not timings or len(timings) < 5:
+                    timings = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
+                    p_data["timings"] = timings
+
                 c_paths = []
                 for idx, c in enumerate(uploaded_clips[:4]):
                     cp = os.path.join(TMP_DIR, f"clip_{idx}.mp4")
                     with open(cp, "wb") as f: f.write(c.read())
                     c_paths.append(cp)
 
-                # Determine audio duration
                 probe = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', a_path], capture_output=True, text=True)
                 dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 24.0) + 0.6
                 speed = (dur / 4.0) / 4.0
@@ -566,21 +563,27 @@ with tab2:
                 else: 
                     v_filters.append(";[vsub]copy[vout]")
 
-                # Background music resolution
-                active_bgm_file = None
-                if chosen_bgm == "CUSTOM" and custom_music_file:
+                # Background audio track resolution
+                active_bgm_path = None
+                if chosen_bgm_mode == "UPLOAD" and custom_music_file:
                     custom_p = os.path.join(TMP_DIR, "custom_bgm.mp3")
                     with open(custom_p, "wb") as f: f.write(custom_music_file.read())
-                    active_bgm_file = custom_p
-                elif chosen_bgm in ["AUTO", "IMPERIAL_GOLD", "GLACIAL_ICE", "FORGE_AMBER"]:
-                    active_bgm_file = resolve_background_track(chosen_bgm, arch_key)
+                    active_bgm_path = custom_p
+                elif chosen_bgm_mode in ["AUTO"] + avail_tracks:
+                    active_bgm_path = resolve_background_track(chosen_bgm_mode, arch_key)
 
-                if active_bgm_file and os.path.exists(active_bgm_file):
-                    inputs.extend(['-i', active_bgm_file])
+                # Dynamic Audio Leveling Engine: EBU R128 + Sidechain Auto-Ducking
+                if active_bgm_path and os.path.exists(active_bgm_path):
+                    inputs.extend(['-i', active_bgm_path])
                     midx = 6 if logo else 5
-                    v_filters.append(f";[4:a]volume=1.0[vo];[{midx}:a]aloop=loop=-1:size=2e+09,volume=0.12,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg];[vo][bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+                    v_filters.append(
+                        f";[4:a]loudnorm=I=-14:TP=-1.0:LRA=7[vo_clean];"
+                        f"[{midx}:a]aloop=loop=-1:size=2e+09,loudnorm=I={bgm_vol_level}:TP=-2.0:LRA=7,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg_clean];"
+                        f"[bg_clean][vo_clean]sidechaincompress=threshold=0.08:ratio=4:attack=50:release=350[bg_ducked];"
+                        f"[vo_clean][bg_ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]"
+                    )
                 else: 
-                    v_filters.append(";[4:a]volume=1.0[aout]")
+                    v_filters.append(";[4:a]loudnorm=I=-14:TP=-1.0:LRA=7[aout]")
 
                 res = subprocess.run([
                     'ffmpeg', '-y', *inputs, 
@@ -596,7 +599,7 @@ with tab2:
                     st.error(f"FFmpeg Compilation Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered! Subtitles: {arch['label']}")
+                    st.success(f"🎉 Master Reel Rendered! Subtitles: {arch['label']} (Dynamic Loudness Leveled)")
 
     if "rendered_video_path" in st.session_state:
         vp = st.session_state["rendered_video_path"]
@@ -615,7 +618,7 @@ with tab2:
         st.divider()
         st.markdown(f"### 🎯 QUEUE: {c_d} @ {c_t} IST ({c_s})")
         
-        # YouTube Deck
+        # YouTube Shorts Suite
         yt_t = pkg.get("youtube_title", f"{pkg.get('hook_banner').title()} #shorts")
         st.text_input("YouTube Title", yt_t)
         render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
@@ -624,7 +627,7 @@ with tab2:
         render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", yt_d)
         render_copy("yt_p", "COPY PINNED COMMENT", pkg.get("youtube_pinned_comment", "Drop 1 or 2 below. 👇"))
 
-        # Meta Deck
+        # Facebook & Instagram Reels Suite
         fb_hook = to_unicode_bold(re.sub(r'[^\w\s]', '', pkg.get("caption_hook", pkg.get("hook_banner", ""))).strip().upper())
         fb_cap = f"⚡ {fb_hook} 🏛️\n\n{pkg.get('caption_lesson', pkg['script'])}\n\n🤔 {pkg.get('debate_question')}\n1️⃣ {pkg.get('choice_1')}\n2️⃣ {pkg.get('choice_2')}\n\nDrop 1 or 2 below. 👇\n\n• Follow @EchoesOfWisdomOfficial\n\n{pkg.get('facebook_hashtags', '#StoicMindset #EchoesOfWisdom')}"
         st.text_area("Facebook Reel Caption (Unicode Bold)", fb_cap, height=160)
