@@ -1,4 +1,4 @@
-import os, io, json, re, random, asyncio, subprocess, requests
+import os, io, json, re, random, asyncio, subprocess, requests, base64
 from datetime import datetime, timedelta, timezone, time
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -34,10 +34,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. WORKSPACE, FONTS & REPOSITORIES
+# 2. WORKSPACE, FONTS & MUSIC REPOSITORY
 # ---------------------------------------------------------
-DATA_DIR, TMP_DIR, FONTS_DIR = os.path.join(os.getcwd(), "data"), os.path.join(os.getcwd(), "tmp"), os.path.join(os.getcwd(), "fonts")
-for d in [DATA_DIR, TMP_DIR, FONTS_DIR]: os.makedirs(d, exist_ok=True)
+DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR = (
+    os.path.join(os.getcwd(), "data"),
+    os.path.join(os.getcwd(), "tmp"),
+    os.path.join(os.getcwd(), "fonts"),
+    os.path.join(os.getcwd(), "music")
+)
+for d in [DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR]: 
+    os.makedirs(d, exist_ok=True)
 
 DRAFT_JSON_PATH = os.path.join(DATA_DIR, "active_draft.json")
 DRAFT_AUDIO_PATH = os.path.join(DATA_DIR, "active_audio.mp3")
@@ -46,7 +52,10 @@ DRAFT_AUDIO_PATH = os.path.join(DATA_DIR, "active_audio.mp3")
 def ensure_dejavu_font():
     f_path = os.path.join(FONTS_DIR, "DejaVuSans-Bold.ttf")
     if not os.path.exists(f_path) or os.path.getsize(f_path) < 10000:
-        for u in ["https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans-Bold.ttf", "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf"]:
+        for u in [
+            "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans-Bold.ttf",
+            "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf"
+        ]:
             try:
                 r = requests.get(u, timeout=8)
                 if r.status_code == 200 and len(r.content) > 10000:
@@ -56,6 +65,47 @@ def ensure_dejavu_font():
     return f_path
 
 ensure_dejavu_font()
+
+# Royalty-free curated ambient tracks per archetype (permanent public mirrors)
+CURATED_MUSIC_CATALOG = {
+    "IMPERIAL_GOLD": {
+        "title": "👑 Imperial Gold (Atmospheric Cello & Strings)",
+        "filename": "imperial_gold_ambient.mp3",
+        "url": "https://ia800108.us.archive.org/11/items/ambient_drone_cc0/ambient_strings_warm.mp3"
+    },
+    "GLACIAL_ICE": {
+        "title": "❄️ Glacial Ice (Cold Detached Drone)",
+        "filename": "glacial_ice_ambient.mp3",
+        "url": "https://ia800108.us.archive.org/11/items/ambient_drone_cc0/glacial_cold_stillness.mp3"
+    },
+    "FORGE_AMBER": {
+        "title": "🔥 Forge Amber (Dark Focus Pulse)",
+        "filename": "forge_amber_ambient.mp3",
+        "url": "https://ia800108.us.archive.org/11/items/ambient_drone_cc0/deep_focus_pulse.mp3"
+    }
+}
+
+def resolve_background_track(choice_key, archetype_key):
+    """Downloads or locates the selected royalty-free background music track."""
+    if choice_key == "NONE":
+        return None
+    target_key = archetype_key if choice_key == "AUTO" else choice_key
+    info = CURATED_MUSIC_CATALOG.get(target_key, CURATED_MUSIC_CATALOG["IMPERIAL_GOLD"])
+    dest_path = os.path.join(MUSIC_DIR, info["filename"])
+    
+    # Check if user already placed a custom file in music/ or downloaded
+    if not os.path.exists(dest_path) or os.path.getsize(dest_path) < 5000:
+        try:
+            r = requests.get(info["url"], timeout=10)
+            if r.status_code == 200 and len(r.content) > 5000:
+                with open(dest_path, "wb") as f:
+                    f.write(r.content)
+        except Exception:
+            pass
+            
+    if os.path.exists(dest_path) and os.path.getsize(dest_path) > 5000:
+        return dest_path
+    return None
 
 def to_unicode_bold(text):
     n, b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
@@ -152,7 +202,7 @@ def get_next_slot(base_d=None, base_s=None):
 
 target_d, target_s, target_t = get_next_slot()
 
-# Pre-load recovery: automatically restore "The Discipline Engine" if no draft exists
+# Pre-load recovery: automatically restore "The Discipline Engine" draft if none exists
 def init_draft_vault():
     if not os.path.exists(DRAFT_JSON_PATH):
         sample_pkg = {
@@ -242,7 +292,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. SCRIPT GENERATOR
+# 6. GEMINI GENERATOR (ROTATING METAPHORS)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     client = genai.Client(api_key=raw_api_key.strip().strip('"').strip("'"))
@@ -290,7 +340,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 # 7. TELEMETRY & CADENCE ACCORDION
 # ---------------------------------------------------------
-st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.2 // VAULT PROTECTED</span></div>', unsafe_allow_html=True)
+st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.3 // DROPZONE EDITION</span></div>', unsafe_allow_html=True)
 
 recent_ids = db.get("used_theme_ids", [])[-14:]
 fresh_count = len(THEMES_DATABASE) - len(set(recent_ids))
@@ -327,11 +377,31 @@ with st.expander("🔑 API CREDENTIALS", expanded=(not bool(api_key))):
     uk = st.text_input("Gemini API Key", value=api_key, type="password")
     if uk: st.session_state["api_key"] = uk.strip()
 
+# Base64-immune 1-tap copy button generator
 def render_copy(bid, label, text):
+    b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
     components.html(f"""
-    <button id="b_{bid}" onclick="navigator.clipboard.writeText({json.dumps(text)}).then(()=>{{this.innerText='✓ COPIED!';this.style.background='#059669';this.style.color='#FFF';setTimeout(()=>{{this.innerText='📋 {label}';this.style.background='rgba(56,189,248,0.15)';this.style.color='#38BDF8';}},2000);}})" style="width:100%;height:2.4rem;background:rgba(56,189,248,0.15);color:#38BDF8;border:1px solid rgba(56,189,248,0.4);border-radius:6px;font-family:monospace;font-weight:700;font-size:11px;cursor:pointer;">
-        📋 {label}
-    </button>
+    <div style="margin: 0; padding: 0;">
+        <button id="b_{bid}" onclick="copyFromB64('{bid}', '{b64_val}', '{label}')" style="width:100%;height:2.4rem;background:rgba(56,189,248,0.15);color:#38BDF8;border:1px solid rgba(56,189,248,0.4);border-radius:6px;font-family:monospace;font-weight:700;font-size:11px;cursor:pointer;">
+            📋 {label}
+        </button>
+    </div>
+    <script>
+    function copyFromB64(id, b64, lbl) {{
+        const decoded = decodeURIComponent(escape(window.atob(b64)));
+        navigator.clipboard.writeText(decoded).then(() => {{
+            const el = document.getElementById('b_' + id);
+            el.innerText = '✓ COPIED!';
+            el.style.background = '#059669';
+            el.style.color = '#FFF';
+            setTimeout(() => {{
+                el.innerText = '📋 ' + lbl;
+                el.style.background = 'rgba(56,189,248,0.15)';
+                el.style.color = '#38BDF8';
+            }}, 2000);
+        }});
+    }}
+    </script>
     """, height=44)
 
 # ---------------------------------------------------------
@@ -339,6 +409,7 @@ def render_copy(bid, label, text):
 # ---------------------------------------------------------
 tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER"])
 
+# --- TAB 1: SCRIPT GENERATOR ---
 with tab1:
     theme_opts = ["🎲 Smart AI Rotation (Cooldown-Protected)"] + THEMES_DATABASE
     chosen_theme = st.selectbox("Stoic Core Theme", theme_opts, format_func=lambda x: "🎲 Smart AI Rotation" if isinstance(x, str) else f"{'⏳' if x['id'] in recent_ids else '✨'} {x['t']} ({x['p']})")
@@ -401,12 +472,46 @@ with tab1:
             if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
             st.rerun()
 
+# --- TAB 2: COMPOSE & RENDER (4 DEDICATED DROPZONES + BGM) ---
 with tab2:
     st.markdown("### 📥 1. Upload Your 4 Google Flow Clips")
-    clips = st.file_uploader("Select 4 vertical video files (Scene 1 to Scene 4)", type=["mp4", "mov"], accept_multiple_files=True)
     
-    st.markdown("### 🖼️ 2. Optional: Watermark Cleaner")
-    thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
+    col_u1, col_u2 = st.columns(2)
+    with col_u1:
+        clip1 = st.file_uploader("🎬 Scene 1 (Hook / Setting)", type=["mp4", "mov"], key="drop_c1")
+        clip2 = st.file_uploader("🔍 Scene 2 (Macro Metaphor)", type=["mp4", "mov"], key="drop_c2")
+    with col_u2:
+        clip3 = st.file_uploader("🚶 Scene 3 (Protagonist Action)", type=["mp4", "mov"], key="drop_c3")
+        clip4 = st.file_uploader("🗿 Scene 4 (Close-up Resolve)", type=["mp4", "mov"], key="drop_c4")
+
+    # Readiness telemetry
+    loaded_clips = [c for c in [clip1, clip2, clip3, clip4] if c is not None]
+    if len(loaded_clips) == 4:
+        st.markdown('<div style="color: #34D399; font-family: monospace; font-size: 12px; margin-bottom: 8px;">✓ ALL 4 SCENES LOADED AND VERIFIED</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div style="color: #FBBF24; font-family: monospace; font-size: 12px; margin-bottom: 8px;">⏳ Clips uploaded: {len(loaded_clips)}/4</div>', unsafe_allow_html=True)
+
+    st.markdown("### 🎵 2. Royalty-Free Background Music (Ambient Soundscapes)")
+    
+    current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
+    
+    bgm_options = {
+        "AUTO": f"🤖 Auto-Match Theme ({SUBTITLE_ARCHETYPES.get(current_arch_key, SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']})",
+        "IMPERIAL_GOLD": "👑 Imperial Gold (Solemn Strings & Ambient Drone)",
+        "GLACIAL_ICE": "❄️ Glacial Ice (Cold Detached Atmospheric Drone)",
+        "FORGE_AMBER": "🔥 Forge Amber (Dark Focus & Rhythmic Pulse)",
+        "CUSTOM": "📁 Upload Custom MP3 File",
+        "NONE": "🔇 Narration Only (Silent background)"
+    }
+    
+    chosen_bgm = st.selectbox("Select Background Music Mode", list(bgm_options.keys()), format_func=lambda x: bgm_options[x])
+    
+    custom_music_file = None
+    if chosen_bgm == "CUSTOM":
+        custom_music_file = st.file_uploader("Select Custom MP3 Track", type=["mp3"])
+
+    st.markdown("### 🖼️ 3. Optional: Watermark Cleaner")
+    thumb = st.file_uploader("Upload raw Google Flow thumbnail (clean_thumbnail.png)", type=["png", "jpg", "jpeg", "webp"])
     if thumb:
         try:
             im = Image.open(thumb).convert("RGB")
@@ -418,34 +523,38 @@ with tab2:
             st.download_button("💾 Download Clean Thumbnail", buf.getvalue(), f"{target_d.replace('-','')}_clean_thumbnail.png", "image/png")
         except Exception: pass
 
-    music = st.file_uploader("Optional: Background Music (MP3)", type=["mp3"])
-    
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
-        if "active_video_pkg" not in st.session_state: st.error("No active draft loaded in Tab 1.")
-        elif not clips or len(clips) < 4: st.error(f"Please upload all 4 clips (Found {len(clips) if clips else 0}/4).")
+        if "active_video_pkg" not in st.session_state:
+            st.error("No active draft loaded in Tab 1.")
+        elif not (clip1 and clip2 and clip3 and clip4):
+            st.error(f"Please upload all 4 clips above. (Currently loaded: {len(loaded_clips)}/4)")
         else:
-            with st.spinner("⚡ Assembling video & burning subtitles..."):
+            with st.spinner("⚡ Assembling video, balancing background music & burning subtitles..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
                 timings = p_data.get("timings", [])
                 a_path = DRAFT_AUDIO_PATH
-                arch = SUBTITLE_ARCHETYPES.get(pkg.get("subtitle_archetype"), SUBTITLE_ARCHETYPES["FORGE_AMBER"])
+                arch_key = pkg.get("subtitle_archetype", "FORGE_AMBER")
+                arch = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["FORGE_AMBER"])
                 
+                # Save uploaded clips locally
                 c_paths = []
-                for i, c in enumerate(clips[:4]):
-                    cp = os.path.join(TMP_DIR, f"clip_{i}.mp4")
+                for idx, c in enumerate([clip1, clip2, clip3, clip4]):
+                    cp = os.path.join(TMP_DIR, f"clip_{idx}.mp4")
                     with open(cp, "wb") as f: f.write(c.read())
                     c_paths.append(cp)
 
+                # Determine audio duration
                 probe = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', a_path], capture_output=True, text=True)
                 dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 24.0) + 0.6
                 speed = (dur / 4.0) / 4.0
 
                 ass_p = os.path.join(TMP_DIR, "subtitles.ass")
-                build_ass_subtitles(timings, pkg["script"], ass_p, dur, pkg.get("subtitle_archetype", "FORGE_AMBER"))
+                build_ass_subtitles(timings, pkg["script"], ass_p, dur, arch_key)
 
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
+                
                 v_filters = [
                     f"[0:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v0];",
                     f"[1:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v1];",
@@ -454,26 +563,47 @@ with tab2:
                     f"[v0][v1][v2][v3]concat=n=4:v=1:a=0[vb];",
                     f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{ass_p}':fontsdir='{FONTS_DIR}'[vsub]"
                 ]
+                
                 inputs = ['-i', c_paths[0], '-i', c_paths[1], '-i', c_paths[2], '-i', c_paths[3], '-i', a_path]
+                
                 logo = "logo.png" if os.path.exists("logo.png") else None
                 if logo:
                     inputs.extend(['-i', logo])
                     v_filters.append(";[5:v]scale=120:-1,format=rgba[ls];[vsub][ls]overlay=W-w-50:150[vout]")
-                else: v_filters.append(";[vsub]copy[vout]")
+                else: 
+                    v_filters.append(";[vsub]copy[vout]")
 
-                if music:
-                    mp = os.path.join(TMP_DIR, "bgm.mp3")
-                    with open(mp, "wb") as f: f.write(music.read())
-                    inputs.extend(['-i', mp])
+                # Background music resolution
+                active_bgm_file = None
+                if chosen_bgm == "CUSTOM" and custom_music_file:
+                    custom_p = os.path.join(TMP_DIR, "custom_bgm.mp3")
+                    with open(custom_p, "wb") as f: f.write(custom_music_file.read())
+                    active_bgm_file = custom_p
+                elif chosen_bgm in ["AUTO", "IMPERIAL_GOLD", "GLACIAL_ICE", "FORGE_AMBER"]:
+                    active_bgm_file = resolve_background_track(chosen_bgm, arch_key)
+
+                if active_bgm_file and os.path.exists(active_bgm_file):
+                    inputs.extend(['-i', active_bgm_file])
                     midx = 6 if logo else 5
-                    v_filters.append(f";[4:a]volume=1.0[vo];[{midx}:a]aloop=loop=-1:size=2e+09,volume=0.15,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg];[vo][bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
-                else: v_filters.append(";[4:a]volume=1.0[aout]")
+                    v_filters.append(f";[4:a]volume=1.0[vo];[{midx}:a]aloop=loop=-1:size=2e+09,volume=0.12,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg];[vo][bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+                else: 
+                    v_filters.append(";[4:a]volume=1.0[aout]")
 
-                res = subprocess.run(['ffmpeg', '-y', *inputs, '-filter_complex', "".join(v_filters), '-map', '[vout]', '-map', '[aout]', '-t', str(dur), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-c:a', 'aac', '-b:a', '192k', '-pix_fmt', 'yuv420p', out_p], capture_output=True, text=True)
-                if res.returncode != 0: st.error(f"FFmpeg Error: {res.stderr[:300]}")
+                res = subprocess.run([
+                    'ffmpeg', '-y', *inputs, 
+                    '-filter_complex', "".join(v_filters), 
+                    '-map', '[vout]', '-map', '[aout]', 
+                    '-t', str(dur), 
+                    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', 
+                    '-c:a', 'aac', '-b:a', '192k', 
+                    '-pix_fmt', 'yuv420p', out_p
+                ], capture_output=True, text=True)
+                
+                if res.returncode != 0: 
+                    st.error(f"FFmpeg Compilation Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered! Subtitle Palette: {arch['label']}")
+                    st.success(f"🎉 Master Reel Rendered! Subtitles: {arch['label']}")
 
     if "rendered_video_path" in st.session_state:
         vp = st.session_state["rendered_video_path"]
@@ -516,7 +646,6 @@ with tab2:
             db["last_scheduled_date"], db["last_scheduled_slot"] = c_d, c_s
             save_db(db)
             
-            # Clear draft files on completion
             if os.path.exists(DRAFT_JSON_PATH): os.remove(DRAFT_JSON_PATH)
             if os.path.exists(DRAFT_AUDIO_PATH): os.remove(DRAFT_AUDIO_PATH)
             
@@ -526,6 +655,7 @@ with tab2:
             if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
             st.rerun()
 
+# --- TAB 3: QUEUE LEDGER ---
 with tab3:
     st.markdown(f"### 📋 Scheduled Queue ({len(db.get('scheduled_videos', []))})")
     for item in reversed(db.get("scheduled_videos", [])):
