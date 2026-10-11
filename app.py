@@ -380,7 +380,7 @@ def generate_video_package(raw_api_key, angle):
       "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 prompt ({angle['macro_symbol']})",
       "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 prompt",
       "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 prompt",
-      "thumbnail_prompt": "Thumbnail prompt",
+      "thumbnail_prompt": "High-contrast 9:16 vertical portrait prompt with bold hook text suggestion",
       "youtube_title": "High CTR Title #shorts #stoicism",
       "youtube_description": "Full description with handles and hashtags",
       "youtube_pinned_comment": "Debate question with 1️⃣/2️⃣ options"
@@ -412,7 +412,7 @@ def generate_video_package(raw_api_key, angle):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v1.1 // STABLE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v1.2 // PRODUCTION</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -453,7 +453,7 @@ with st.expander("🔑 API CREDENTIALS", expanded=(not bool(st.session_state["ap
 # ---------------------------------------------------------
 tab_synth, tab_render, tab_queue = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER"])
 
-# --- TAB 1: SCRIPT & GOOGLE FLOW PROMPTS ---
+# --- TAB 1: SCRIPT & ALL 5 GOOGLE FLOW PROMPTS ---
 with tab_synth:
     theme_options = ["🎲 Random / AI Choice"] + [a["theme"] for a in VIRAL_ANGLES]
     chosen_theme_name = st.selectbox("Stoic Psychological Angle", theme_options)
@@ -492,13 +492,20 @@ with tab_synth:
         st.audio(st.session_state["active_video_pkg"]["audio_path"])
         
         st.markdown("### 📋 Copy Google Flow Prompts")
-        for idx, key in enumerate(["scene1_prompt", "scene2_prompt", "scene3_prompt", "scene4_prompt"]):
+        prompt_cards = [
+            ("1. SCENE 1 PROMPT (4S)", "scene1_prompt"),
+            ("2. SCENE 2 PROMPT (MACRO 4S)", "scene2_prompt"),
+            ("3. SCENE 3 PROMPT (4S)", "scene3_prompt"),
+            ("4. SCENE 4 PROMPT (4S)", "scene4_prompt"),
+            ("5. THUMBNAIL PROMPT (9:16 HIGH-CTR)", "thumbnail_prompt")
+        ]
+        for idx, (label, key) in enumerate(prompt_cards):
             prompt_text = pkg.get(key, "")
-            st.text_area(f"Scene {idx+1} Prompt", prompt_text, height=75)
+            st.text_area(label, prompt_text, height=75)
             escaped_prompt = json.dumps(prompt_text)
             components.html(f"""
             <button id="pbtn_{idx}" onclick="copyPrompt({idx})" style="width: 100%; height: 2.2rem; background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; font-weight: 700; font-family: monospace; font-size: 11px; cursor: pointer;">
-                📋 COPY SCENE {idx+1} PROMPT
+                📋 COPY {label}
             </button>
             <script>
             function copyPrompt(i) {{
@@ -509,7 +516,7 @@ with tab_synth:
                     b.style.background = "#059669";
                     b.style.color = "#FFFFFF";
                     setTimeout(function() {{
-                        b.innerText = "📋 COPY SCENE " + (i + 1) + " PROMPT";
+                        b.innerText = "📋 COPY {label}";
                         b.style.background = "rgba(56, 189, 248, 0.15)";
                         b.style.color = "#38BDF8";
                     }}, 2000);
@@ -520,14 +527,36 @@ with tab_synth:
 
 # --- TAB 2: COMPOSE & RENDER REEL ---
 with tab_render:
-    st.markdown("### 📥 Upload Your 4 Google Flow Clips")
+    st.markdown("### 📥 1. Upload Your 4 Google Flow Video Clips")
     uploaded_clips = st.file_uploader(
-        "Select the 4 vertical video files from your phone gallery (scene1 - scene4)",
+        "Select the 4 vertical video clips from your phone gallery",
         type=["mp4", "mov"],
         accept_multiple_files=True
     )
     
-    uploaded_music = st.file_uploader("Optional: Custom Background Music (MP3)", type=["mp3"])
+    st.markdown("### 🖼️ 2. Optional: Thumbnail Cleaner (Auto-Patch Watermark)")
+    uploaded_thumb = st.file_uploader("Upload raw Google Flow thumbnail (clean_thumbnail.png)", type=["png", "jpg", "jpeg", "webp"])
+    if uploaded_thumb:
+        try:
+            raw_thumb = Image.open(uploaded_thumb).convert("RGB")
+            tw, th = raw_thumb.size
+            tdraw = ImageDraw.Draw(raw_thumb)
+            bg_col = raw_thumb.getpixel((int(tw * 0.90), int(th * 0.97)))
+            tdraw.rectangle([int(tw * 0.92), int(th * 0.955), tw, th], fill=bg_col)
+            
+            t_buf = io.BytesIO()
+            raw_thumb.save(t_buf, format="PNG", quality=98)
+            st.download_button(
+                label="💾 Download Watermark-Cleaned Thumbnail",
+                data=t_buf.getvalue(),
+                file_name=f"{target_date.replace('-', '')}_clean_thumbnail.png",
+                mime="image/png"
+            )
+        except Exception as e:
+            st.warning(f"Could not patch thumbnail: {e}")
+
+    st.markdown("### 🎵 3. Optional: Background Music")
+    uploaded_music = st.file_uploader("Select MP3 track (or leave empty for voice only)", type=["mp3"])
     
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
         if "active_video_pkg" not in st.session_state:
