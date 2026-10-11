@@ -273,7 +273,7 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE ENGINE (PROVEN COLAB SPEC WITH LEAD DELAY)
+# 5. SUBTITLE ENGINE (PROVEN ACOUSTIC TIMINGS)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
@@ -292,7 +292,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
     events = []
     
-    # Priority 1: Exact acoustic word boundaries from Edge-TTS
+    # Priority 1: Exact acoustic boundaries from Edge-TTS
     if timed_words and len(timed_words) >= 5:
         clean_words = []
         for tw in timed_words:
@@ -665,7 +665,6 @@ with tab2:
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
-                # Proven Colab filter with explicit fontsdir
                 v_filters = [
                     f"[0:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v0];",
                     f"[1:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v1];",
@@ -690,14 +689,15 @@ with tab2:
                 else:
                     active_bgm_path, _ = resolve_background_track(chosen_bgm_mode, arch_key)
 
+                # Split voiceover to maintain narration while ducking background music
                 if active_bgm_path and os.path.exists(active_bgm_path):
                     inputs.extend(['-i', active_bgm_path])
                     midx = 6 if logo else 5
                     v_filters.append(
-                        f";[4:a]loudnorm=I=-14:TP=-1.0:LRA=7[vo_clean];"
+                        f";[4:a]loudnorm=I=-14:TP=-1.0:LRA=7,asplit=2[vo_out][vo_sc];"
                         f"[{midx}:a]aloop=loop=-1:size=2e+09,loudnorm=I={bgm_vol_level}:TP=-2.0:LRA=7,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg_clean];"
-                        f"[bg_clean][vo_clean]sidechaincompress=threshold=0.08:ratio=4:attack=50:release=350[bg_ducked];"
-                        f"[vo_clean][bg_ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]"
+                        f"[bg_clean][vo_sc]sidechaincompress=threshold=0.08:ratio=4:attack=50:release=350[bg_ducked];"
+                        f"[vo_out][bg_ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]"
                     )
                 else: 
                     v_filters.append(";[4:a]loudnorm=I=-14:TP=-1.0:LRA=7[aout]")
