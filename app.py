@@ -28,7 +28,6 @@ st.markdown("""
     .stDownloadButton>button { background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; color: white !important; border-radius: 10px !important; height: 3.2rem !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 700 !important; width: 100% !important; }
     .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; margin: 2px; }
     .badge-green { background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.25); }
-    .badge-blue  { background: rgba(56, 189, 248, 0.12); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.25); }
     .badge-amber { background: rgba(245, 158, 11, 0.12); color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.25); }
     .badge-purple{ background: rgba(168, 85, 247, 0.12); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.25); }
 </style>
@@ -39,6 +38,9 @@ st.markdown("""
 # ---------------------------------------------------------
 DATA_DIR, TMP_DIR, FONTS_DIR = os.path.join(os.getcwd(), "data"), os.path.join(os.getcwd(), "tmp"), os.path.join(os.getcwd(), "fonts")
 for d in [DATA_DIR, TMP_DIR, FONTS_DIR]: os.makedirs(d, exist_ok=True)
+
+DRAFT_JSON_PATH = os.path.join(DATA_DIR, "active_draft.json")
+DRAFT_AUDIO_PATH = os.path.join(DATA_DIR, "active_audio.mp3")
 
 @st.cache_resource(show_spinner=False)
 def ensure_dejavu_font():
@@ -103,14 +105,14 @@ THEMES_DATABASE = [
 ]
 
 SETTINGS_MATRIX = [
-    {"n": "Citadel Colonnades", "d": "Within towering monolithic ancient stone colonnades and rain-slicked courtyards with bronze braziers casting dramatic shadows."},
-    {"n": "Coastal Cliffs", "d": "Atop high windswept coastal cliffs overlooking turbulent dark ocean waves crashing against jagged basalt rocks in atmospheric fog."},
-    {"n": "Stone Workshop", "d": "Inside a secluded ancient stone workshop with drafting parchment, beeswax candles, deep shadows, and glowing forge embers."},
-    {"n": "Mountain Summit", "d": "Traversing a barren rocky mountain pass under cold dramatic grey skies and swirling morning mist beside weathered stone shrines."}
+    {"n": "The Ancient Citadel Colonnades", "d": "Within towering monolithic ancient stone colonnades and rain-slicked courtyards with bronze braziers casting dramatic shadows."},
+    {"n": "The Windswept Coastal Cliffs", "d": "Atop high windswept coastal cliffs overlooking turbulent dark ocean waves crashing against jagged basalt rocks in atmospheric fog."},
+    {"n": "The Secluded Stone Workshop", "d": "Inside a secluded ancient stone workshop with drafting parchment, beeswax candles, deep shadows, and glowing forge embers."},
+    {"n": "The Rugged Mountain Summit", "d": "Traversing a barren rocky mountain pass under cold dramatic grey skies and swirling morning mist beside weathered stone shrines."}
 ]
 
 # ---------------------------------------------------------
-# 4. CADENCE & COOLDOWN PERSISTENCE
+# 4. CADENCE & DRAFT VAULT PERSISTENCE
 # ---------------------------------------------------------
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
 def load_db():
@@ -147,6 +149,47 @@ def get_next_slot(base_d=None, base_s=None):
         if now_ist.time() < t1: return td.strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
         elif now_ist.time() < t2: return td.strftime("%Y-%m-%d"), "SLOT 2 (EVENING)", s2_t
         else: return (td + timedelta(days=1)).strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
+
+target_d, target_s, target_t = get_next_slot()
+
+# Pre-load recovery: automatically restore "The Discipline Engine" if no draft exists
+def init_draft_vault():
+    if not os.path.exists(DRAFT_JSON_PATH):
+        sample_pkg = {
+            "title_concept": "The Discipline Engine",
+            "hook_banner": "ACTION CURES SELF-PITY",
+            "subtitle_archetype": "FORGE_AMBER",
+            "script": "Action cures self-pity. Waiting to feel inspired is a dangerous trap forged by comfort. Emotions are fragile allies that abandon you the moment duty demands sacrifice. A disciplined man advances even when his flesh rebels. Do not wait for fire; relentless motion strikes the spark. Silence your excuses, endure the bitter friction, and when inner weakness tempts you to surrender, rise up immediately and remember that...",
+            "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle standing resolute within towering monolithic ancient stone colonnades.",
+            "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Flint and steel striking violently to generate a sudden bright spark in moody chiaroscuro lighting.",
+            "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] An original fictional mature man in dark woolen mantle turning with calm stoic resolve in atmospheric stone corridors.",
+            "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Close up portrait of an original fictional mature man with weathered beard and calm focused gaze in dignified silent composure.",
+            "thumbnail_prompt": "[Vertical 9:16 cinematic portrait photograph] A striking high-contrast portrait of an original fictional mature man with weathered lined face and beard in dark woolen mantle standing in citadel colonnades with clean negative space.",
+            "youtube_title": "ACTION Cures Self-Pity | The Stoic Power of Discipline #shorts #stoicism",
+            "youtube_description": "Waiting to feel inspired is a trap forged by comfort. A disciplined man advances even when his flesh rebels.\n\nSubscribe to @EchoesOfWisdomOfficial\n#stoicism #discipline #focus #shorts",
+            "youtube_pinned_comment": "When discipline is tested: 1️⃣ Strike the spark and move immediately, or 2️⃣ Wait until motivation arrives? Drop 1 or 2 below. 👇",
+            "facebook_title": "Action Cures Self-Pity | Stoic Discipline",
+            "caption_hook": "ACTION CURES SELF-PITY",
+            "caption_lesson": "Waiting to feel inspired is a trap forged by comfort. A disciplined man advances even when his emotions rebel.",
+            "debate_question": "When duty calls and comfort tempts:",
+            "choice_1": "Act immediately without waiting",
+            "choice_2": "Wait for inspiration to strike",
+            "facebook_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Focus #Reels"
+        }
+        draft_payload = {
+            "pkg": sample_pkg,
+            "t_id": "MYTH_OF_WAITING",
+            "p": "Relentless Focus",
+            "m": "Flint and steel striking violently to generate a sudden bright spark",
+            "s": "The Ancient Citadel Colonnades",
+            "date": target_d,
+            "slot": target_s,
+            "time": target_t
+        }
+        with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump(draft_payload, f, indent=2)
+
+init_draft_vault()
 
 # ---------------------------------------------------------
 # 5. AUDIO & SUBTITLE ENGINE (NO WHISPER)
@@ -185,6 +228,18 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     for st_t, en_t, txt in events: ass += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
     with open(ass, "w", encoding="utf-8") as f: f.write(ass)
     return events
+
+# Load persistent draft into session
+if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH):
+    try:
+        with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f:
+            d_data = json.load(f)
+        if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000:
+            asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH))
+        d_data["audio"] = DRAFT_AUDIO_PATH
+        d_data["timings"] = []
+        st.session_state["active_video_pkg"] = d_data
+    except Exception: pass
 
 # ---------------------------------------------------------
 # 6. SCRIPT GENERATOR
@@ -235,8 +290,8 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 # 7. TELEMETRY & CADENCE ACCORDION
 # ---------------------------------------------------------
-st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.1 // COMPACT</span></div>', unsafe_allow_html=True)
-target_d, target_s, target_t = get_next_slot()
+st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.2 // VAULT PROTECTED</span></div>', unsafe_allow_html=True)
+
 recent_ids = db.get("used_theme_ids", [])[-14:]
 fresh_count = len(THEMES_DATABASE) - len(set(recent_ids))
 
@@ -303,25 +358,48 @@ with tab1:
                 if err or not pkg: st.error(err)
                 else:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
-                    a_path = os.path.join(TMP_DIR, "audio.mp3")
-                    timings = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
-                    st.session_state["active_video_pkg"] = {"pkg": pkg, "t_id": t_obj["id"], "p": t_obj["p"], "m": m_choice, "s": s_obj["n"], "audio": a_path, "timings": timings, "date": target_d, "slot": target_s, "time": target_t}
-                    st.success(f"Generated! {t_obj['t']} | {s_obj['n']}")
+                    timings = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
+                    
+                    draft_data = {
+                        "pkg": pkg,
+                        "t_id": t_obj["id"],
+                        "p": t_obj["p"],
+                        "m": m_choice,
+                        "s": s_obj["n"],
+                        "audio": DRAFT_AUDIO_PATH,
+                        "timings": timings,
+                        "date": target_d,
+                        "slot": target_s,
+                        "time": target_t
+                    }
+                    with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
+                        json.dump(draft_data, f, indent=2)
+                    st.session_state["active_video_pkg"] = draft_data
+                    st.success(f"Locked to Cloud Draft Vault! {t_obj['t']} | {s_obj['n']}")
 
     if "active_video_pkg" in st.session_state:
         p_data = st.session_state["active_video_pkg"]
         pkg = p_data["pkg"]
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
-        st.markdown(f"**🏛️ Pillar:** `{p_data['p']}` | **Palette:** `{SUBTITLE_ARCHETYPES.get(pkg['subtitle_archetype'], SUBTITLE_ARCHETYPES['IMPERIAL_GOLD'])['label']}`")
-        st.markdown(f"**🔍 Scene 2 Metaphor:** `{p_data['m']}`")
-        st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg['script']}*")
-        st.audio(p_data["audio"])
+        st.markdown(f"**🏛️ Pillar:** `{p_data.get('p', 'Relentless Focus')}` | **Palette:** `{SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}`")
+        st.markdown(f"**🎬 Setting:** `{p_data.get('s', 'Citadel Colonnades')}`")
+        st.markdown(f"**🔍 Scene 2 Metaphor:** `{p_data.get('m', 'Flint and steel')}`")
+        st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
+        
+        if os.path.exists(DRAFT_AUDIO_PATH):
+            st.audio(DRAFT_AUDIO_PATH)
         
         st.markdown("### 📋 Copy Google Flow Prompts")
         for i, (lbl, k) in enumerate([("SCENE 1 (Hook)", "scene1_prompt"), ("SCENE 2 (Macro)", "scene2_prompt"), ("SCENE 3 (Action)", "scene3_prompt"), ("SCENE 4 (Resolve)", "scene4_prompt"), ("THUMBNAIL (9:16)", "thumbnail_prompt")]):
             st.text_area(lbl, pkg.get(k, ""), height=70)
             render_copy(f"pr_{i}", f"COPY {lbl}", pkg.get(k, ""))
+
+        if st.button("🗑️ Discard Draft & Start Fresh"):
+            if os.path.exists(DRAFT_JSON_PATH): os.remove(DRAFT_JSON_PATH)
+            if os.path.exists(DRAFT_AUDIO_PATH): os.remove(DRAFT_AUDIO_PATH)
+            if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
+            st.rerun()
 
 with tab2:
     st.markdown("### 📥 1. Upload Your 4 Google Flow Clips")
@@ -343,13 +421,15 @@ with tab2:
     music = st.file_uploader("Optional: Background Music (MP3)", type=["mp3"])
     
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
-        if "active_video_pkg" not in st.session_state: st.error("Generate script in Tab 1 first.")
+        if "active_video_pkg" not in st.session_state: st.error("No active draft loaded in Tab 1.")
         elif not clips or len(clips) < 4: st.error(f"Please upload all 4 clips (Found {len(clips) if clips else 0}/4).")
         else:
             with st.spinner("⚡ Assembling video & burning subtitles..."):
                 p_data = st.session_state["active_video_pkg"]
-                pkg, timings, a_path = p_data["pkg"], p_data["timings"], p_data["audio"]
-                arch = SUBTITLE_ARCHETYPES.get(pkg.get("subtitle_archetype"), SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
+                pkg = p_data["pkg"]
+                timings = p_data.get("timings", [])
+                a_path = DRAFT_AUDIO_PATH
+                arch = SUBTITLE_ARCHETYPES.get(pkg.get("subtitle_archetype"), SUBTITLE_ARCHETYPES["FORGE_AMBER"])
                 
                 c_paths = []
                 for i, c in enumerate(clips[:4]):
@@ -358,13 +438,13 @@ with tab2:
                     c_paths.append(cp)
 
                 probe = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', a_path], capture_output=True, text=True)
-                dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 28.0) + 0.6
+                dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 24.0) + 0.6
                 speed = (dur / 4.0) / 4.0
 
                 ass_p = os.path.join(TMP_DIR, "subtitles.ass")
-                build_ass_subtitles(timings, pkg["script"], ass_p, dur, pkg.get("subtitle_archetype", "IMPERIAL_GOLD"))
+                build_ass_subtitles(timings, pkg["script"], ass_p, dur, pkg.get("subtitle_archetype", "FORGE_AMBER"))
 
-                banner = pkg.get("hook_banner", "MOVE IN SILENCE").replace("'", "\\'").replace(":", "\\:")
+                banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 v_filters = [
                     f"[0:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v0];",
@@ -393,13 +473,16 @@ with tab2:
                 if res.returncode != 0: st.error(f"FFmpeg Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered! Palette: {arch['label']}")
+                    st.success(f"🎉 Master Reel Rendered! Subtitle Palette: {arch['label']}")
 
     if "rendered_video_path" in st.session_state:
         vp = st.session_state["rendered_video_path"]
         st.video(vp)
         p_data = st.session_state["active_video_pkg"]
-        pkg, c_d, c_s, c_t = p_data["pkg"], p_data["date"], p_data["slot"], p_data["time"]
+        pkg = p_data["pkg"]
+        c_d = p_data.get("date", target_d)
+        c_s = p_data.get("slot", target_s)
+        c_t = p_data.get("time", target_t)
         slug = re.sub(r'[^a-zA-Z0-9]+', '_', pkg.get('hook_banner', 'reel')).strip('_').lower()
         exp_name = f"{c_d.replace('-','')}_{slug}.mp4"
 
@@ -427,15 +510,20 @@ with tab2:
         st.markdown('<div style="margin: 10px 0;"><a href="https://business.facebook.com/latest/composer" target="_blank"><button style="width:100%;height:2.8rem;background:#1877F2;color:white;border:none;border-radius:8px;font-weight:700;font-family:monospace;cursor:pointer;">🌐 OPEN META BUSINESS SUITE</button></a></div>', unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
-            db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "theme_id": p_data["t_id"], "title": yt_t, "file": exp_name})
-            if p_data["t_id"] not in db.get("used_theme_ids", []): db.setdefault("used_theme_ids", []).append(p_data["t_id"])
+            db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "theme_id": p_data.get("t_id", "THEME_CUSTOM"), "title": yt_t, "file": exp_name})
+            if p_data.get("t_id") and p_data["t_id"] not in db.get("used_theme_ids", []): db.setdefault("used_theme_ids", []).append(p_data["t_id"])
             if pkg.get("hook_banner") not in db.get("used_hooks", []): db.setdefault("used_hooks", []).append(pkg.get("hook_banner"))
             db["last_scheduled_date"], db["last_scheduled_slot"] = c_d, c_s
             save_db(db)
+            
+            # Clear draft files on completion
+            if os.path.exists(DRAFT_JSON_PATH): os.remove(DRAFT_JSON_PATH)
+            if os.path.exists(DRAFT_AUDIO_PATH): os.remove(DRAFT_AUDIO_PATH)
+            
             nd, ns, nt = get_next_slot(c_d, c_s)
             st.session_state["status_banner"] = f"✓ LOCKED: {exp_name} scheduled! Next slot: {nd} @ {nt} IST ({ns})"
-            del st.session_state["rendered_video_path"]
-            del st.session_state["active_video_pkg"]
+            if "rendered_video_path" in st.session_state: del st.session_state["rendered_video_path"]
+            if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
             st.rerun()
 
 with tab3:
