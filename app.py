@@ -68,7 +68,7 @@ st.markdown("""
         border-radius: 10px !important; 
         height: 3.4rem !important; 
         font-weight: 700 !important; 
-        font-size: 14px !important;
+        font-size: 14px !important; 
         letter-spacing: 0.02em !important;
         text-transform: uppercase !important; 
         width: 100% !important; 
@@ -110,7 +110,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. FILE PATHWAYS (ANCHORED TO REPO ROOT)
+# 2. FILE PATHWAYS & PERSISTENCE ANCHORS
 # ---------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -123,6 +123,7 @@ for d in [DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR]:
 
 DRAFT_JSON_PATH = os.path.join(DATA_DIR, "active_draft.json")
 DRAFT_AUDIO_PATH = os.path.join(DATA_DIR, "active_audio.mp3")
+API_KEY_FILE = os.path.join(DATA_DIR, "gemini_key.txt")
 
 @st.cache_resource(show_spinner=False)
 def ensure_dejavu_font():
@@ -141,6 +142,28 @@ def ensure_dejavu_font():
     return f_path
 
 ensure_dejavu_font()
+
+# Persistent API Key Resolver
+def get_persistent_api_key():
+    if "GEMINI_API_KEY" in st.secrets:
+        return str(st.secrets["GEMINI_API_KEY"]).strip().strip('"').strip("'")
+    if os.getenv("GEMINI_API_KEY"):
+        return os.getenv("GEMINI_API_KEY").strip()
+    if os.path.exists(API_KEY_FILE):
+        try:
+            with open(API_KEY_FILE, "r", encoding="utf-8") as f:
+                saved = f.read().strip()
+                if saved: return saved
+        except Exception: pass
+    return st.session_state.get("api_key", "").strip()
+
+def save_persistent_api_key(key_val):
+    clean = key_val.strip().strip('"').strip("'")
+    st.session_state["api_key"] = clean
+    try:
+        with open(API_KEY_FILE, "w", encoding="utf-8") as f:
+            f.write(clean)
+    except Exception: pass
 
 SUBTITLE_ARCHETYPES = {
     "IMPERIAL_GOLD": {"label": "👑 Imperial Gold", "ass_primary": "&H0000E5FF", "banner_hex": "0xFFE500", "prefix": "gold_"},
@@ -273,7 +296,7 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE ENGINE (PROVEN ACOUSTIC TIMINGS)
+# 5. SUBTITLE SYNCHRONIZER (WITH ACOUSTIC SAFETY FALLBACK)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
@@ -292,7 +315,6 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
     events = []
     
-    # Priority 1: Exact acoustic boundaries from Edge-TTS
     if timed_words and len(timed_words) >= 5:
         clean_words = []
         for tw in timed_words:
@@ -325,7 +347,6 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             if txt:
                 events.append((st_t, en_t, txt))
     else:
-        # Priority 2: Linear distribution with 0.35s speech onset lead delay
         tokens = script_text.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
         vocal_start = 0.35
@@ -373,10 +394,18 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (HARDENED ANATOMICAL RULES)
+# 6. GEMINI GENERATOR (FAULT-TOLERANT WITH DETAILED ERROR)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
-    client = genai.Client(api_key=raw_api_key.strip().strip('"').strip("'"))
+    clean_key = raw_api_key.strip().strip('"').strip("'")
+    if not clean_key:
+        return None, "API Key is empty. Please enter your Gemini API key in 'API CREDENTIALS'."
+    
+    try:
+        client = genai.Client(api_key=clean_key)
+    except Exception as e:
+        return None, f"Could not initialize Gemini Client: {str(e)}"
+        
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
     
     prompt = (
@@ -384,9 +413,9 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f"PILLAR: {t_obj['p']} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
         f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\nFORBIDDEN HOOKS:\n{used_h}\n"
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
-        f"4. Google Flow Character Rules (STRICT ANATOMY ENFORCEMENT):\n"
+        f"4. Google Flow Character Rules (STRICT ANATOMICAL ENFORCEMENT):\n"
         f"   - Character description MUST be: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'\n"
-        f"   - ANATOMICAL CONSTRAINTS: Exactly two arms and two hands only. Hands are kept resting naturally inside the deep folds of the woolen mantle or clasped calmly at waist level. Absolutely no extra limbs, no phantom hands emerging from cloth folds, no mutated fingers, anatomically flawless human anatomy.\n"
+        f"   - ANATOMY CONSTRAINTS: Strictly two arms and two hands only. Hands resting calmly inside the deep woolen mantle folds or clasped at waist level. Flawless human anatomy, no phantom limbs, no extra hands or fingers emerging from fabric folds.\n"
         f"   - Composure: Dignified silent composure, serene stoic expression, calm steady gaze.\n"
         f"5. Prompt Formatting: All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
@@ -395,10 +424,10 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         '  "hook_banner": "3-4 WORDS IN CAPS",\n'
         f'  "subtitle_archetype": "{t_obj["a"]}",\n'
         '  "script": "Full 65-70 word script.",\n'
-        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting, hands resting inside woolen mantle, flawless anatomy, exactly two arms",\n'
+        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting, hands resting inside woolen mantle, flawless anatomy, strictly two arms",\n'
         f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c})",\n'
         '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action, natural posture, no phantom limbs",\n'
-        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up head and shoulders, serene resolve",\n'
+        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up, serene resolve",\n'
         '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, anatomically correct",\n'
         '  "youtube_title": "High CTR Title #shorts #stoicism",\n'
         '  "youtube_description": "Description with handles and hashtags",\n'
@@ -413,20 +442,30 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    for m in ["gemini-2.5-flash", "gemini-2.0-flash"]:
+    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    last_err = ""
+    for m in models_to_try:
         try:
-            r = client.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85))
+            r = client.models.generate_content(
+                model=m, 
+                contents=prompt, 
+                config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85)
+            )
             parsed = json.loads(r.text)
-            if "script" in parsed: return parsed, None
-        except Exception: continue
-    return None, "Gemini API error. Check credentials."
+            if "script" in parsed: 
+                return parsed, None
+        except Exception as err:
+            last_err = str(err)
+            continue
+            
+    return None, f"Gemini Error ({last_err[:120]}...). Please verify your API Key."
 
 # ---------------------------------------------------------
 # 7. TELEMETRY BAR & CADENCE MANAGER
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v3.9 // PERMANENT ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.0 // PRODUCTION REEL ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -462,10 +501,12 @@ with st.expander("📅 PUBLISHING CADENCE & SETTINGS"):
         st.session_state["status_banner"] = f"Cadence locked! Next: {nd} @ {nt} IST ({ns})"
         st.rerun()
 
-api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY", st.session_state.get("api_key", "")))
-with st.expander("🔑 API CREDENTIALS", expanded=(not bool(api_key))):
-    uk = st.text_input("Gemini API Key", value=api_key, type="password")
-    if uk: st.session_state["api_key"] = uk.strip()
+curr_saved_key = get_persistent_api_key()
+with st.expander("🔑 API CREDENTIALS", expanded=(not bool(curr_saved_key))):
+    uk = st.text_input("Gemini API Key", value=curr_saved_key, type="password", placeholder="AIzaSy...")
+    if uk and uk != curr_saved_key:
+        save_persistent_api_key(uk)
+        st.success("API key stored securely in vault!")
 
 def render_copy(bid, label, text):
     b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
@@ -507,15 +548,17 @@ with tab1:
     with col_s2: chosen_arch = st.selectbox("Subtitle Color", ["🤖 Match Theme Archetype"] + list(SUBTITLE_ARCHETYPES.keys()), format_func=lambda x: "🤖 Match Archetype" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"])
 
     if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
-        k = st.session_state.get("api_key", api_key)
-        if not k: st.error("Please enter Gemini API Key.")
+        k = get_persistent_api_key()
+        if not k: 
+            st.error("Please enter your Gemini API Key in the '🔑 API CREDENTIALS' accordion above.")
         else:
             with st.spinner("⚡ Synthesizing script & timed narration..."):
                 t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
                 s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
                 m_choice = random.choice(t_obj["m"])
                 pkg, err = generate_video_package(k, t_obj, m_choice, s_obj)
-                if err or not pkg: st.error(err)
+                if err or not pkg: 
+                    st.error(f"Synthesis Failed: {err}")
                 else:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
                     timings = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
@@ -644,7 +687,6 @@ with tab2:
                 arch_key = pkg.get("subtitle_archetype", "FORGE_AMBER")
                 arch = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["FORGE_AMBER"])
                 
-                # Guarantee acoustic word timings exist
                 timings = p_data.get("timings", [])
                 if not timings or len(timings) < 5:
                     timings = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
@@ -692,7 +734,7 @@ with tab2:
                 else:
                     active_bgm_path, _ = resolve_background_track(chosen_bgm_mode, arch_key)
 
-                # Split voiceover to maintain narration while ducking background music
+                # Voiceover split: maintains audio presence and triggers music ducking
                 if active_bgm_path and os.path.exists(active_bgm_path):
                     inputs.extend(['-i', active_bgm_path])
                     midx = 6 if logo else 5
@@ -729,6 +771,16 @@ with tab2:
         c_d = p_data.get("date", target_d)
         c_s = p_data.get("slot", target_s)
         c_t = p_data.get("time", target_t)
+        active_pillar = p_data.get("p", "Relentless Focus")
+        
+        PLAYLIST_MAP = {
+            "Emotional Immunity": "Echoes of Wisdom | Emotional Immunity & Boundaries",
+            "Relentless Focus": "Echoes of Wisdom | Relentless Focus & Execution",
+            "Mental Fortress": "Echoes of Wisdom | Mental Fortress & Resilience",
+            "Radical Acceptance": "Echoes of Wisdom | Radical Acceptance & Amor Fati"
+        }
+        yt_playlist = PLAYLIST_MAP.get(active_pillar, "Echoes of Wisdom | Timeless Stoicism")
+
         slug = re.sub(r'[^a-zA-Z0-9]+', '_', pkg.get('hook_banner', 'reel')).strip('_').lower()
         exp_name = f"{c_d.replace('-','')}_{slug}.mp4"
 
@@ -738,22 +790,59 @@ with tab2:
         st.divider()
         st.markdown(f"### 🎯 QUEUE: {c_d} @ {c_t} IST ({c_s})")
         
-        # YouTube Shorts Suite
-        yt_t = pkg.get("youtube_title", f"{pkg.get('hook_banner').title()} #shorts")
-        st.text_input("YouTube Title", yt_t)
-        render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
-        yt_d = pkg.get("youtube_description", f"{pkg['script']}\n\nSubscribe to @EchoesOfWisdomOfficial\n#stoicism #shorts")
-        st.text_area("YouTube Description", yt_d, height=110)
-        render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", yt_d)
-        render_copy("yt_p", "COPY PINNED COMMENT", pkg.get("youtube_pinned_comment", "Drop 1 or 2 below. 👇"))
+        # -------------------------------------------------
+        # YOUTUBE SHORTS SUITE (WITH PLAYLIST & PINNED COMMENT)
+        # -------------------------------------------------
+        st.markdown("#### 🔴 YOUTUBE SHORTS SUITE")
+        
+        st.text_input("YouTube Playlist", yt_playlist, key="yt_pl_val")
+        render_copy("yt_pl", "COPY PLAYLIST NAME", yt_playlist)
 
-        # Facebook & Instagram Reels Suite
-        fb_hook = to_unicode_bold(re.sub(r'[^\w\s-]', '', pkg.get("caption_hook", pkg.get("hook_banner", ""))).strip().upper())
-        fb_cap = f"⚡ {fb_hook} 🏛️\n\n{pkg.get('caption_lesson', pkg['script'])}\n\n🤔 {pkg.get('debate_question')}\n1️⃣ {pkg.get('choice_1')}\n2️⃣ {pkg.get('choice_2')}\n\nDrop 1 or 2 below. 👇\n\n• Follow @EchoesOfWisdomOfficial\n\n{pkg.get('facebook_hashtags', '#StoicMindset #EchoesOfWisdom')}"
-        st.text_area("Facebook Reel Caption (Unicode Bold)", fb_cap, height=160)
+        yt_t = pkg.get("youtube_title", f"{pkg.get('hook_banner', 'Stoic Wisdom').title()} #shorts #stoicism")
+        st.text_input("YouTube Title", yt_t, key="yt_t_val")
+        render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
+        
+        yt_d = pkg.get("youtube_description", f"{pkg.get('script', '')}\n\nSubscribe to @EchoesOfWisdomOfficial\n#stoicism #shorts")
+        st.text_area("YouTube Description", yt_d, height=110, key="yt_d_val")
+        render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", yt_d)
+        
+        yt_pin = pkg.get("youtube_pinned_comment", "When facing this moment: 1️⃣ Stand resolute in silence, or 2️⃣ React immediately? Drop 1 or 2 below. 👇")
+        st.text_area("YouTube Pinned Debate Comment", yt_pin, height=75, key="yt_pin_val")
+        render_copy("yt_p", "COPY PINNED COMMENT", yt_pin)
+
+        # -------------------------------------------------
+        # FACEBOOK & INSTAGRAM REELS SUITE
+        # -------------------------------------------------
+        st.markdown("#### 🔵 FACEBOOK & INSTAGRAM REELS SUITE")
+        
+        fb_t = pkg.get("facebook_title", f"{pkg.get('hook_banner', 'Stoic Reel').title()} | Stoic Wisdom")
+        st.text_input("Facebook Reel Title", fb_t, key="fb_t_val")
+        render_copy("fb_t", "COPY FACEBOOK TITLE", fb_t)
+
+        raw_fb_hook = pkg.get("caption_hook", pkg.get("hook_banner", "DISCIPLINE OVER COMFORT"))
+        fb_hook = to_unicode_bold(re.sub(r'[^\w\s-]', '', raw_fb_hook).strip().upper())
+        fb_cap = (
+            f"⚡ {fb_hook} 🏛️\n\n"
+            f"{pkg.get('caption_lesson', pkg.get('script', ''))}\n\n"
+            f"🤔 {pkg.get('debate_question', 'When faced with this choice:')}\n"
+            f"1️⃣ {pkg.get('choice_1', 'Maintain silent composure')}\n"
+            f"2️⃣ {pkg.get('choice_2', 'Defend your honor verbally')}\n\n"
+            f"Drop 1 or 2 below. 👇\n\n"
+            f"• Follow @EchoesOfWisdomOfficial for timeless clarity.\n\n"
+            f"{pkg.get('facebook_hashtags', '#StoicMindset #EchoesOfWisdom #Discipline #Reels')}"
+        )
+        st.text_area("Facebook Reel Caption (Unicode Bold)", fb_cap, height=160, key="fb_cap_val")
         render_copy("fb_c", "COPY FACEBOOK CAPTION", fb_cap)
 
-        st.markdown('<div style="margin: 10px 0;"><a href="https://business.facebook.com/latest/composer" target="_blank"><button style="width:100%;height:2.8rem;background:#1877F2;color:white;border:none;border-radius:8px;font-weight:700;font-family:sans-serif;cursor:pointer;">🌐 OPEN META BUSINESS SUITE</button></a></div>', unsafe_allow_html=True)
+        st.markdown('''
+        <div style="margin: 12px 0 16px 0;">
+            <a href="https://business.facebook.com/latest/reels_composer" target="_blank" style="text-decoration: none;">
+                <button style="width: 100%; height: 3.2rem; background: #1877F2; color: white; border: none; border-radius: 8px; font-weight: 700; font-family: -apple-system, sans-serif; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.35);">
+                    🌐 OPEN META REELS COMPOSER (9:16 NATIVE)
+                </button>
+            </a>
+        </div>
+        ''', unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
             db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "theme_id": p_data.get("t_id", "THEME_CUSTOM"), "title": yt_t, "file": exp_name})
