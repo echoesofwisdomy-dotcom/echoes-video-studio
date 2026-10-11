@@ -9,25 +9,106 @@ from google.genai import types
 import edge_tts
 
 # ---------------------------------------------------------
-# 1. PAGE SETUP & OBSIDIAN TERMINAL UI
+# 1. PAGE SETUP & MODERN EXECUTIVE STUDIO UI
 # ---------------------------------------------------------
 st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+    
     header[data-testid="stHeader"] { background: transparent !important; }
-    .stApp { background-color: #080B11 !important; background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important; font-family: 'Space Grotesk', sans-serif !important; color: #E2E8F0 !important; }
-    .block-container { padding-top: 4rem !important; padding-bottom: 3rem !important; max-width: 680px !important; }
-    div[data-testid="stExpander"] { background: #0E1626 !important; border: 1px solid rgba(56, 189, 248, 0.25) !important; border-radius: 12px !important; margin-bottom: 1rem !important; }
-    div[data-testid="stExpander"] summary { background: #111B30 !important; color: #38BDF8 !important; font-family: 'JetBrains Mono', monospace !important; font-size: 13px !important; font-weight: 700 !important; }
-    label[data-testid="stWidgetLabel"] p { color: #94A3B8 !important; font-family: 'JetBrains Mono', monospace !important; font-size: 11px !important; text-transform: uppercase !important; }
-    .stTextInput>div>div>input, .stTextArea textarea { background-color: #0A0F1D !important; border: 1px solid rgba(56, 189, 248, 0.25) !important; color: #F8FAFC !important; border-radius: 8px !important; }
-    .stButton>button[kind="primary"] { background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important; color: #FFF !important; border-radius: 10px !important; height: 3.4rem !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 700 !important; text-transform: uppercase !important; width: 100% !important; }
-    .stButton>button:not([kind="primary"]) { background: #111B30 !important; color: #E2E8F0 !important; border: 1px solid rgba(56, 189, 248, 0.25) !important; border-radius: 8px !important; font-family: 'JetBrains Mono', monospace !important; }
-    .stDownloadButton>button { background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; color: white !important; border-radius: 10px !important; height: 3.2rem !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 700 !important; width: 100% !important; }
-    .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; margin: 2px; }
+    
+    .stApp { 
+        background-color: #080B11 !important; 
+        background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important; 
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important; 
+        color: #E2E8F0 !important; 
+        -webkit-font-smoothing: antialiased !important;
+    }
+    
+    .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; max-width: 700px !important; }
+    
+    div[data-testid="stExpander"] { 
+        background: #0E1626 !important; 
+        border: 1px solid rgba(56, 189, 248, 0.25) !important; 
+        border-radius: 12px !important; 
+        margin-bottom: 1rem !important; 
+    }
+    
+    div[data-testid="stExpander"] summary { 
+        background: #111B30 !important; 
+        color: #38BDF8 !important; 
+        font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        font-size: 13px !important; 
+        font-weight: 700 !important; 
+        letter-spacing: 0.02em !important;
+    }
+    
+    label[data-testid="stWidgetLabel"] p { 
+        color: #94A3B8 !important; 
+        font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        font-size: 12px !important; 
+        font-weight: 600 !important; 
+        text-transform: uppercase !important; 
+        letter-spacing: 0.04em !important;
+    }
+    
+    .stTextInput>div>div>input, .stTextArea textarea { 
+        background-color: #0A0F1D !important; 
+        border: 1px solid rgba(56, 189, 248, 0.25) !important; 
+        color: #F8FAFC !important; 
+        border-radius: 8px !important; 
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+    }
+    
+    .stButton>button[kind="primary"] { 
+        background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important; 
+        color: #FFF !important; 
+        border-radius: 10px !important; 
+        height: 3.4rem !important; 
+        font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        font-weight: 700 !important; 
+        font-size: 14px !important;
+        letter-spacing: 0.02em !important;
+        text-transform: uppercase !important; 
+        width: 100% !important; 
+    }
+    
+    .stButton>button:not([kind="primary"]) { 
+        background: #111B30 !important; 
+        color: #E2E8F0 !important; 
+        border: 1px solid rgba(56, 189, 248, 0.25) !important; 
+        border-radius: 8px !important; 
+        font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        font-weight: 600 !important;
+    }
+    
+    .stDownloadButton>button { 
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; 
+        color: white !important; 
+        border-radius: 10px !important; 
+        height: 3.2rem !important; 
+        font-family: 'Plus Jakarta Sans', sans-serif !important; 
+        font-weight: 700 !important; 
+        width: 100% !important; 
+    }
+    
+    .badge { 
+        font-family: 'JetBrains Mono', monospace; 
+        font-size: 11px; 
+        font-weight: 600; 
+        padding: 5px 12px; 
+        border-radius: 6px; 
+        display: inline-flex; 
+        align-items: center; 
+        gap: 6px; 
+        margin: 2px; 
+    }
     .badge-green { background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.25); }
+    .badge-blue  { background: rgba(56, 189, 248, 0.12); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.25); }
     .badge-amber { background: rgba(245, 158, 11, 0.12); color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.25); }
     .badge-purple{ background: rgba(168, 85, 247, 0.12); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.25); }
 </style>
@@ -73,32 +154,43 @@ SUBTITLE_ARCHETYPES = {
 }
 
 def get_library_tracks():
-    """Scans the music/ folder for all available MP3 tracks."""
+    """Scans the music/ directory for all available MP3 files."""
     if not os.path.exists(MUSIC_DIR):
         return []
     return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith(".mp3")])
 
 def resolve_background_track(choice_key, archetype_key):
-    """Dynamically resolves and rotates background tracks based on theme archetype."""
+    """Dynamically matches audio files from the music/ folder based on archetype prefix."""
     if choice_key == "NONE":
-        return None
+        return None, "None"
     all_tracks = get_library_tracks()
     if not all_tracks:
-        return None
+        return None, "None"
     
     if choice_key == "AUTO":
         target_prefix = SUBTITLE_ARCHETYPES.get(archetype_key, {}).get("prefix", "gold_")
         matched = [f for f in all_tracks if f.lower().startswith(target_prefix)]
         pool = matched if matched else all_tracks
-        return os.path.join(MUSIC_DIR, random.choice(pool))
+        chosen_file = random.choice(pool)
+        return os.path.join(MUSIC_DIR, chosen_file), chosen_file
     
     if choice_key in all_tracks:
-        return os.path.join(MUSIC_DIR, choice_key)
-    return None
+        return os.path.join(MUSIC_DIR, choice_key), choice_key
+    return None, "None"
 
 def to_unicode_bold(text):
-    n, b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶遭𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
-    return text.translate(str.maketrans(n, b))
+    """Converts text to mathematical Unicode bold characters without spacing anomalies."""
+    res = []
+    for char in text:
+        if 'A' <= char <= 'Z':
+            res.append(chr(0x1D400 + ord(char) - ord('A')))
+        elif 'a' <= char <= 'z':
+            res.append(chr(0x1D41A + ord(char) - ord('a')))
+        elif '0' <= char <= '9':
+            res.append(chr(0x1D7CE + ord(char) - ord('0')))
+        else:
+            res.append(char)
+    return ''.join(res)
 
 # ---------------------------------------------------------
 # 3. 24 THEMES & ROTATING METAPHORS MATRIX
@@ -145,7 +237,7 @@ SETTINGS_MATRIX = [
 ]
 
 # ---------------------------------------------------------
-# 4. CADENCE & PERSISTENT DRAFT VAULT
+# 4. CADENCE & PERSISTENT DATA
 # ---------------------------------------------------------
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
 def load_db():
@@ -186,7 +278,7 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. ACOUSTIC-LOCKED SUBTITLE SYNCHRONIZER
+# 5. SUBTITLE SYNCHRONIZER (WITH ACOUSTIC SAFETY FALLBACK)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
@@ -205,36 +297,51 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
     events = []
     
-    clean_words = []
-    for tw in timed_words:
-        w_txt = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper().strip()
-        if w_txt:
-            clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
+    # Check if word boundary events are present
+    if timed_words and len(timed_words) >= 5:
+        clean_words = []
+        for tw in timed_words:
+            w_txt = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper().strip()
+            if w_txt:
+                clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
 
-    chunk = []
-    for i, tw in enumerate(clean_words):
-        chunk.append(tw)
-        is_punct = any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';'])
-        has_pause = (i + 1 < len(clean_words)) and (clean_words[i + 1]['start'] - tw['end'] >= 0.25)
-        
-        if is_punct or has_pause or len(chunk) >= 3:
-            st_t = chunk[0]['start']
-            if i + 1 < len(clean_words):
-                en_t = clean_words[i + 1]['start']
-            else:
-                en_t = min(total_dur, chunk[-1]['end'] + 0.25)
+        chunk = []
+        for i, tw in enumerate(clean_words):
+            chunk.append(tw)
+            is_punct = any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';'])
+            has_pause = (i + 1 < len(clean_words)) and (clean_words[i + 1]['start'] - tw['end'] >= 0.25)
             
+            if is_punct or has_pause or len(chunk) >= 3:
+                st_t = chunk[0]['start']
+                if i + 1 < len(clean_words):
+                    en_t = clean_words[i + 1]['start']
+                else:
+                    en_t = min(total_dur, chunk[-1]['end'] + 0.3)
+                
+                txt = " ".join([c['word'] for c in chunk]).strip()
+                if txt:
+                    events.append((st_t, en_t, txt))
+                chunk = []
+                
+        if chunk:
+            st_t = chunk[0]['start']
+            en_t = min(total_dur, chunk[-1]['end'] + 0.3)
             txt = " ".join([c['word'] for c in chunk]).strip()
             if txt:
                 events.append((st_t, en_t, txt))
-            chunk = []
-            
-    if chunk:
-        st_t = chunk[0]['start']
-        en_t = min(total_dur, chunk[-1]['end'] + 0.25)
-        txt = " ".join([c['word'] for c in chunk]).strip()
-        if txt:
-            events.append((st_t, en_t, txt))
+    else:
+        # Acoustic safety fallback: step through word groups with vocal lead-in
+        tokens = script_text.split()
+        token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
+        vocal_start = 0.35  # Do not display before narrator begins speaking
+        step = max(0.5, (total_dur - vocal_start - 0.4) / max(1, len(token_groups)))
+        
+        for idx, grp in enumerate(token_groups):
+            st_t = vocal_start + (idx * step)
+            en_t = min(total_dur, vocal_start + ((idx + 1) * step))
+            txt = re.sub(r'[^\w\s\',.!?-]', '', " ".join(grp)).upper().strip()
+            if txt:
+                events.append((st_t, en_t, txt))
 
     def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
     
@@ -258,15 +365,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         f.write(ass_doc)
     return events
 
-# Persistent Draft Loader (Maintains acoustic timings in disk vault)
+# Draft vault loader
 if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH):
     try:
         with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f:
             d_data = json.load(f)
-        if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000 or not d_data.get("timings"):
+        if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000:
             timings = asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH))
             d_data["timings"] = timings
-            with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as fw: json.dump(d_data, fw, indent=2)
         d_data["audio"] = DRAFT_AUDIO_PATH
         st.session_state["active_video_pkg"] = d_data
     except Exception: pass
@@ -320,7 +426,11 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 # 7. TELEMETRY BAR & CADENCE MANAGER
 # ---------------------------------------------------------
-st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.6 // PRODUCTION</span></div>', unsafe_allow_html=True)
+st.markdown("""
+<div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v3.7 // STUDIO SUITE</span>
+</div>
+""", unsafe_allow_html=True)
 
 recent_ids = db.get("used_theme_ids", [])[-14:]
 fresh_count = len(THEMES_DATABASE) - len(set(recent_ids))
@@ -363,7 +473,7 @@ def render_copy(bid, label, text):
     b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
     components.html(f"""
     <div style="margin: 0; padding: 0;">
-        <button id="b_{bid}" onclick="copyFromB64('{bid}', '{b64_val}', '{label}')" style="width:100%;height:2.4rem;background:rgba(56,189,248,0.15);color:#38BDF8;border:1px solid rgba(56,189,248,0.4);border-radius:6px;font-family:monospace;font-weight:700;font-size:11px;cursor:pointer;">
+        <button id="b_{bid}" onclick="copyFromB64('{bid}', '{b64_val}', '{label}')" style="width:100%;height:2.6rem;background:rgba(56,189,248,0.12);color:#38BDF8;border:1px solid rgba(56,189,248,0.35);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:0.02em;transition:all 0.2s;">
             📋 {label}
         </button>
     </div>
@@ -377,13 +487,13 @@ def render_copy(bid, label, text):
             el.style.color = '#FFF';
             setTimeout(() => {{
                 el.innerText = '📋 ' + lbl;
-                el.style.background = 'rgba(56,189,248,0.15)';
+                el.style.background = 'rgba(56,189,248,0.12)';
                 el.style.color = '#38BDF8';
             }}, 2000);
         }});
     }}
     </script>
-    """, height=44)
+    """, height=48)
 
 # ---------------------------------------------------------
 # 8. WORKSPACE TABS
@@ -471,7 +581,7 @@ with tab2:
     
     avail_tracks = get_library_tracks()
     bgm_options = {
-        "AUTO": f"🤖 Auto-Rotate by Theme ({SUBTITLE_ARCHETYPES.get(current_arch_key, {})['label']})",
+        "AUTO": f"🤖 Auto-Match Theme ({SUBTITLE_ARCHETYPES.get(current_arch_key, {})['label']})",
         "NONE": "🔇 Narration Only (Silent background)",
         "UPLOAD": "📁 Upload New MP3 File"
     }
@@ -488,6 +598,13 @@ with tab2:
     if chosen_bgm_mode == "UPLOAD":
         custom_music_file = st.file_uploader("Upload MP3 Track", type=["mp3"])
 
+    # Track readiness indicator
+    res_path, res_name = resolve_background_track(chosen_bgm_mode, current_arch_key)
+    if res_path and os.path.exists(res_path):
+        st.markdown(f'<div style="color: #34D399; font-family: monospace; font-size: 11px; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
+    elif chosen_bgm_mode != "NONE":
+        st.markdown('<div style="color: #FBBF24; font-family: monospace; font-size: 11px; margin-top: -6px; margin-bottom: 8px;">ℹ️ No matching MP3 found in music/ folder. Render will proceed with clean narration.</div>', unsafe_allow_html=True)
+
     st.markdown("### 🖼️ 3. Thumbnail Watermark Elimination (Lossless Aspect-Ratio Crop)")
     thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
     if thumb:
@@ -495,7 +612,7 @@ with tab2:
             im = Image.open(thumb).convert("RGB")
             w, h = im.size
             
-            # Lossless crop: trim bottom 5.5% (watermark area) while preserving true 9:16 aspect ratio
+            # Lossless crop: trim bottom 5.5% watermark area while preserving true 9:16 vertical framing
             crop_h = h - int(h * 0.055)
             target_aspect = 9.0 / 16.0
             crop_w = int(crop_h * target_aspect)
@@ -541,6 +658,7 @@ with tab2:
 
                 ass_p = os.path.join(TMP_DIR, "subtitles.ass")
                 build_ass_subtitles(timings, pkg["script"], ass_p, dur, arch_key)
+                clean_ass_path = ass_p.replace("'", "\\'").replace(":", "\\:")
 
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
@@ -551,7 +669,7 @@ with tab2:
                     f"[2:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v2];",
                     f"[3:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v3];",
                     f"[v0][v1][v2][v3]concat=n=4:v=1:a=0[vb];",
-                    f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{ass_p}':fontsdir='{FONTS_DIR}'[vsub]"
+                    f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',subtitles='{clean_ass_path}'[vsub]"
                 ]
                 
                 inputs = ['-i', c_paths[0], '-i', c_paths[1], '-i', c_paths[2], '-i', c_paths[3], '-i', a_path]
@@ -569,8 +687,8 @@ with tab2:
                     custom_p = os.path.join(TMP_DIR, "custom_bgm.mp3")
                     with open(custom_p, "wb") as f: f.write(custom_music_file.read())
                     active_bgm_path = custom_p
-                elif chosen_bgm_mode in ["AUTO"] + avail_tracks:
-                    active_bgm_path = resolve_background_track(chosen_bgm_mode, arch_key)
+                else:
+                    active_bgm_path, _ = resolve_background_track(chosen_bgm_mode, arch_key)
 
                 # Dynamic Audio Leveling Engine: EBU R128 + Sidechain Auto-Ducking
                 if active_bgm_path and os.path.exists(active_bgm_path):
@@ -599,7 +717,7 @@ with tab2:
                     st.error(f"FFmpeg Compilation Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered! Subtitles: {arch['label']} (Dynamic Loudness Leveled)")
+                    st.success(f"🎉 Master Reel Rendered! Subtitles: {arch['label']} (Dynamic Audio Leveled)")
 
     if "rendered_video_path" in st.session_state:
         vp = st.session_state["rendered_video_path"]
@@ -628,12 +746,12 @@ with tab2:
         render_copy("yt_p", "COPY PINNED COMMENT", pkg.get("youtube_pinned_comment", "Drop 1 or 2 below. 👇"))
 
         # Facebook & Instagram Reels Suite
-        fb_hook = to_unicode_bold(re.sub(r'[^\w\s]', '', pkg.get("caption_hook", pkg.get("hook_banner", ""))).strip().upper())
+        fb_hook = to_unicode_bold(re.sub(r'[^\w\s-]', '', pkg.get("caption_hook", pkg.get("hook_banner", ""))).strip().upper())
         fb_cap = f"⚡ {fb_hook} 🏛️\n\n{pkg.get('caption_lesson', pkg['script'])}\n\n🤔 {pkg.get('debate_question')}\n1️⃣ {pkg.get('choice_1')}\n2️⃣ {pkg.get('choice_2')}\n\nDrop 1 or 2 below. 👇\n\n• Follow @EchoesOfWisdomOfficial\n\n{pkg.get('facebook_hashtags', '#StoicMindset #EchoesOfWisdom')}"
         st.text_area("Facebook Reel Caption (Unicode Bold)", fb_cap, height=160)
         render_copy("fb_c", "COPY FACEBOOK CAPTION", fb_cap)
 
-        st.markdown('<div style="margin: 10px 0;"><a href="https://business.facebook.com/latest/composer" target="_blank"><button style="width:100%;height:2.8rem;background:#1877F2;color:white;border:none;border-radius:8px;font-weight:700;font-family:monospace;cursor:pointer;">🌐 OPEN META BUSINESS SUITE</button></a></div>', unsafe_allow_html=True)
+        st.markdown('<div style="margin: 10px 0;"><a href="https://business.facebook.com/latest/composer" target="_blank"><button style="width:100%;height:2.8rem;background:#1877F2;color:white;border:none;border-radius:8px;font-weight:700;font-family:sans-serif;cursor:pointer;">🌐 OPEN META BUSINESS SUITE</button></a></div>', unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
             db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "theme_id": p_data.get("t_id", "THEME_CUSTOM"), "title": yt_t, "file": exp_name})
