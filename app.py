@@ -1,12 +1,5 @@
-import os
-import io
-import json
-import re
-import random
-import asyncio
-import subprocess
+import os, io, json, re, random, asyncio, subprocess, requests
 from datetime import datetime, timedelta, timezone, time
-import requests
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
@@ -18,745 +11,440 @@ import edge_tts
 # ---------------------------------------------------------
 # 1. PAGE SETUP & DARK OBSIDIAN UI
 # ---------------------------------------------------------
-st.set_page_config(
-    page_title="Echoes Video Studio // Terminal",
-    page_icon="🎬",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
-
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-        height: 2.5rem !important;
-    }
-
-    .stApp {
-        background-color: #080B11 !important;
-        background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important;
-        font-family: 'Space Grotesk', -apple-system, sans-serif !important;
-        color: #E2E8F0 !important;
-    }
-    
-    .block-container {
-        padding-top: 4.2rem !important;
-        padding-bottom: 3.5rem !important;
-        max-width: 680px !important;
-    }
-
-    div[data-testid="stExpander"] {
-        background: #0E1626 !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
-        overflow: hidden !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    div[data-testid="stExpander"] summary {
-        background: #111B30 !important;
-        color: #38BDF8 !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.05em !important;
-        padding: 12px 16px !important;
-        border-bottom: 1px solid rgba(56, 189, 248, 0.15) !important;
-    }
-
-    div[data-testid="stExpander"] summary:hover {
-        color: #7DD3FC !important;
-    }
-
-    label[data-testid="stWidgetLabel"] p, .stTextInput label p, .stSelectbox label p, .stDateInput label p, .stTimeInput label p {
-        color: #94A3B8 !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.06em !important;
-        text-transform: uppercase !important;
-    }
-
-    div[data-baseweb="select"] > div {
-        background-color: #0A0F1D !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 8px !important;
-        color: #F8FAFC !important;
-    }
-
-    .stTextInput>div>div>input, .stTextArea textarea, .stDateInput input, .stTimeInput input {
-        background-color: #0A0F1D !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 8px !important;
-        color: #F8FAFC !important;
-        font-family: 'Space Grotesk', sans-serif !important;
-        font-size: 14px !important;
-    }
-
-    .stButton>button[kind="primary"] {
-        background: linear-gradient(135deg, #0284C7 0%, #0369A1 50%, #075985 100%) !important;
-        color: #FFFFFF !important;
-        border: 1px solid rgba(56, 189, 248, 0.4) !important;
-        border-radius: 10px !important;
-        height: 3.4rem !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-weight: 700 !important;
-        font-size: 14px !important;
-        letter-spacing: 0.05em !important;
-        text-transform: uppercase !important;
-        box-shadow: 0 0 25px rgba(2, 132, 199, 0.35) !important;
-    }
-
-    .stButton>button:not([kind="primary"]) {
-        background: #111B30 !important;
-        color: #E2E8F0 !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 8px !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-    }
-
-    .stButton>button:not([kind="primary"]):hover {
-        background: #172544 !important;
-        color: #38BDF8 !important;
-        border-color: #38BDF8 !important;
-        box-shadow: 0 0 18px rgba(56, 189, 248, 0.35) !important;
-    }
-
-    .stDownloadButton>button {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-        color: white !important;
-        border: 1px solid rgba(52, 211, 153, 0.4) !important;
-        border-radius: 10px !important;
-        height: 3.2rem !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-weight: 700 !important;
-        box-shadow: 0 0 20px rgba(5, 150, 105, 0.3) !important;
-    }
-
-    .telemetry-bar {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-    }
-    .badge {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        font-weight: 600;
-        padding: 5px 12px;
-        border-radius: 6px;
-        letter-spacing: 0.05em;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
+    header[data-testid="stHeader"] { background: transparent !important; }
+    .stApp { background-color: #080B11 !important; background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important; font-family: 'Space Grotesk', sans-serif !important; color: #E2E8F0 !important; }
+    .block-container { padding-top: 4rem !important; padding-bottom: 3rem !important; max-width: 680px !important; }
+    div[data-testid="stExpander"] { background: #0E1626 !important; border: 1px solid rgba(56, 189, 248, 0.25) !important; border-radius: 12px !important; margin-bottom: 1rem !important; }
+    div[data-testid="stExpander"] summary { background: #111B30 !important; color: #38BDF8 !important; font-family: 'JetBrains Mono', monospace !important; font-size: 13px !important; font-weight: 700 !important; }
+    label[data-testid="stWidgetLabel"] p { color: #94A3B8 !important; font-family: 'JetBrains Mono', monospace !important; font-size: 11px !important; text-transform: uppercase !important; }
+    .stTextInput>div>div>input, .stTextArea textarea { background-color: #0A0F1D !important; border: 1px solid rgba(56, 189, 248, 0.25) !important; color: #F8FAFC !important; border-radius: 8px !important; }
+    .stButton>button[kind="primary"] { background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important; color: #FFF !important; border-radius: 10px !important; height: 3.4rem !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 700 !important; text-transform: uppercase !important; width: 100% !important; }
+    .stButton>button:not([kind="primary"]) { background: #111B30 !important; color: #E2E8F0 !important; border: 1px solid rgba(56, 189, 248, 0.25) !important; border-radius: 8px !important; font-family: 'JetBrains Mono', monospace !important; }
+    .stDownloadButton>button { background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; color: white !important; border-radius: 10px !important; height: 3.2rem !important; font-family: 'JetBrains Mono', monospace !important; font-weight: 700 !important; width: 100% !important; }
+    .badge { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; margin: 2px; }
     .badge-green { background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.25); }
     .badge-blue  { background: rgba(56, 189, 248, 0.12); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.25); }
     .badge-amber { background: rgba(245, 158, 11, 0.12); color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.25); }
     .badge-purple{ background: rgba(168, 85, 247, 0.12); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.25); }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background-color: #34D399; box-shadow: 0 0 8px #34D399; }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. WORKSPACE, FONT FOUNDRY & HELPERS
+# 2. WORKSPACE, FONTS & REPOSITORIES
 # ---------------------------------------------------------
-DATA_DIR = os.path.join(os.getcwd(), "data")
-TMP_DIR = os.path.join(os.getcwd(), "tmp")
-FONTS_DIR = os.path.join(os.getcwd(), "fonts")
-os.makedirs(DATA_DIR, exist_ok=True)
-os.makedirs(TMP_DIR, exist_ok=True)
-os.makedirs(FONTS_DIR, exist_ok=True)
+DATA_DIR, TMP_DIR, FONTS_DIR = os.path.join(os.getcwd(), "data"), os.path.join(os.getcwd(), "tmp"), os.path.join(os.getcwd(), "fonts")
+for d in [DATA_DIR, TMP_DIR, FONTS_DIR]: os.makedirs(d, exist_ok=True)
 
 @st.cache_resource(show_spinner=False)
 def ensure_dejavu_font():
-    font_target = os.path.join(FONTS_DIR, "DejaVuSans-Bold.ttf")
-    if not os.path.exists(font_target) or os.path.getsize(font_target) < 10000:
-        urls = [
-            "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans-Bold.ttf",
-            "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf"
-        ]
-        for u in urls:
+    f_path = os.path.join(FONTS_DIR, "DejaVuSans-Bold.ttf")
+    if not os.path.exists(f_path) or os.path.getsize(f_path) < 10000:
+        for u in ["https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans-Bold.ttf", "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf"]:
             try:
                 r = requests.get(u, timeout=8)
                 if r.status_code == 200 and len(r.content) > 10000:
-                    with open(font_target, "wb") as f:
-                        f.write(r.content)
+                    with open(f_path, "wb") as f: f.write(r.content)
                     break
-            except Exception:
-                pass
-    return font_target
+            except Exception: pass
+    return f_path
 
 ensure_dejavu_font()
 
 def to_unicode_bold(text):
-    normal_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    bold_chars   = "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
-    trans = str.maketrans(normal_chars, bold_chars)
-    return text.translate(trans)
+    n, b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
+    return text.translate(str.maketrans(n, b))
 
 SUBTITLE_ARCHETYPES = {
-    "IMPERIAL_GOLD": {
-        "label": "👑 Imperial Gold (Sovereignty & Power)",
-        "ass_primary": "&H0000E5FF",
-        "banner_hex": "0xFFE500"
-    },
-    "GLACIAL_ICE": {
-        "label": "❄️ Glacial Ice (Detachment & Boundaries)",
-        "ass_primary": "&H00FFF500",
-        "banner_hex": "0x00F5FF"
-    },
-    "FORGE_AMBER": {
-        "label": "🔥 Forge Amber (Discipline & Raw Truth)",
-        "ass_primary": "&H000099FF",
-        "banner_hex": "0xFF9900"
-    }
+    "IMPERIAL_GOLD": {"label": "👑 Imperial Gold", "ass_primary": "&H0000E5FF", "banner_hex": "0xFFE500"},
+    "GLACIAL_ICE":   {"label": "❄️ Glacial Ice",   "ass_primary": "&H00FFF500", "banner_hex": "0x00F5FF"},
+    "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900"}
 }
 
 # ---------------------------------------------------------
-# 3. 24-THEME MATRIX ACROSS 4 STOIC PILLARS
+# 3. 24 THEMES & ROTATING METAPHORS MATRIX
 # ---------------------------------------------------------
 THEMES_DATABASE = [
-    # --- PILLAR 1: EMOTIONAL IMMUNITY & BOUNDARIES ---
-    {
-        "id": "THEME_SILENT_EXIT",
-        "pillar": "Emotional Immunity",
-        "theme": "The Silent Exit (Outgrowing Disrespect)",
-        "premise": "Never announce when you cut someone off. Withdrawing presence without conflict is the ultimate boundary.",
-        "hook_starter": "NEVER ANNOUNCE YOUR EXIT",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "An ancient heavy bronze portal latch locking smoothly into dark weathered stone",
-            "A single fraying linen cord burning through over a flame and separating silently",
-            "A solitary timber skiff drifting into dense lake mist with no oars"
-        ]
-    },
-    {
-        "id": "THEME_WEAPONIZED_INDIFFERENCE",
-        "pillar": "Emotional Immunity",
-        "theme": "Weaponized Indifference (Controlling Your Reaction)",
-        "premise": "If their disrespect triggers your anger, they own you. Cold silence instantly strips away their leverage.",
-        "hook_starter": "YOUR REACTION GIVES THEM POWER",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "A monolithic dark basalt stone resting unmoved against crashing stormy sea waves",
-            "Heavy rain pouring down an ancient marble statue with water rolling off without a scratch",
-            "A glowing ember dropping onto cold slate stone and extinguishing into harmless ash"
-        ]
-    },
-    {
-        "id": "THEME_COST_OF_LIKABILITY",
-        "pillar": "Emotional Immunity",
-        "theme": "The Cost of Being Likable (People Pleasing)",
-        "premise": "Trying to please everyone is not kindness; it is fear of rejection. When everyone likes you, nobody respects your boundaries.",
-        "hook_starter": "STOP TRYING TO BE LIKED",
-        "archetype": "FORGE_AMBER",
-        "metaphors": [
-            "A weathered antique theater mask cracking apart on wet cobblestones",
-            "A brittle dried clay seal crumbling under slight thumb pressure",
-            "A weathered glass lens fracturing under direct intense sun focus"
-        ]
-    },
-    {
-        "id": "THEME_ABSORBING_INSULTS",
-        "pillar": "Emotional Immunity",
-        "theme": "The Armor of Epictetus (Insults Are Irrelevant)",
-        "premise": "An insult cannot hurt you unless you agree with it. If someone mocks you, they reveal their own inner sickness.",
-        "hook_starter": "INSULTS ONLY HURT FOOLS",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "A sharp bronze arrow deflecting harmlessly off a heavy Roman iron shield",
-            "Mud hurled against a solid granite castle bastion washing away in the rain",
-            "A venomous snake striking a solid bronze bell with no effect"
-        ]
-    },
-    {
-        "id": "THEME_GOSSIP_STARVATION",
-        "pillar": "Emotional Immunity",
-        "theme": "Gossip Starvation (Starving Drama of Fuel)",
-        "premise": "When someone brings you gossip about others, they will talk about you tomorrow. Starve rumors with complete silence.",
-        "hook_starter": "NEVER FEED SMALL MINDS",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "A dark iron snuffer descending over a guttering candle flame to extinguish it",
-            "Dry withered brush caught in sudden rain preventing fire from spreading",
-            "A deep stone cistern swallowing a pebble without producing an echo"
-        ]
-    },
-    {
-        "id": "THEME_UNRETURNED_LOYALTY",
-        "pillar": "Emotional Immunity",
-        "theme": "The Trap of Unreturned Loyalty",
-        "premise": "Blind loyalty to people who only call when they need something is self-betrayal. Learn to close the vault.",
-        "hook_starter": "STOP BLEEDING FOR USERS",
-        "archetype": "FORGE_AMBER",
-        "metaphors": [
-            "A heavy iron bank vault door swinging shut on oiled precision hinges",
-            "A cracked clay water vessel leaking water into barren sand",
-            "A withered vine trimmed cleanly from a fruit-bearing olive branch"
-        ]
-    },
+    # Pillar I: Emotional Immunity
+    {"id": "SILENT_EXIT", "p": "Emotional Immunity", "t": "The Silent Exit", "prem": "Never announce when you cut someone off. Withdrawing presence without conflict is sovereign power.", "h": "NEVER ANNOUNCE YOUR EXIT", "a": "GLACIAL_ICE", "m": ["Heavy bronze portal latch locking into dark stone", "Single fraying linen cord burning through over a flame", "Solitary timber skiff drifting into dense lake mist"]},
+    {"id": "WEAPON_INDIFFERENCE", "p": "Emotional Immunity", "t": "Weaponized Indifference", "prem": "If their disrespect triggers your anger, they own you. Cold silence strips away their leverage.", "h": "YOUR REACTION GIVES THEM POWER", "a": "GLACIAL_ICE", "m": ["Monolithic basalt stone unmoved against crashing storm waves", "Torrential rain pouring down a marble statue without a scratch", "Glowing ember dropping on cold slate extinguishing to ash"]},
+    {"id": "COST_LIKABLE", "p": "Emotional Immunity", "t": "The Cost of Being Likable", "prem": "Trying to please everyone is not kindness; it is weakness. When everyone likes you, nobody respects you.", "h": "STOP TRYING TO BE LIKED", "a": "FORGE_AMBER", "m": ["Weathered antique theater mask cracking on wet cobblestones", "Brittle dried clay seal crumbling under thumb pressure", "Weathered glass lens fracturing under focused sunlight"]},
+    {"id": "ARMOR_EPICTETUS", "p": "Emotional Immunity", "t": "The Armor of Epictetus", "prem": "An insult cannot hurt you unless you agree with it. If they mock you, they reveal their own sickness.", "h": "INSULTS ONLY HURT FOOLS", "a": "GLACIAL_ICE", "m": ["Bronze arrow deflecting off a heavy Roman iron shield", "Mud hurled against a granite castle bastion washing away", "Venomous snake striking a solid bronze bell with no effect"]},
+    {"id": "GOSSIP_STARVE", "p": "Emotional Immunity", "t": "Gossip Starvation", "prem": "When someone brings you gossip about others, they will talk about you tomorrow. Starve rumors with silence.", "h": "NEVER FEED SMALL MINDS", "a": "GLACIAL_ICE", "m": ["Dark iron snuffer descending over a guttering candle flame", "Dry withered brush caught in sudden rain stopping fire", "Deep stone cistern swallowing a pebble without producing an echo"]},
+    {"id": "UNRETURNED_LOYALTY", "p": "Emotional Immunity", "t": "Unreturned Loyalty", "prem": "Blind loyalty to people who only call when they need something is self-betrayal. Close the vault.", "h": "STOP BLEEDING FOR USERS", "a": "FORGE_AMBER", "m": ["Heavy iron vault door swinging shut on oiled hinges", "Cracked clay water vessel leaking water into barren sand", "Withered vine trimmed cleanly from a fruit-bearing olive branch"]},
 
-    # --- PILLAR 2: RELENTLESS EXECUTION & FOCUS ---
-    {
-        "id": "THEME_DOPAMINE_BANKRUPTCY",
-        "pillar": "Relentless Focus",
-        "theme": "Dopamine Bankruptcy (Drained by Distraction)",
-        "premise": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.",
-        "hook_starter": "YOU ARE DRAINED BY NOISE",
-        "archetype": "FORGE_AMBER",
-        "metaphors": [
-            "An antique bronze oil lamp burning steadily down to deep glowing amber embers",
-            "Clear mountain spring water settling completely transparent inside a glass vial",
-            "An iron pendulum slowing to a complete, balanced standstill"
-        ]
-    },
-    {
-        "id": "THEME_QUIET_EXECUTION",
-        "pillar": "Relentless Focus",
-        "theme": "Quiet Execution (Never Brag)",
-        "premise": "Never broadcast what you are building. The world flatters plans but only respects finished stone.",
-        "hook_starter": "BUILD IN COMPLETE OBSCURITY",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "A heavy blacksmith iron hammer striking a glowing hot blade on a dark stone anvil",
-            "A stonemason chisel carving precise Roman numerals deep into granite bedrock",
-            "Deep underground tree roots breaking through rock foundations in total darkness"
-        ]
-    },
-    {
-        "id": "THEME_SUNK_COST_TRAP",
-        "pillar": "Relentless Focus",
-        "theme": "The Sunk Cost Trap (Walking Away from Mistakes)",
-        "premise": "Just because you spent years making a mistake does not mean you owe it your future. Cut the cord immediately.",
-        "hook_starter": "STOP FEEDING DEAD DREAMS",
-        "archetype": "FORGE_AMBER",
-        "metaphors": [
-            "A sharp pruning sickle cleanly slicing an anchor rope under high tension",
-            "A heavy dry branch snapping off a centuries-old oak in storm winds",
-            "An antique weighing scale dumping heavy slag to return to equilibrium"
-        ]
-    },
-    {
-        "id": "THEME_THE_MYTH_OF_WAITING",
-        "pillar": "Relentless Focus",
-        "theme": "The Myth of Waiting for Motivation",
-        "premise": "Motivation is a fair-weather friend. Discipline is doing what needs to be done even when your emotions protest.",
-        "hook_starter": "ACTION CURES SELF-PITY",
-        "archetype": "FORGE_AMBER",
-        "metaphors": [
-            "Flint and steel striking violently to generate a sudden bright spark",
-            "A heavy waterwheel turning relentlessly against strong river currents",
-            "A team of draft oxen pulling a heavy plow through frost-hardened soil"
-        ]
-    },
-    {
-        "id": "THEME_THE_SOLITUDE_ADVANTAGE",
-        "pillar": "Relentless Focus",
-        "theme": "The Solitude Advantage (Power in Being Alone)",
-        "premise": "A man who cannot sit quietly in a room alone is an easy target for anyone who promises stimulation.",
-        "hook_starter": "LEARN TO SIT IN SILENCE",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "A single tall watchtower standing alone on a foggy mountain peak",
-            "A lone golden eagle gliding motionless on thermal winds high above clouds",
-            "A solitary stone lighthouse enduring darkness with a steady beam"
-        ]
-    },
-    {
-        "id": "THEME_ENVY_DESTRUCTION",
-        "pillar": "Relentless Focus",
-        "theme": "The Toxicity of Comparison",
-        "premise": "When you envy another person's victory, you declare that your own journey is worthless. Mind your own craft.",
-        "hook_starter": "NEVER WATCH THEIR RACE",
-        "archetype": "FORGE_AMBER",
-        "metaphors": [
-            "A racehorse wearing blinders charging forward on a dry dirt arena",
-            "A craftsman magnifying loupe focusing strictly on fine gold engravings",
-            "A sundial tracking the sun without regard for passing clouds"
-        ]
-    },
+    # Pillar II: Relentless Focus
+    {"id": "DOPAMINE_BANKRUPT", "p": "Relentless Focus", "t": "Dopamine Bankruptcy", "prem": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.", "h": "YOU ARE DRAINED BY NOISE", "a": "FORGE_AMBER", "m": ["Antique bronze oil lamp burning steadily down to deep amber embers", "Clear mountain spring water settling completely transparent in a vial", "Iron pendulum slowing to a complete, balanced standstill"]},
+    {"id": "QUIET_EXECUTION", "p": "Relentless Focus", "t": "Quiet Execution", "prem": "Never broadcast what you are building. The world flatters plans but only respects finished stone.", "h": "BUILD IN COMPLETE OBSCURITY", "a": "IMPERIAL_GOLD", "m": ["Heavy blacksmith hammer striking glowing blade on dark stone anvil", "Stonemason chisel carving Roman numerals into granite bedrock", "Deep underground tree roots breaking through rock in total darkness"]},
+    {"id": "SUNK_COST_TRAP", "p": "Relentless Focus", "t": "The Sunk Cost Trap", "prem": "Just because you spent years making a mistake does not mean you owe it your future. Cut the cord immediately.", "h": "STOP FEEDING DEAD DREAMS", "a": "FORGE_AMBER", "m": ["Sharp pruning sickle cleanly slicing an anchor rope under high tension", "Heavy dry branch snapping off a centuries-old oak in storm winds", "Antique weighing scale dumping heavy slag to return to equilibrium"]},
+    {"id": "MYTH_OF_WAITING", "p": "Relentless Focus", "t": "The Myth of Motivation", "prem": "Motivation is a fair-weather friend. Discipline is doing the work even when your emotions protest.", "h": "ACTION CURES SELF-PITY", "a": "FORGE_AMBER", "m": ["Flint and steel striking violently to generate a bright spark", "Heavy waterwheel turning relentlessly against strong river currents", "Team of draft oxen pulling a heavy plow through frost-hardened soil"]},
+    {"id": "SOLITUDE_ADVANTAGE", "p": "Relentless Focus", "t": "The Solitude Advantage", "prem": "A man who cannot sit quietly alone is an easy target for anyone promising stimulation.", "h": "LEARN TO SIT IN SILENCE", "a": "IMPERIAL_GOLD", "m": ["Single tall watchtower standing alone on a foggy mountain peak", "Lone golden eagle gliding motionless on thermal winds high above clouds", "Solitary stone lighthouse enduring darkness with a steady beam"]},
+    {"id": "ENVY_DESTRUCTION", "p": "Relentless Focus", "t": "The Toxicity of Comparison", "prem": "When you envy another person's victory, you declare that your own journey is worthless. Mind your own craft.", "h": "NEVER WATCH THEIR RACE", "a": "FORGE_AMBER", "m": ["Racehorse wearing blinders charging forward on dry dirt arena", "Craftsman magnifying loupe focusing strictly on fine gold engravings", "Sundial tracking the sun without regard for passing clouds"]},
 
-    # --- PILLAR 3: MENTAL FORTRESS & RESILIENCE ---
-    {
-        "id": "THEME_FUTURE_RUIN",
-        "pillar": "Mental Fortress",
-        "theme": "The Illusion of Future Ruin (Overthinking)",
-        "premise": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will almost never arrive.",
-        "hook_starter": "YOU SUFFER IN YOUR HEAD",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "Cold morning mist dissolving completely over ancient stone arches under sunlight",
-            "A troubled pool of dark water settling into a crystal mirror as ripples fade",
-            "A dark storm cloud dispersing harmlessly across a barren plain"
-        ]
-    },
-    {
-        "id": "THEME_CALAMITY_AS_TRAINING",
-        "pillar": "Mental Fortress",
-        "theme": "Calamity as Training (The Obstacle Is the Way)",
-        "premise": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character that comfort can never build.",
-        "hook_starter": "THE STRUGGLE IS THE TEACHER",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "A roaring forge furnace turning raw scrap iron into hardened Damascus steel",
-            "A mountain pine tree growing dense and unshakeable in freezing gale winds",
-            "A diamond blade grinding down rough raw stone into a sharp facet"
-        ]
-    },
-    {
-        "id": "THEME_BURDEN_OF_EXPECTATIONS",
-        "pillar": "Mental Fortress",
-        "theme": "The Burden of Expecting Fairness",
-        "premise": "The universe owes you nothing. Expecting life to treat you gently because you are good is expecting a lion not to eat you.",
-        "hook_starter": "THE WORLD OWES YOU NOTHING",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "A jagged granite headland taking crashing ocean waves without yielding",
-            "A desert sandstorm sweeping across an ancient stone obelisk",
-            "A heavy bronze coin falling indifferently on stone whether heads or tails"
-        ]
-    },
-    {
-        "id": "THEME_DEATH_OF_EGO",
-        "pillar": "Mental Fortress",
-        "theme": "The Death of Pride (True Confidence Is Quiet)",
-        "premise": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.",
-        "hook_starter": "KILL YOUR NEED FOR PRAISE",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "A deep subterranean bedrock supporting an entire city without showing itself",
-            "A dark iron anchor resting silently at the bottom of the ocean floor",
-            "An ancient oak tree whose strength lies in its hidden root network"
-        ]
-    },
-    {
-        "id": "THEME_CONTROLLING_DESIRE",
-        "pillar": "Mental Fortress",
-        "theme": "The Chains of Wanting More",
-        "premise": "Wealth does not consist in having great possessions, but in having few wants. He who is content cannot be enslaved.",
-        "hook_starter": "WANT LESS TO RULE MORE",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "Heavy broken iron shackles lying in dust beside an open cell gate",
-            "A simple earthenware cup filled with cool clear mountain well water",
-            "A rustic wooden staff supporting a traveler over rugged mountain ridges"
-        ]
-    },
-    {
-        "id": "THEME_ANGER_AS_POISON",
-        "pillar": "Mental Fortress",
-        "theme": "Anger Is Self-Poison (The Seneca Cure)",
-        "premise": "Holding onto anger is like drinking poison and expecting the other person to die. Calmness is the ultimate weapon.",
-        "hook_starter": "ANGER IS TEMPORARY MADNESS",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "Boiling water in a bronze cauldron cooling down to smooth stillness",
-            "A wild brushfire hitting a wide dirt trench and running out of fuel",
-            "A raging wild stallion being brought to stillness by a steady hand on the reins"
-        ]
-    },
+    # Pillar III: Mental Fortress
+    {"id": "FUTURE_RUIN", "p": "Mental Fortress", "t": "The Illusion of Future Ruin", "prem": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will never arrive.", "h": "YOU SUFFER IN YOUR HEAD", "a": "IMPERIAL_GOLD", "m": ["Cold morning mist dissolving over ancient stone arches under sunlight", "Troubled pool of dark water settling into a crystal mirror as ripples fade", "Dark storm cloud dispersing harmlessly across a barren plain"]},
+    {"id": "CALAMITY_TRAINING", "p": "Mental Fortress", "t": "Calamity as Training", "prem": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character comfort cannot buy.", "h": "THE STRUGGLE IS THE TEACHER", "a": "IMPERIAL_GOLD", "m": ["Roaring forge furnace turning raw scrap iron into hardened steel", "Mountain pine tree growing dense and unshakeable in freezing gale winds", "Diamond blade grinding down rough raw stone into a sharp facet"]},
+    {"id": "BURDEN_EXPECTATIONS", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
+    {"id": "DEATH_OF_PRIDE", "p": "Mental Fortress", "t": "The Death of Pride", "prem": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.", "h": "KILL YOUR NEED FOR PRAISE", "a": "IMPERIAL_GOLD", "m": ["Deep subterranean bedrock supporting an entire city without showing itself", "Dark iron anchor resting silently at the bottom of the ocean floor", "Ancient oak tree whose strength lies in its hidden root network"]},
+    {"id": "CONTROL_DESIRE", "p": "Mental Fortress", "t": "The Chains of Wanting", "prem": "Wealth does not consist in great possessions, but in few wants. He who is content cannot be enslaved.", "h": "WANT LESS TO RULE MORE", "a": "IMPERIAL_GOLD", "m": ["Heavy broken iron shackles lying in dust beside an open cell gate", "Simple earthenware cup filled with cool clear mountain well water", "Rustic wooden staff supporting a traveler over rugged mountain ridges"]},
+    {"id": "ANGER_POISON", "p": "Mental Fortress", "t": "Anger Is Self-Poison", "prem": "Holding onto anger is drinking poison and expecting the other person to die. Calmness is the ultimate weapon.", "h": "ANGER IS TEMPORARY MADNESS", "a": "GLACIAL_ICE", "m": ["Boiling water in a bronze cauldron cooling down to smooth stillness", "Wild brushfire hitting a wide dirt trench and running out of fuel", "Raging wild stallion brought to stillness by a steady hand on the reins"]},
 
-    # --- PILLAR 4: RADICAL ACCEPTANCE & IMPERMANENCE ---
-    {
-        "id": "THEME_MEMENTO_MORI",
-        "pillar": "Radical Acceptance",
-        "theme": "Memento Mori (The Clock Is Ticking)",
-        "premise": "You could leave life right now. Let that determine what you do, what you say, and what you think.",
-        "hook_starter": "YOU ARE RUNNING OUT OF TIME",
-        "archetype": "FORGE_AMBER",
-        "metaphors": [
-            "Fine golden sand falling steadily through an ancient glass hourglass neck",
-            "A shadow lengthening across Roman stone numerals on a sundial face",
-            "A single dried autumn leaf detaching and drifting on a brisk wind"
-        ]
-    },
-    {
-        "id": "THEME_AMOR_FATI",
-        "pillar": "Radical Acceptance",
-        "theme": "Amor Fati (Love Your Fate)",
-        "premise": "Do not demand that things happen as you wish. Wish that things happen as they actually happen, and your life will flow well.",
-        "hook_starter": "ACCEPT WHATEVER COMES NEXT",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "A raging river flowing around boulders without slowing its descent",
-            "A large campfire consuming whatever fuel is thrown into its flames",
-            "A ship sail adjusting its ropes to catch crosswinds and maintain heading"
-        ]
-    },
-    {
-        "id": "THEME_STRIPPING_THE_PEDESTAL",
-        "pillar": "Radical Acceptance",
-        "theme": "Stripping the Pedestal (Nobody Is a God)",
-        "premise": "Never put anyone on a pedestal. They bleed, make mistakes, age, and suffer from the same weaknesses as you.",
-        "hook_starter": "NOBODY IS ABOVE YOU",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "A gilded monument showing exposed cracked limestone underneath worn gold leaf",
-            "A royal purple woolen mantle turning to simple thread under close inspection",
-            "A chess board being cleared where kings and pawns go into the same wooden box"
-        ]
-    },
-    {
-        "id": "THEME_THE_RIVER_OF_TIME",
-        "pillar": "Radical Acceptance",
-        "theme": "The River of Time (Everything Passes)",
-        "premise": "The pain you feel right now will pass. The victory you celebrate today will fade. Ground your peace in eternity.",
-        "hook_starter": "THIS TOO SHALL PASS",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "Fast river water rushing over polished river stones under sunlight",
-            "Ancient Roman stone ruins standing tranquil against centuries of weather",
-            "Constellations revolving slowly in clear dark night skies over mountains"
-        ]
-    },
-    {
-        "id": "THEME_DEATH_OF_OPINIONS",
-        "pillar": "Radical Acceptance",
-        "theme": "The Irrelevance of Public Opinion",
-        "premise": "Why do you value yourself over others, but value their opinion of you over your own judgment? Reclaim your inner court.",
-        "hook_starter": "TRUST YOUR OWN JUDGMENT",
-        "archetype": "IMPERIAL_GOLD",
-        "metaphors": [
-            "A balance scale holding a single gold bullion balancing against heaps of straw",
-            "A solid bronze compass needle pointing true North regardless of storm winds",
-            "An ancient judge stone bench standing empty and resolute under open skies"
-        ]
-    },
-    {
-        "id": "THEME_THE_FINAL_BOUNDARY",
-        "pillar": "Radical Acceptance",
-        "theme": "The Final Boundary (Sovereign Stillness)",
-        "premise": "The mind is its own place. No tyrant, circumstance, or insult can break inside unless you leave the gate unlocked.",
-        "hook_starter": "GUARD YOUR INNER CITADEL",
-        "archetype": "GLACIAL_ICE",
-        "metaphors": [
-            "A massive carved stone gateway fortified with heavy bronze iron bands",
-            "A solitary fortress lantern burning steadily against pitch-black mountain fog",
-            "A deep subterranean spring flowing cold and pure under massive granite arches"
-        ]
-    }
+    # Pillar IV: Radical Acceptance
+    {"id": "MEMENTO_MORI", "p": "Radical Acceptance", "t": "Memento Mori", "prem": "You could leave life right now. Let that determine what you do, what you say, and what you think.", "h": "YOU ARE RUNNING OUT OF TIME", "a": "FORGE_AMBER", "m": ["Fine golden sand falling steadily through an ancient hourglass neck", "Shadow lengthening across Roman stone numerals on a sundial face", "Single dried autumn leaf detaching and drifting on a brisk wind"]},
+    {"id": "AMOR_FATI", "p": "Radical Acceptance", "t": "Amor Fati", "prem": "Do not demand that things happen as you wish. Accept what happens as necessary and move forward.", "h": "ACCEPT WHATEVER COMES NEXT", "a": "IMPERIAL_GOLD", "m": ["Raging river flowing around boulders without slowing its descent", "Large campfire consuming whatever fuel is thrown into its flames", "Ship sail adjusting its ropes to catch crosswinds and maintain heading"]},
+    {"id": "STRIP_PEDESTAL", "p": "Radical Acceptance", "t": "Stripping the Pedestal", "prem": "Never put anyone on a pedestal. They bleed, make mistakes, and age just like you.", "h": "NOBODY IS ABOVE YOU", "a": "GLACIAL_ICE", "m": ["Gilded monument showing exposed cracked limestone under worn gold leaf", "Royal purple woolen mantle turning to simple thread under inspection", "Chess board being cleared where kings and pawns go into the same box"]},
+    {"id": "RIVER_OF_TIME", "p": "Radical Acceptance", "t": "The River of Time", "prem": "The pain you feel right now will pass. The victory you celebrate today will fade. Ground your peace in eternity.", "h": "THIS TOO SHALL PASS", "a": "IMPERIAL_GOLD", "m": ["Fast river water rushing over polished river stones under sunlight", "Ancient Roman stone ruins standing tranquil against centuries of weather", "Constellations revolving slowly in clear dark night skies over mountains"]},
+    {"id": "DEATH_OF_OPINIONS", "p": "Radical Acceptance", "t": "Irrelevance of Opinions", "prem": "Why value yourself over others, but value their opinion of you over your own judgment? Reclaim your inner court.", "h": "TRUST YOUR OWN JUDGMENT", "a": "IMPERIAL_GOLD", "m": ["Balance scale holding single gold bullion balancing heaps of straw", "Solid bronze compass needle pointing true North in storm winds", "Ancient judge stone bench standing empty and resolute under open skies"]},
+    {"id": "FINAL_BOUNDARY", "p": "Radical Acceptance", "t": "The Final Boundary", "prem": "The mind is its own place. No tyrant or insult can break inside unless you leave the gate unlocked.", "h": "GUARD YOUR INNER CITADEL", "a": "GLACIAL_ICE", "m": ["Massive carved stone gateway fortified with heavy bronze bands", "Solitary fortress lantern burning steadily against pitch-black mountain fog", "Deep subterranean spring flowing cold and pure under massive granite arches"]}
 ]
 
 SETTINGS_MATRIX = [
-    {
-        "setting_name": "The Ancient Citadel Colonnades",
-        "setting_desc": "Within towering monolithic ancient stone colonnades and rain-slicked courtyards, flickering bronze braziers casting long dramatic shadows."
-    },
-    {
-        "setting_name": "The Windswept Coastal Cliffs",
-        "setting_desc": "Standing atop high windswept coastal cliffs overlooking turbulent dark ocean waves crashing against jagged basalt rocks in atmospheric fog."
-    },
-    {
-        "setting_name": "The Secluded Stone Workshop",
-        "setting_desc": "Inside a secluded ancient stone workshop with drafting parchment, beeswax candles, deep shadows, and glowing forge embers in the background."
-    },
-    {
-        "setting_name": "The Rugged Mountain Summit",
-        "setting_desc": "Traversing a barren rocky mountain pass under cold dramatic grey skies and swirling morning mist beside ancient weathered stone shrines."
-    }
+    {"n": "Citadel Colonnades", "d": "Within towering monolithic ancient stone colonnades and rain-slicked courtyards with bronze braziers casting dramatic shadows."},
+    {"n": "Coastal Cliffs", "d": "Atop high windswept coastal cliffs overlooking turbulent dark ocean waves crashing against jagged basalt rocks in atmospheric fog."},
+    {"n": "Stone Workshop", "d": "Inside a secluded ancient stone workshop with drafting parchment, beeswax candles, deep shadows, and glowing forge embers."},
+    {"n": "Mountain Summit", "d": "Traversing a barren rocky mountain pass under cold dramatic grey skies and swirling morning mist beside weathered stone shrines."}
 ]
 
 # ---------------------------------------------------------
-# 4. CADENCE & PERSISTENT COOLDOWN DATABASE
+# 4. CADENCE & COOLDOWN PERSISTENCE
 # ---------------------------------------------------------
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
-
 def load_db():
-    defaults = {
-        "scheduled_videos": [],
-        "used_hooks": [],
-        "used_theme_ids": [],
-        "last_scheduled_date": None,
-        "last_scheduled_slot": None,
-        "slot1_time": "05:00",
-        "slot2_time": "20:00"
-    }
+    d = {"scheduled_videos": [], "used_hooks": [], "used_theme_ids": [], "last_scheduled_date": None, "last_scheduled_slot": None, "slot1_time": "05:00", "slot2_time": "20:00"}
     if os.path.exists(DB_PATH):
         try:
             with open(DB_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                for k, v in defaults.items():
-                    if k not in data:
-                        data[k] = v
-                return data
-        except Exception:
-            pass
-    return defaults
+                d.update(data)
+        except Exception: pass
+    return d
 
 def save_db(data):
-    with open(DB_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    with open(DB_PATH, "w", encoding="utf-8") as f: json.dump(data, f, indent=2)
 
 db = load_db()
 
-def parse_time_str(t_str, fallback):
-    try:
-        parts = t_str.split(":")
-        return time(int(parts[0]), int(parts[1]))
-    except Exception:
-        return fallback
-
-def get_next_slot(base_date=None, base_slot=None):
+def get_next_slot(base_d=None, base_s=None):
     now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
-    last_d_str = base_date if base_date else db.get("last_scheduled_date")
-    last_slot = base_slot if base_slot else db.get("last_scheduled_slot")
-    s1_t_str = db.get("slot1_time", "05:00")
-    s2_t_str = db.get("slot2_time", "20:00")
-
-    if last_d_str and last_slot:
-        try:
-            last_d = datetime.strptime(str(last_d_str), "%Y-%m-%d").date()
-        except ValueError:
-            last_d = now_ist.date()
-
-        if "SLOT 1" in str(last_slot).upper():
-            target_d = last_d
-            target_slot = "SLOT 2 (EVENING)"
-            target_time = s2_t_str
+    ld_str = base_d if base_d else db.get("last_scheduled_date")
+    ls = base_s if base_s else db.get("last_scheduled_slot")
+    s1_t, s2_t = db.get("slot1_time", "05:00"), db.get("slot2_time", "20:00")
+    if ld_str and ls:
+        try: ld = datetime.strptime(str(ld_str), "%Y-%m-%d").date()
+        except Exception: ld = now_ist.date()
+        if "SLOT 1" in str(ls).upper():
+            return ld.strftime("%Y-%m-%d"), "SLOT 2 (EVENING)", s2_t
         else:
-            target_d = last_d + timedelta(days=1)
-            target_slot = "SLOT 1 (MORNING)"
-            target_time = s1_t_str
+            return (ld + timedelta(days=1)).strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
     else:
-        target_d = now_ist.date()
-        s1_time = parse_time_str(s1_t_str, time(5, 0))
-        s2_time = parse_time_str(s2_t_str, time(20, 0))
-
-        if now_ist.time() < s1_time:
-            target_slot = "SLOT 1 (MORNING)"
-            target_time = s1_t_str
-        elif now_ist.time() < s2_time:
-            target_slot = "SLOT 2 (EVENING)"
-            target_time = s2_t_str
-        else:
-            target_d = now_ist.date() + timedelta(days=1)
-            target_slot = "SLOT 1 (MORNING)"
-            target_time = s1_t_str
-
-    return target_d.strftime("%Y-%m-%d"), target_slot, target_time
+        td = now_ist.date()
+        t1 = time(int(s1_t.split(":")[0]), int(s1_t.split(":")[1]))
+        t2 = time(int(s2_t.split(":")[0]), int(s2_t.split(":")[1]))
+        if now_ist.time() < t1: return td.strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
+        elif now_ist.time() < t2: return td.strftime("%Y-%m-%d"), "SLOT 2 (EVENING)", s2_t
+        else: return (td + timedelta(days=1)).strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
 
 # ---------------------------------------------------------
-# 5. AUDIO SYNTHESIS & ASS SUBTITLES
+# 5. AUDIO & SUBTITLE ENGINE (NO WHISPER)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
-    communicate = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
-    word_timings = []
-    
+    comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
+    timings = []
     with open(audio_path, "wb") as f:
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                f.write(chunk["data"])
+        async for chunk in comm.stream():
+            if chunk["type"] == "audio": f.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
-                start_s = chunk["offset"] / 10_000_000.0
-                dur_s = chunk["duration"] / 10_000_000.0
-                word_timings.append({
-                    "word": chunk.get("text", ""),
-                    "start": round(start_s, 3),
-                    "end": round(start_s + dur_s, 3)
-                })
-    return word_timings
+                st_s = chunk["offset"] / 10_000_000.0
+                timings.append({"word": chunk.get("text", ""), "start": round(st_s, 3), "end": round(st_s + (chunk["duration"] / 10_000_000.0), 3)})
+    return timings
 
-def build_ass_subtitles(timed_words, script_text, ass_path, total_duration, archetype_key="IMPERIAL_GOLD"):
-    color_cfg = SUBTITLE_ARCHETYPES.get(archetype_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
-    primary_color = color_cfg["ass_primary"]
-    dialogue_events = []
-    
+def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
+    color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
+    events = []
     if not timed_words or len(timed_words) < 5:
         tokens = script_text.split()
-        chunk_size = 3
-        token_groups = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
-        step = max(0.5, (total_duration - 0.8) / max(1, len(token_groups)))
-        
-        for idx, group in enumerate(token_groups):
-            st_t = idx * step
-            en_t = min(total_duration, (idx + 1) * step)
-            txt = re.sub(r'[^\w\s\',.!?-]', '', " ".join(group)).upper()
-            dialogue_events.append((st_t, en_t, txt))
+        groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
+        step = max(0.5, (total_dur - 0.8) / max(1, len(groups)))
+        for i, g in enumerate(groups):
+            events.append((i * step, min(total_dur, (i + 1) * step), re.sub(r'[^\w\s\',.!?-]', '', " ".join(g)).upper()))
     else:
         chunk = []
         for i, tw in enumerate(timed_words):
-            clean_w = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper()
-            chunk.append({'word': clean_w, 'start': tw['start'], 'end': tw['end']})
-            is_punct = any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';'])
-            has_pause = (i + 1 < len(timed_words)) and (timed_words[i + 1]['start'] - tw['end'] >= 0.25)
-            
-            if is_punct or has_pause or len(chunk) >= 3:
-                st_t = chunk[0]['start']
-                en_t = min(total_duration, max(chunk[-1]['end'], st_t + 0.35))
-                txt = " ".join([c['word'] for c in chunk]).strip()
-                if txt:
-                    dialogue_events.append((st_t, en_t, txt))
+            chunk.append({'word': re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper(), 'start': tw['start'], 'end': tw['end']})
+            if any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';']) or (i + 1 < len(timed_words) and timed_words[i + 1]['start'] - tw['end'] >= 0.25) or len(chunk) >= 3:
+                events.append((chunk[0]['start'], min(total_dur, max(chunk[-1]['end'], chunk[0]['start'] + 0.35)), " ".join([c['word'] for c in chunk]).strip()))
                 chunk = []
-                
-        if chunk:
-            st_t = chunk[0]['start']
-            en_t = min(total_duration, max(chunk[-1]['end'], st_t + 0.35))
-            txt = " ".join([c['word'] for c in chunk]).strip()
-            if txt:
-                dialogue_events.append((st_t, en_t, txt))
+        if chunk: events.append((chunk[0]['start'], min(total_dur, max(chunk[-1]['end'], chunk[0]['start'] + 0.35)), " ".join([c['word'] for c in chunk]).strip()))
 
-    def ass_ts(s):
-        h, m, sec = int(s // 3600), int((s % 3600) // 60), s % 60
-        return f"{h}:{m:02d}:{sec:05.2f}"
-
-    ass_content = f"""[Script Info]
-ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
-ScaledBorderAndShadow: yes
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,DejaVu Sans,76,{primary_color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1
-
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-"""
-    for st_t, en_t, txt in dialogue_events:
-        ass_content += f"Dialogue: 0,{ass_ts(st_t)},{ass_ts(en_t)},Default,,0,0,0,,{txt}\n"
-
-    with open(ass_path, "w", encoding="utf-8") as f:
-        f.write(ass_content)
-        
-    return dialogue_events
+    def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
+    ass = f"[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,DejaVu Sans,76,{color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    for st_t, en_t, txt in events: ass += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
+    with open(ass, "w", encoding="utf-8") as f: f.write(ass)
+    return events
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (SAFE-ZONE FRAMING & CROP PROOF)
+# 6. SCRIPT GENERATOR
 # ---------------------------------------------------------
-def generate_video_package(raw_api_key, angle_obj, macro_choice, setting_obj):
-    clean_key = raw_api_key.strip().strip('"').strip("'")
-    client = genai.Client(api_key=clean_key)
+def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
+    client = genai.Client(api_key=raw_api_key.strip().strip('"').strip("'"))
+    used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
     
-    used_hooks = db.get("used_hooks", [])
-    blacklist_str = "\n".join([f"- {h}" for h in used_hooks[-40:]]) if used_hooks else "None yet."
+    prompt = (
+        f"You are Creative Director for 'Echoes of Wisdom' (9:16 reels).\n"
+        f"PILLAR: {t_obj['p']} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
+        f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\nFORBIDDEN HOOKS:\n{used_h}\n"
+        f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
+        f"4. Google Flow Character: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.' (Serene, dignified silence).\n"
+        f"5. All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
+        f"OUTPUT STRICT JSON ONLY:\n"
+        "{\n"
+        '  "title_concept": "Short Concept Title",\n'
+        '  "hook_banner": "3-4 WORDS IN CAPS",\n'
+        f'  "subtitle_archetype": "{t_obj["a"]}",\n'
+        '  "script": "Full 65-70 word script.",\n'
+        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting",\n'
+        f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c})",\n'
+        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action",\n'
+        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up",\n'
+        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting",\n'
+        '  "youtube_title": "High CTR Title #shorts #stoicism",\n'
+        '  "youtube_description": "Description with handles and hashtags",\n'
+        '  "youtube_pinned_comment": "Binary debate question with 1️⃣/2️⃣ options",\n'
+        '  "facebook_title": "Facebook Title",\n'
+        '  "caption_hook": "PUNCHY 4-6 WORD HOOK",\n'
+        '  "caption_lesson": "Two sentences of wisdom.",\n'
+        '  "debate_question": "When faced with this choice:",\n'
+        '  "choice_1": "Stoic action",\n'
+        '  "choice_2": "Impulsive action",\n'
+        '  "facebook_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Reels"\n'
+        "}"
+    )
 
-    full_prompt = f"""
-    You are the Creative Director for 'Echoes of Wisdom', producing high-retention Stoic vertical video reels (9:16).
-    ACTIVE STOIC PILLAR: {angle_obj['pillar']}
-    ACTIVE CORE THEME: {angle_obj['theme']}
-    PREMISE: {angle_obj['premise']}
-    DEFAULT HOOK: {angle_obj['hook_starter']}
-    ASSIGNED MACRO SYMBOL (SCENE 2): {macro_choice}
-    CINEMATIC ENVIRONMENT (SCENES 1, 3, 4): {setting_obj['setting_desc']}
+    for m in ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"]:
+        try:
+            r = client.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85))
+            parsed = json.loads(r.text)
+            if "script" in parsed: return parsed, None
+        except Exception: continue
+    return None, "Gemini API error. Check your API credentials."
 
-    FORBIDDEN PREVIOUS HOOKS (DO NOT REPEAT):
-    {blacklist_str}
+# ---------------------------------------------------------
+# 7. TELEMETRY & CADENCE ACCORDION
+# ---------------------------------------------------------
+st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.1 // COMPACT</span></div>', unsafe_allow_html=True)
+target_d, target_s, target_t = get_next_slot()
+recent_ids = db.get("used_theme_ids", [])[-14:]
+fresh_count = len(THEMES_DATABASE) - len(set(recent_ids))
 
-    STRICT CROP-PROOF FRAMING DIRECTIVES:
-    All video clips and thumbnail will undergo a 1.4x (40%) center-zoom to crop out corner watermarks.
-    Therefore, you MUST format EVERY visual prompt with these camera framing constraints:
-    1. Distance: 'Cinematic medium shot' or 'medium-wide shot'. NEVER specify 'extreme close-up' or 'tight face crop'.
-    2. Headroom: Always specify 'Generous 25% empty headroom and safe upper margins'.
-    3. Center Anchor: Always specify 'Subject strictly framed in the central 60% safe zone of the 9:16 vertical canvas, with breathing room on all sides so head and shoulders remain completely in frame after center-crop'.
-    4. Focus: Always specify 'Sharp deep focus on the central subject, crisp details, 8k cinematic resolution'.
-    5. Macro Metaphor (Scene 2): Always specify 'Wide-angle macro shot with ample negative space around the entire object, completely centered'.
+st.markdown(f"""
+<div style="margin-bottom: 14px;">
+    <span class="badge badge-green">● ENGINE ONLINE</span>
+    <span class="badge badge-purple">🛡️ {fresh_count} FRESH THEMES</span>
+    <span class="badge badge-amber">📅 {target_d} @ {target_t} IST ({target_s})</span>
+</div>
+""", unsafe_allow_html=True)
 
-    GENERAL RULES:
-    1. Word count: Exactly 65 to 70 words total.
-    2. Hook: Line 1 must challenge the viewer directly
+if "status_banner" in st.session_state:
+    st.success(st.session_state.pop("status_banner"))
+
+with st.expander("📅 PUBLISHING CADENCE & SETTINGS"):
+    c1, c2 = st.columns(2)
+    saved_d = datetime.strptime(db["last_scheduled_date"], "%Y-%m-%d").date() if db.get("last_scheduled_date") else datetime.now(timezone(timedelta(hours=5, minutes=30))).date()
+    with c1:
+        cd = st.date_input("Last Scheduled Date", value=saved_d)
+        cs = st.selectbox("Last Slot", ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"], index=(0 if "SLOT 1" in str(db.get("last_scheduled_slot","")).upper() else 1))
+    with c2:
+        ct1 = st.time_input("Slot 1 (IST)", value=time(int(db.get("slot1_time","05:00").split(":")[0]), int(db.get("slot1_time","05:00").split(":")[1])))
+        ct2 = st.time_input("Slot 2 (IST)", value=time(int(db.get("slot2_time","20:00").split(":")[0]), int(db.get("slot2_time","20:00").split(":")[1])))
+    if st.button("💾 Save Cadence"):
+        db.update({"last_scheduled_date": cd.strftime("%Y-%m-%d"), "last_scheduled_slot": cs, "slot1_time": ct1.strftime("%H:%M"), "slot2_time": ct2.strftime("%H:%M")})
+        save_db(db)
+        nd, ns, nt = get_next_slot(db["last_scheduled_date"], db["last_scheduled_slot"])
+        st.session_state["status_banner"] = f"Cadence locked! Next: {nd} @ {nt} IST ({ns})"
+        st.rerun()
+
+api_key = st.secrets.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY", st.session_state.get("api_key", "")))
+with st.expander("🔑 API CREDENTIALS", expanded=(not bool(api_key))):
+    uk = st.text_input("Gemini API Key", value=api_key, type="password")
+    if uk: st.session_state["api_key"] = uk.strip()
+
+def render_copy(bid, label, text):
+    components.html(f"""
+    <button id="b_{bid}" onclick="navigator.clipboard.writeText({json.dumps(text)}).then(()=>{{this.innerText='✓ COPIED!';this.style.background='#059669';this.style.color='#FFF';setTimeout(()=>{{this.innerText='📋 {label}';this.style.background='rgba(56,189,248,0.15)';this.style.color='#38BDF8';}},2000);}})" style="width:100%;height:2.4rem;background:rgba(56,189,248,0.15);color:#38BDF8;border:1px solid rgba(56,189,248,0.4);border-radius:6px;font-family:monospace;font-weight:700;font-size:11px;cursor:pointer;">
+        📋 {label}
+    </button>
+    """, height=44)
+
+# ---------------------------------------------------------
+# 8. TABS WORKSPACE
+# ---------------------------------------------------------
+tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER"])
+
+with tab1:
+    theme_opts = ["🎲 Smart AI Rotation (Cooldown-Protected)"] + THEMES_DATABASE
+    chosen_theme = st.selectbox("Stoic Core Theme", theme_opts, format_func=lambda x: "🎲 Smart AI Rotation" if isinstance(x, str) else f"{'⏳' if x['id'] in recent_ids else '✨'} {x['t']} ({x['p']})")
+    col_s1, col_s2 = st.columns(2)
+    with col_s1: chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
+    with col_s2: chosen_arch = st.selectbox("Subtitle Color", ["🤖 Match Theme Archetype"] + list(SUBTITLE_ARCHETYPES.keys()), format_func=lambda x: "🤖 Match Archetype" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"])
+
+    if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
+        k = st.session_state.get("api_key", api_key)
+        if not k: st.error("Please enter Gemini API Key.")
+        else:
+            with st.spinner("⚡ Synthesizing script & timed narration..."):
+                t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
+                s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
+                m_choice = random.choice(t_obj["m"])
+                pkg, err = generate_video_package(k, t_obj, m_choice, s_obj)
+                if err or not pkg: st.error(err)
+                else:
+                    pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
+                    a_path = os.path.join(TMP_DIR, "audio.mp3")
+                    timings = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
+                    st.session_state["active_video_pkg"] = {"pkg": pkg, "t_id": t_obj["id"], "p": t_obj["p"], "m": m_choice, "s": s_obj["n"], "audio": a_path, "timings": timings, "date": target_d, "slot": target_s, "time": target_t}
+                    st.success(f"Generated! {t_obj['t']} | {s_obj['n']}")
+
+    if "active_video_pkg" in st.session_state:
+        p_data = st.session_state["active_video_pkg"]
+        pkg = p_data["pkg"]
+        st.divider()
+        st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
+        st.markdown(f"**🏛️ Pillar:** `{p_data['p']}` | **Palette:** `{SUBTITLE_ARCHETYPES.get(pkg['subtitle_archetype'], SUBTITLE_ARCHETYPES['IMPERIAL_GOLD'])['label']}`")
+        st.markdown(f"**🔍 Scene 2 Metaphor:** `{p_data['m']}`")
+        st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg['script']}*")
+        st.audio(p_data["audio"])
+        
+        st.markdown("### 📋 Copy Google Flow Prompts")
+        for i, (lbl, k) in enumerate([("SCENE 1 (Hook)", "scene1_prompt"), ("SCENE 2 (Macro)", "scene2_prompt"), ("SCENE 3 (Action)", "scene3_prompt"), ("SCENE 4 (Resolve)", "scene4_prompt"), ("THUMBNAIL (9:16)", "thumbnail_prompt")]):
+            st.text_area(lbl, pkg.get(k, ""), height=70)
+            render_copy(f"pr_{i}", f"COPY {lbl}", pkg.get(k, ""))
+
+with tab2:
+    st.markdown("### 📥 1. Upload Your 4 Google Flow Clips")
+    clips = st.file_uploader("Select 4 vertical video files (Scene 1 to Scene 4)", type=["mp4", "mov"], accept_multiple_files=True)
+    
+    st.markdown("### 🖼️ 2. Optional: Watermark Cleaner")
+    thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
+    if thumb:
+        try:
+            im = Image.open(thumb).convert("RGB")
+            w, h = im.size
+            draw = ImageDraw.Draw(im)
+            draw.rectangle([int(w * 0.92), int(h * 0.955), w, h], fill=im.getpixel((int(w * 0.90), int(h * 0.97))))
+            buf = io.BytesIO()
+            im.save(buf, format="PNG", quality=98)
+            st.download_button("💾 Download Clean Thumbnail", buf.getvalue(), f"{target_d.replace('-','')}_clean_thumbnail.png", "image/png")
+        except Exception: pass
+
+    music = st.file_uploader("Optional: Background Music (MP3)", type=["mp3"])
+    
+    if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
+        if "active_video_pkg" not in st.session_state: st.error("Generate script in Tab 1 first.")
+        elif not clips or len(clips) < 4: st.error(f"Please upload all 4 clips (Found {len(clips) if clips else 0}/4).")
+        else:
+            with st.spinner("⚡ Assembling video & burning subtitles..."):
+                p_data = st.session_state["active_video_pkg"]
+                pkg, timings, a_path = p_data["pkg"], p_data["timings"], p_data["audio"]
+                arch = SUBTITLE_ARCHETYPES.get(pkg.get("subtitle_archetype"), SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
+                
+                c_paths = []
+                for i, c in enumerate(clips[:4]):
+                    cp = os.path.join(TMP_DIR, f"clip_{i}.mp4")
+                    with open(cp, "wb") as f: f.write(c.read())
+                    c_paths.append(cp)
+
+                probe = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', a_path], capture_output=True, text=True)
+                dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 28.0) + 0.6
+                speed = (dur / 4.0) / 4.0
+
+                ass_p = os.path.join(TMP_DIR, "subtitles.ass")
+                build_ass_subtitles(timings, pkg["script"], ass_p, dur, pkg.get("subtitle_archetype", "IMPERIAL_GOLD"))
+
+                banner = pkg.get("hook_banner", "MOVE IN SILENCE").replace("'", "\\'").replace(":", "\\:")
+                out_p = os.path.join(TMP_DIR, "master_output.mp4")
+                v_filters = [
+                    f"[0:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v0];",
+                    f"[1:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v1];",
+                    f"[2:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v2];",
+                    f"[3:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v3];",
+                    f"[v0][v1][v2][v3]concat=n=4:v=1:a=0[vb];",
+                    f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{ass_p}':fontsdir='{FONTS_DIR}'[vsub]"
+                ]
+                inputs = ['-i', c_paths[0], '-i', c_paths[1], '-i', c_paths[2], '-i', c_paths[3], '-i', a_path]
+                logo = "logo.png" if os.path.exists("logo.png") else None
+                if logo:
+                    inputs.extend(['-i', logo])
+                    v_filters.append(";[5:v]scale=120:-1,format=rgba[ls];[vsub][ls]overlay=W-w-50:150[vout]")
+                else: v_filters.append(";[vsub]copy[vout]")
+
+                if music:
+                    mp = os.path.join(TMP_DIR, "bgm.mp3")
+                    with open(mp, "wb") as f: f.write(music.read())
+                    inputs.extend(['-i', mp])
+                    midx = 6 if logo else 5
+                    v_filters.append(f";[4:a]volume=1.0[vo];[{midx}:a]aloop=loop=-1:size=2e+09,volume=0.15,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg];[vo][bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+                else: v_filters.append(";[4:a]volume=1.0[aout]")
+
+                res = subprocess.run(['ffmpeg', '-y', *inputs, '-filter_complex', "".join(v_filters), '-map', '[vout]', '-map', '[aout]', '-t', str(dur), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-c:a', 'aac', '-b:a', '192k', '-pix_fmt', 'yuv420p', out_p], capture_output=True, text=True)
+                if res.returncode != 0: st.error(f"FFmpeg Error: {res.stderr[:300]}")
+                else:
+                    st.session_state["rendered_video_path"] = out_p
+                    st.success(f"🎉 Master Reel Rendered! Palette: {arch['label']}")
+
+    if "rendered_video_path" in st.session_state:
+        vp = st.session_state["rendered_video_path"]
+        st.video(vp)
+        p_data = st.session_state["active_video_pkg"]
+        pkg, c_d, c_s, c_t = p_data["pkg"], p_data["date"], p_data["slot"], p_data["time"]
+        slug = re.sub(r'[^a-zA-Z0-9]+', '_', pkg.get('hook_banner', 'reel')).strip('_').lower()
+        exp_name = f"{c_d.replace('-','')}_{slug}.mp4"
+
+        with open(vp, "rb") as f: vb = f.read()
+        st.download_button(f"💾 Download Master Reel ({exp_name})", vb, exp_name, "video/mp4")
+
+        st.divider()
+        st.markdown(f"### 🎯 QUEUE: {c_d} @ {c_t} IST ({c_s})")
+        
+        # YouTube Deck
+        yt_t = pkg.get("youtube_title", f"{pkg.get('hook_banner').title()} #shorts")
+        st.text_input("YouTube Title", yt_t)
+        render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
+        yt_d = pkg.get("youtube_description", f"{pkg['script']}\n\nSubscribe to @EchoesOfWisdomOfficial\n#stoicism #shorts")
+        st.text_area("YouTube Description", yt_d, height=110)
+        render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", yt_d)
+        render_copy("yt_p", "COPY PINNED COMMENT", pkg.get("youtube_pinned_comment", "Drop 1 or 2 below. 👇"))
+
+        # Meta Deck
+        fb_hook = to_unicode_bold(re.sub(r'[^\w\s]', '', pkg.get("caption_hook", pkg.get("hook_banner", ""))).strip().upper())
+        fb_cap = f"⚡ {fb_hook} 🏛️\n\n{pkg.get('caption_lesson', pkg['script'])}\n\n🤔 {pkg.get('debate_question')}\n1️⃣ {pkg.get('choice_1')}\n2️⃣ {pkg.get('choice_2')}\n\nDrop 1 or 2 below. 👇\n\n• Follow @EchoesOfWisdomOfficial\n\n{pkg.get('facebook_hashtags', '#StoicMindset #EchoesOfWisdom')}"
+        st.text_area("Facebook Reel Caption (Unicode Bold)", fb_cap, height=160)
+        render_copy("fb_c", "COPY FACEBOOK CAPTION", fb_cap)
+
+        st.markdown('<div style="margin: 10px 0;"><a href="https://business.facebook.com/latest/composer" target="_blank"><button style="width:100%;height:2.8rem;background:#1877F2;color:white;border:none;border-radius:8px;font-weight:700;font-family:monospace;cursor:pointer;">🌐 OPEN META BUSINESS SUITE</button></a></div>', unsafe_allow_html=True)
+
+        if st.button("✅ Lock & Advance Slot", type="primary"):
+            db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "theme_id": p_data["t_id"], "title": yt_t, "file": exp_name})
+            if p_data["t_id"] not in db.get("used_theme_ids", []): db.setdefault("used_theme_ids", []).append(p_data["t_id"])
+            if pkg.get("hook_banner") not in db.get("used_hooks", []): db.setdefault("used_hooks", []).append(pkg.get("hook_banner"))
+            db["last_scheduled_date"], db["last_scheduled_slot"] = c_d, c_s
+            save_db(db)
+            nd, ns, nt = get_next_slot(c_d, c_s)
+            st.session_state["status_banner"] = f"✓ LOCKED: {exp_name} scheduled! Next slot: {nd} @ {nt} IST ({ns})"
+            del st.session_state["rendered_video_path"]
+            del st.session_state["active_video_pkg"]
+            st.rerun()
+
+with tab3:
+    st.markdown(f"### 📋 Scheduled Queue ({len(db.get('scheduled_videos', []))})")
+    for item in reversed(db.get("scheduled_videos", [])):
+        st.markdown(f"""
+        <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
+            <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
+            <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
+            <div style="color:#64748B;">📁 {item.get('file')} | 🏷️ {item.get('theme_id')}</div>
+        </div>
+        """, unsafe_allow_html=True)
