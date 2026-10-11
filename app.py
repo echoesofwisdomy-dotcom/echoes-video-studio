@@ -66,7 +66,7 @@ def ensure_dejavu_font():
 
 ensure_dejavu_font()
 
-# Royalty-free curated ambient tracks per archetype (permanent public mirrors)
+# Royalty-free curated ambient soundscapes
 CURATED_MUSIC_CATALOG = {
     "IMPERIAL_GOLD": {
         "title": "👑 Imperial Gold (Atmospheric Cello & Strings)",
@@ -86,14 +86,12 @@ CURATED_MUSIC_CATALOG = {
 }
 
 def resolve_background_track(choice_key, archetype_key):
-    """Downloads or locates the selected royalty-free background music track."""
     if choice_key == "NONE":
         return None
     target_key = archetype_key if choice_key == "AUTO" else choice_key
     info = CURATED_MUSIC_CATALOG.get(target_key, CURATED_MUSIC_CATALOG["IMPERIAL_GOLD"])
     dest_path = os.path.join(MUSIC_DIR, info["filename"])
     
-    # Check if user already placed a custom file in music/ or downloaded
     if not os.path.exists(dest_path) or os.path.getsize(dest_path) < 5000:
         try:
             r = requests.get(info["url"], timeout=10)
@@ -202,7 +200,7 @@ def get_next_slot(base_d=None, base_s=None):
 
 target_d, target_s, target_t = get_next_slot()
 
-# Pre-load recovery: automatically restore "The Discipline Engine" draft if none exists
+# Pre-load recovery: restore "The Discipline Engine" draft if none exists
 def init_draft_vault():
     if not os.path.exists(DRAFT_JSON_PATH):
         sample_pkg = {
@@ -242,7 +240,7 @@ def init_draft_vault():
 init_draft_vault()
 
 # ---------------------------------------------------------
-# 5. AUDIO & SUBTITLE ENGINE (NO WHISPER)
+# 5. AUDIO & SUBTITLE ENGINE (BUG FIXED)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
@@ -274,9 +272,12 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
         if chunk: events.append((chunk[0]['start'], min(total_dur, max(chunk[-1]['end'], chunk[0]['start'] + 0.35)), " ".join([c['word'] for c in chunk]).strip()))
 
     def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
-    ass = f"[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,DejaVu Sans,76,{color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
-    for st_t, en_t, txt in events: ass += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
-    with open(ass, "w", encoding="utf-8") as f: f.write(ass)
+    ass_doc = f"[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,DejaVu Sans,76,{color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    for st_t, en_t, txt in events: ass_doc += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
+    
+    # FIXED: Write to ass_path, not ass_doc string
+    with open(ass_path, "w", encoding="utf-8") as f: 
+        f.write(ass_doc)
     return events
 
 # Load persistent draft into session
@@ -292,7 +293,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (ROTATING METAPHORS)
+# 6. GEMINI GENERATOR
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     client = genai.Client(api_key=raw_api_key.strip().strip('"').strip("'"))
@@ -340,7 +341,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 # 7. TELEMETRY & CADENCE ACCORDION
 # ---------------------------------------------------------
-st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.3 // DROPZONE EDITION</span></div>', unsafe_allow_html=True)
+st.markdown('<div style="font-size: 22px; font-weight: 800; color: #F8FAFC; margin-bottom: 6px;">🎬 ECHOES VIDEO STUDIO <span style="font-size: 12px; color: #38BDF8; font-family: monospace;">v3.4 // DESKTOP EDITION</span></div>', unsafe_allow_html=True)
 
 recent_ids = db.get("used_theme_ids", [])[-14:]
 fresh_count = len(THEMES_DATABASE) - len(set(recent_ids))
@@ -377,7 +378,6 @@ with st.expander("🔑 API CREDENTIALS", expanded=(not bool(api_key))):
     uk = st.text_input("Gemini API Key", value=api_key, type="password")
     if uk: st.session_state["api_key"] = uk.strip()
 
-# Base64-immune 1-tap copy button generator
 def render_copy(bid, label, text):
     b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
     components.html(f"""
@@ -472,27 +472,21 @@ with tab1:
             if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
             st.rerun()
 
-# --- TAB 2: COMPOSE & RENDER (4 DEDICATED DROPZONES + BGM) ---
+# --- TAB 2: COMPOSE & RENDER (UNIFIED SINGLE DROPZONE + AUTO BGM) ---
 with tab2:
     st.markdown("### 📥 1. Upload Your 4 Google Flow Clips")
-    
-    col_u1, col_u2 = st.columns(2)
-    with col_u1:
-        clip1 = st.file_uploader("🎬 Scene 1 (Hook / Setting)", type=["mp4", "mov"], key="drop_c1")
-        clip2 = st.file_uploader("🔍 Scene 2 (Macro Metaphor)", type=["mp4", "mov"], key="drop_c2")
-    with col_u2:
-        clip3 = st.file_uploader("🚶 Scene 3 (Protagonist Action)", type=["mp4", "mov"], key="drop_c3")
-        clip4 = st.file_uploader("🗿 Scene 4 (Close-up Resolve)", type=["mp4", "mov"], key="drop_c4")
+    uploaded_clips = st.file_uploader(
+        "Drop or select all 4 video clips at once (scene1 to scene4)",
+        type=["mp4", "mov"],
+        accept_multiple_files=True
+    )
 
-    # Readiness telemetry
-    loaded_clips = [c for c in [clip1, clip2, clip3, clip4] if c is not None]
-    if len(loaded_clips) == 4:
-        st.markdown('<div style="color: #34D399; font-family: monospace; font-size: 12px; margin-bottom: 8px;">✓ ALL 4 SCENES LOADED AND VERIFIED</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div style="color: #FBBF24; font-family: monospace; font-size: 12px; margin-bottom: 8px;">⏳ Clips uploaded: {len(loaded_clips)}/4</div>', unsafe_allow_html=True)
+    if uploaded_clips:
+        # Sort naturally by filename so scene1, scene2, scene3, scene4 sequence is guaranteed
+        uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
+        st.markdown(f'<div style="color: {"#34D399" if len(uploaded_clips) == 4 else "#FBBF24"}; font-family: monospace; font-size: 12px; margin-bottom: 8px;">📁 Files loaded: {len(uploaded_clips)}/4 — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
     st.markdown("### 🎵 2. Royalty-Free Background Music (Ambient Soundscapes)")
-    
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
     
     bgm_options = {
@@ -503,7 +497,6 @@ with tab2:
         "CUSTOM": "📁 Upload Custom MP3 File",
         "NONE": "🔇 Narration Only (Silent background)"
     }
-    
     chosen_bgm = st.selectbox("Select Background Music Mode", list(bgm_options.keys()), format_func=lambda x: bgm_options[x])
     
     custom_music_file = None
@@ -526,8 +519,8 @@ with tab2:
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
         if "active_video_pkg" not in st.session_state:
             st.error("No active draft loaded in Tab 1.")
-        elif not (clip1 and clip2 and clip3 and clip4):
-            st.error(f"Please upload all 4 clips above. (Currently loaded: {len(loaded_clips)}/4)")
+        elif not uploaded_clips or len(uploaded_clips) < 4:
+            st.error(f"Please upload all 4 clips above. (Currently loaded: {len(uploaded_clips) if uploaded_clips else 0}/4)")
         else:
             with st.spinner("⚡ Assembling video, balancing background music & burning subtitles..."):
                 p_data = st.session_state["active_video_pkg"]
@@ -537,9 +530,9 @@ with tab2:
                 arch_key = pkg.get("subtitle_archetype", "FORGE_AMBER")
                 arch = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["FORGE_AMBER"])
                 
-                # Save uploaded clips locally
+                # Save uploaded clips locally in filename-sorted order
                 c_paths = []
-                for idx, c in enumerate([clip1, clip2, clip3, clip4]):
+                for idx, c in enumerate(uploaded_clips[:4]):
                     cp = os.path.join(TMP_DIR, f"clip_{idx}.mp4")
                     with open(cp, "wb") as f: f.write(c.read())
                     c_paths.append(cp)
