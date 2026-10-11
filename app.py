@@ -163,12 +163,54 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. WORKSPACE & CADENCE PERSISTENCE
+# 2. WORKSPACE & FONT FOUNDRY
 # ---------------------------------------------------------
 DATA_DIR = os.path.join(os.getcwd(), "data")
 TMP_DIR = os.path.join(os.getcwd(), "tmp")
+FONTS_DIR = os.path.join(os.getcwd(), "fonts")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TMP_DIR, exist_ok=True)
+os.makedirs(FONTS_DIR, exist_ok=True)
+
+@st.cache_resource(show_spinner=False)
+def ensure_dejavu_font():
+    font_target = os.path.join(FONTS_DIR, "DejaVuSans-Bold.ttf")
+    if not os.path.exists(font_target) or os.path.getsize(font_target) < 10000:
+        urls = [
+            "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans-Bold.ttf",
+            "https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Bold.ttf"
+        ]
+        for u in urls:
+            try:
+                r = requests.get(u, timeout=8)
+                if r.status_code == 200 and len(r.content) > 10000:
+                    with open(font_target, "wb") as f:
+                        f.write(r.content)
+                    break
+            except Exception:
+                pass
+    return font_target
+
+ensure_dejavu_font()
+
+# Subtitle Stylistic Archetypes (BGR format for ASS subtitles)
+SUBTITLE_ARCHETYPES = {
+    "IMPERIAL_GOLD": {
+        "label": "👑 Imperial Gold (Sovereignty & Power)",
+        "ass_primary": "&H0000E5FF",  # BGR for #FFE500
+        "banner_hex": "0xFFE500"
+    },
+    "GLACIAL_ICE": {
+        "label": "❄️ Glacial Ice (Detachment & Boundaries)",
+        "ass_primary": "&H00FFF500",  # BGR for #00F5FF
+        "banner_hex": "0x00F5FF"
+    },
+    "FORGE_AMBER": {
+        "label": "🔥 Forge Amber (Discipline & Raw Truth)",
+        "ass_primary": "&H000099FF",  # BGR for #FF9900
+        "banner_hex": "0xFF9900"
+    }
+}
 
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
 
@@ -240,37 +282,43 @@ VIRAL_ANGLES = [
         "theme": "The Silent Exit (Outgrowing Disrespect)",
         "premise": "Never announce when you cut someone off. Withdrawing your presence without an argument is the ultimate power move.",
         "macro_symbol": "An ancient heavy bronze portal latch locking into dark textured stone",
-        "hook_starter": "NEVER ANNOUNCE YOUR EXIT"
+        "hook_starter": "NEVER ANNOUNCE YOUR EXIT",
+        "default_archetype": "GLACIAL_ICE"
     },
     {
         "theme": "The Cost of Being Likable (People Pleasing)",
         "premise": "Trying to please everyone is not kindness; it is weakness. When everyone likes you, nobody respects your boundaries.",
         "macro_symbol": "A weathered antique stone theater mask breaking apart on cobblestones",
-        "hook_starter": "STOP TRYING TO BE LIKED"
+        "hook_starter": "STOP TRYING TO BE LIKED",
+        "default_archetype": "FORGE_AMBER"
     },
     {
         "theme": "Weaponized Indifference (Controlling Your Reaction)",
         "premise": "If their disrespect triggers your anger, you belong to them. Cold silence strips them of control instantly.",
         "macro_symbol": "A monolithic dark basalt stone resting unmoved against crashing stormy sea waves",
-        "hook_starter": "YOUR REACTION GIVES THEM POWER"
+        "hook_starter": "YOUR REACTION GIVES THEM POWER",
+        "default_archetype": "GLACIAL_ICE"
     },
     {
         "theme": "Dopamine Bankruptcy (Mental Focus)",
         "premise": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.",
         "macro_symbol": "An antique bronze oil lamp burning steadily down to deep glowing amber embers",
-        "hook_starter": "YOU ARE DRAINED BY NOISE"
+        "hook_starter": "YOU ARE DRAINED BY NOISE",
+        "default_archetype": "FORGE_AMBER"
     },
     {
         "theme": "Quiet Execution (Never Brag)",
         "premise": "Never broadcast what you are building. The world flatters plans but only respects finished stone.",
         "macro_symbol": "A heavy blacksmith iron hammer striking a glowing hot blade on a dark stone anvil",
-        "hook_starter": "BUILD IN COMPLETE OBSCURITY"
+        "hook_starter": "BUILD IN COMPLETE OBSCURITY",
+        "default_archetype": "IMPERIAL_GOLD"
     },
     {
         "theme": "The Illusion of Future Ruin (Overthinking)",
         "premise": "We suffer ten times more in our thoughts than in reality. The catastrophe keeping you awake will never arrive.",
         "macro_symbol": "Cold morning mist dissolving completely over ancient stone arches under sunlight",
-        "hook_starter": "YOU SUFFER IN YOUR HEAD"
+        "hook_starter": "YOU SUFFER IN YOUR HEAD",
+        "default_archetype": "IMPERIAL_GOLD"
     }
 ]
 
@@ -289,40 +337,56 @@ async def synthesize_speech_timed(text, audio_path):
                 start_s = chunk["offset"] / 10_000_000.0
                 dur_s = chunk["duration"] / 10_000_000.0
                 word_timings.append({
-                    "word": chunk["text"],
-                    "start": start_s,
-                    "end": start_s + dur_s
+                    "word": chunk.get("text", ""),
+                    "start": round(start_s, 3),
+                    "end": round(start_s + dur_s, 3)
                 })
     return word_timings
 
-def build_ass_subtitles(timed_words, ass_path, max_duration):
+def build_ass_subtitles(timed_words, script_text, ass_path, total_duration, archetype_key="IMPERIAL_GOLD"):
+    color_cfg = SUBTITLE_ARCHETYPES.get(archetype_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
+    primary_color = color_cfg["ass_primary"]
     dialogue_events = []
-    chunk = []
     
-    for i, tw in enumerate(timed_words):
-        clean_w = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper()
-        chunk.append({'word': clean_w, 'start': tw['start'], 'end': tw['end']})
-        is_punct = any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';'])
-        has_pause = (i + 1 < len(timed_words)) and (timed_words[i + 1]['start'] - tw['end'] >= 0.28)
+    if not timed_words or len(timed_words) < 5:
+        tokens = script_text.split()
+        chunk_size = 3
+        token_groups = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
+        step = max(0.5, (total_duration - 0.8) / max(1, len(token_groups)))
         
-        if is_punct or has_pause or len(chunk) >= 3:
-            st_t = chunk[0]['start']
-            en_t = min(max_duration, max(chunk[-1]['end'], st_t + 0.35))
-            txt = " ".join([c['word'] for c in chunk]).strip()
+        for idx, group in enumerate(token_groups):
+            st_t = idx * step
+            en_t = min(total_duration, (idx + 1) * step)
+            txt = re.sub(r'[^\w\s\',.!?-]', '', " ".join(group)).upper()
             dialogue_events.append((st_t, en_t, txt))
-            chunk = []
+    else:
+        chunk = []
+        for i, tw in enumerate(timed_words):
+            clean_w = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper()
+            chunk.append({'word': clean_w, 'start': tw['start'], 'end': tw['end']})
+            is_punct = any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';'])
+            has_pause = (i + 1 < len(timed_words)) and (timed_words[i + 1]['start'] - tw['end'] >= 0.25)
             
-    if chunk:
-        st_t = chunk[0]['start']
-        en_t = min(max_duration, max(chunk[-1]['end'], st_t + 0.35))
-        txt = " ".join([c['word'] for c in chunk]).strip()
-        dialogue_events.append((st_t, en_t, txt))
+            if is_punct or has_pause or len(chunk) >= 3:
+                st_t = chunk[0]['start']
+                en_t = min(total_duration, max(chunk[-1]['end'], st_t + 0.35))
+                txt = " ".join([c['word'] for c in chunk]).strip()
+                if txt:
+                    dialogue_events.append((st_t, en_t, txt))
+                chunk = []
+                
+        if chunk:
+            st_t = chunk[0]['start']
+            en_t = min(total_duration, max(chunk[-1]['end'], st_t + 0.35))
+            txt = " ".join([c['word'] for c in chunk]).strip()
+            if txt:
+                dialogue_events.append((st_t, en_t, txt))
 
     def ass_ts(s):
         h, m, sec = int(s // 3600), int((s % 3600) // 60), s % 60
         return f"{h}:{m:02d}:{sec:05.2f}"
 
-    ass_content = """[Script Info]
+    ass_content = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080
 PlayResY: 1920
@@ -330,7 +394,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,DejaVu Sans,76,&H0000E5FF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1
+Style: Default,DejaVu Sans,76,{primary_color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -340,9 +404,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
     with open(ass_path, "w", encoding="utf-8") as f:
         f.write(ass_content)
+        
+    return dialogue_events
 
 # ---------------------------------------------------------
-# 5. GEMINI SCRIPT & PROMPT GENERATOR (EXPLICIT INSTRUCTION)
+# 5. GEMINI SCRIPT & PROMPT GENERATOR
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, angle):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -365,7 +431,11 @@ def generate_video_package(raw_api_key, angle):
     1. Word count: Exactly 65 to 70 words total.
     2. Hook: Line 1 must challenge the viewer directly within 4 words.
     3. Seamless Loop: The last sentence must connect cleanly back into the opening hook.
-    4. Google Flow Compliance:
+    4. Subtitle Archetype Selection:
+       - 'GLACIAL_ICE' for cold silence, indifference, setting boundaries, or walking away.
+       - 'FORGE_AMBER' for discipline, hard work, focus, dopamine detox, or overcoming overthinking.
+       - 'IMPERIAL_GOLD' for inner sovereignty, regal composure, high-status stillness, or wisdom.
+    5. Google Flow Compliance:
        - Character MUST always be described as: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'
        - Never use names like Marcus, Seneca, Epictetus in visual prompts.
        - Natural silence: 'Dignified silent composure, serene stoic expression, calm and steady gaze.'
@@ -375,6 +445,7 @@ def generate_video_package(raw_api_key, angle):
     {{
       "title_concept": "Short Concept Title",
       "hook_banner": "3-4 WORDS IN ALL CAPS",
+      "subtitle_archetype": "GLACIAL_ICE or FORGE_AMBER or IMPERIAL_GOLD",
       "script": "Full 65-70 word script with seamless loop.",
       "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 prompt",
       "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 prompt ({angle['macro_symbol']})",
@@ -412,7 +483,7 @@ def generate_video_package(raw_api_key, angle):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v1.2 // PRODUCTION</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v1.4 // ADAPTIVE PALETTES</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -421,7 +492,7 @@ target_date, target_slot, target_time, display_slot = get_next_slot()
 st.markdown(f"""
 <div class="telemetry-bar">
     <div class="badge badge-green"><span class="dot"></span> ENGINE: ONLINE</div>
-    <div class="badge badge-blue">⚡ GEMINI + EDGE-TTS</div>
+    <div class="badge badge-blue">⚡ SUBTITLE ENGINE: ARMED</div>
     <div class="badge badge-amber">📅 NEXT DROP: {target_date} @ {target_time} IST ({display_slot})</div>
 </div>
 """, unsafe_allow_html=True)
@@ -434,7 +505,6 @@ if "status_banner" in st.session_state:
     """, unsafe_allow_html=True)
     del st.session_state["status_banner"]
 
-# Session-Safe API Key Resolution
 if "api_key" not in st.session_state:
     st.session_state["api_key"] = ""
 
@@ -449,21 +519,30 @@ with st.expander("🔑 API CREDENTIALS", expanded=(not bool(st.session_state["ap
         st.session_state["api_key"] = user_key.strip().strip('"').strip("'")
 
 # ---------------------------------------------------------
-# 7. TAB NAVIGATION (SYNTHESIZE -> RENDER -> AUDIT)
+# 7. TAB NAVIGATION
 # ---------------------------------------------------------
 tab_synth, tab_render, tab_queue = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER"])
 
-# --- TAB 1: SCRIPT & ALL 5 GOOGLE FLOW PROMPTS ---
+# --- TAB 1: SCRIPT & ALL 5 PROMPTS ---
 with tab_synth:
-    theme_options = ["🎲 Random / AI Choice"] + [a["theme"] for a in VIRAL_ANGLES]
-    chosen_theme_name = st.selectbox("Stoic Psychological Angle", theme_options)
+    col_t1, col_t2 = st.columns([3, 2])
+    with col_t1:
+        theme_options = ["🎲 Random / AI Choice"] + [a["theme"] for a in VIRAL_ANGLES]
+        chosen_theme_name = st.selectbox("Stoic Psychological Angle", theme_options)
+    with col_t2:
+        arch_options = ["🤖 AI Recommended"] + list(SUBTITLE_ARCHETYPES.keys())
+        chosen_arch_override = st.selectbox(
+            "Subtitle Color Style",
+            arch_options,
+            format_func=lambda x: "🤖 AI Recommended" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"]
+        )
     
     if st.button("🚀 Generate Video Package & Spoken Audio", type="primary"):
         active_key = st.session_state.get("api_key", "").strip()
         if not active_key:
             st.error("Please enter your Gemini API Key in the '🔑 API CREDENTIALS' panel above.")
         else:
-            with st.spinner("⚡ Synthesizing script & generating timed voiceover..."):
+            with st.spinner("⚡ Synthesizing script, setting color archetype & generating voiceover..."):
                 if chosen_theme_name.startswith("🎲"):
                     angle_data = random.choice(VIRAL_ANGLES)
                 else:
@@ -473,6 +552,15 @@ with tab_synth:
                 if err or not package:
                     st.error(f"⚠️ Synthesis Failed: {err}")
                 else:
+                    if chosen_arch_override and not chosen_arch_override.startswith("🤖"):
+                        final_arch = chosen_arch_override
+                    else:
+                        final_arch = package.get("subtitle_archetype", angle_data.get("default_archetype", "IMPERIAL_GOLD"))
+                        if final_arch not in SUBTITLE_ARCHETYPES:
+                            final_arch = "IMPERIAL_GOLD"
+                    
+                    package["subtitle_archetype"] = final_arch
+
                     audio_path = os.path.join(TMP_DIR, "audio.mp3")
                     word_timings = asyncio.run(synthesize_speech_timed(package["script"], audio_path))
                     
@@ -481,12 +569,16 @@ with tab_synth:
                         "audio_path": audio_path,
                         "timings": word_timings
                     }
-                    st.success("✅ Script generated & voiceover synthesized with millisecond word sync!")
+                    st.success(f"✅ Script ready! Subtitle style locked to: {SUBTITLE_ARCHETYPES[final_arch]['label']}")
 
     if "active_video_pkg" in st.session_state:
         pkg = st.session_state["active_video_pkg"]["package"]
+        current_arch = pkg.get("subtitle_archetype", "IMPERIAL_GOLD")
+        arch_meta = SUBTITLE_ARCHETYPES.get(current_arch, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
+
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
+        st.markdown(f"**🎨 Active Subtitle Palette:** `{arch_meta['label']}`")
         st.info(f"🎯 **Hook Banner:** `{pkg.get('hook_banner', 'MOVE IN SILENCE')}`\n\n🗣️ **Script ({len(pkg['script'].split())} words):**\n\n*{pkg['script']}*")
         
         st.audio(st.session_state["active_video_pkg"]["audio_path"])
@@ -556,7 +648,7 @@ with tab_render:
             st.warning(f"Could not patch thumbnail: {e}")
 
     st.markdown("### 🎵 3. Optional: Background Music")
-    uploaded_music = st.file_uploader("Select MP3 track (or leave empty for voice only)", type=["mp3"])
+    uploaded_music = st.file_uploader("Select MP3 track (or leave empty for clean narration)", type=["mp3"])
     
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
         if "active_video_pkg" not in st.session_state:
@@ -564,10 +656,16 @@ with tab_render:
         elif not uploaded_clips or len(uploaded_clips) < 4:
             st.error(f"Please upload all 4 clips from Google Flow. (Uploaded: {len(uploaded_clips) if uploaded_clips else 0}/4)")
         else:
-            with st.spinner("⚡ Assembling video, burning kinetic subtitles & balancing audio..."):
+            with st.spinner("⚡ Assembling video, burning adaptive subtitles & balancing audio..."):
                 pkg_data = st.session_state["active_video_pkg"]["package"]
-                timings = st.session_state["active_video_pkg"]["timings"]
+                timings = st.session_state["active_video_pkg"].get("timings", [])
                 audio_path = st.session_state["active_video_pkg"]["audio_path"]
+                script_txt = pkg_data.get("script", "")
+                
+                # Active Archetype Palette
+                arch_key = pkg_data.get("subtitle_archetype", "IMPERIAL_GOLD")
+                arch_meta = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
+                banner_color = arch_meta["banner_hex"]
                 
                 clip_paths = []
                 for i, clip in enumerate(uploaded_clips[:4]):
@@ -578,14 +676,18 @@ with tab_render:
                     
                 probe_cmd = ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', audio_path]
                 res = subprocess.run(probe_cmd, capture_output=True, text=True)
-                vo_dur = float(res.stdout.strip()) if res.stdout.strip() else 24.0
+                vo_dur = float(res.stdout.strip()) if res.stdout.strip() else 28.0
                 target_dur = vo_dur + 0.6
                 per_clip_dur = target_dur / 4.0
                 speed_factor = per_clip_dur / 4.0
 
+                # Build ASS subtitle file with dynamic archetype colors
                 ass_path = os.path.join(TMP_DIR, "subtitles.ass")
-                build_ass_subtitles(timings, ass_path, target_dur)
+                cues = build_ass_subtitles(timings, script_txt, ass_path, target_dur, archetype_key=arch_key)
 
+                clean_ass_path = ass_path.replace("'", "\\'").replace(":", "\\:")
+                clean_fonts_dir = FONTS_DIR.replace("'", "\\'").replace(":", "\\:")
+                
                 logo_file = "logo.png" if os.path.exists("logo.png") else None
                 banner_text = pkg_data.get("hook_banner", "MOVE IN SILENCE").replace("'", "\\'").replace(":", "\\:")
                 out_video_path = os.path.join(TMP_DIR, "output_master.mp4")
@@ -596,9 +698,9 @@ with tab_render:
                     f"[2:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed_factor:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v2];"
                     f"[3:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed_factor:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v3];"
                     f"[v0][v1][v2][v3]concat=n=4:v=1:a=0[vbase];"
-                    f"[vbase]drawtext=text='{banner_text}':fontsize=44:fontcolor=0xFFE500:"
+                    f"[vbase]drawtext=text='{banner_text}':fontsize=44:fontcolor={banner_color}:"
                     f"box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',"
-                    f"ass={ass_path}[v_sub]"
+                    f"ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[v_sub]"
                 ]
 
                 inputs = ['-i', clip_paths[0], '-i', clip_paths[1], '-i', clip_paths[2], '-i', clip_paths[3], '-i', audio_path]
@@ -639,7 +741,7 @@ with tab_render:
                     st.error(f"FFmpeg Compilation Error: {proc.stderr[:400]}")
                 else:
                     st.session_state["rendered_video_path"] = out_video_path
-                    st.success("🎉 Master Reel Rendered Successfully!")
+                    st.success(f"🎉 Master Reel Rendered! Dynamic Palette Applied: {arch_meta['label']}")
 
     if "rendered_video_path" in st.session_state:
         v_path = st.session_state["rendered_video_path"]
