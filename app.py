@@ -163,7 +163,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. WORKSPACE & PERSISTENT CADENCE SETUP
+# 2. WORKSPACE & CADENCE PERSISTENCE
 # ---------------------------------------------------------
 DATA_DIR = os.path.join(os.getcwd(), "data")
 TMP_DIR = os.path.join(os.getcwd(), "tmp")
@@ -177,7 +177,7 @@ def load_db():
         "scheduled_videos": [],
         "used_hooks": [],
         "last_scheduled_date": None,
-        "last_scheduled_slot": None  # "SLOT 1" or "SLOT 2"
+        "last_scheduled_slot": None
     }
     if os.path.exists(DB_PATH):
         try:
@@ -197,7 +197,6 @@ def save_db(data):
 
 db = load_db()
 
-# Calculate next drop: Slot 1 (05:00 AM IST) or Slot 2 (20:00 PM IST)
 def get_next_slot():
     now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
     last_d_str = db.get("last_scheduled_date")
@@ -287,7 +286,6 @@ async def synthesize_speech_timed(text, audio_path):
             if chunk["type"] == "audio":
                 f.write(chunk["data"])
             elif chunk["type"] == "WordBoundary":
-                # offset & duration are in 100ns units (10^-7 sec)
                 start_s = chunk["offset"] / 10_000_000.0
                 dur_s = chunk["duration"] / 10_000_000.0
                 word_timings.append({
@@ -344,7 +342,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         f.write(ass_content)
 
 # ---------------------------------------------------------
-# 5. GEMINI 3.8 FLASH SCRIPT & FLOW PROMPT GENERATOR
+# 5. GEMINI SCRIPT & PROMPT GENERATOR (EXPLICIT INSTRUCTION)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, angle):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -353,14 +351,14 @@ def generate_video_package(raw_api_key, angle):
     used_hooks = db.get("used_hooks", [])
     blacklist_str = "\n".join([f"- {h}" for h in used_hooks[-40:]]) if used_hooks else "None yet."
 
-    system_prompt = f"""
+    full_prompt = f"""
     You are the Creative Director for 'Echoes of Wisdom', producing high-retention Stoic vertical video reels (9:16).
     ACTIVE CORE THEME: {angle['theme']}
     PREMISE: {angle['premise']}
     DEFAULT HOOK: {angle['hook_starter']}
     MACRO SYMBOL: {angle['macro_symbol']}
 
-    FORBIDDEN PREVIOUS HOOKS:
+    FORBIDDEN PREVIOUS HOOKS (DO NOT REPEAT):
     {blacklist_str}
 
     STRICT RULES:
@@ -373,11 +371,11 @@ def generate_video_package(raw_api_key, angle):
        - Natural silence: 'Dignified silent composure, serene stoic expression, calm and steady gaze.'
        - Format: Every prompt must begin with '[4-second vertical 9:16 cinematic video clip]'.
 
-    Output STRICT JSON ONLY:
+    Output STRICT JSON matching this schema:
     {{
       "title_concept": "Short Concept Title",
       "hook_banner": "3-4 WORDS IN ALL CAPS",
-      "script": "Full 65-70 word script.",
+      "script": "Full 65-70 word script with seamless loop.",
       "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 prompt",
       "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 prompt ({angle['macro_symbol']})",
       "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 prompt",
@@ -389,27 +387,32 @@ def generate_video_package(raw_api_key, angle):
     }}
     """
 
-    for mod in ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-flash-latest"]:
+    err_list = []
+    for mod in ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
         try:
             resp = client.models.generate_content(
                 model=mod,
-                contents=f"Generate viral Stoic video package for '{angle['theme']}'. Enforce word count and Google Flow safety.",
-                config=types.GenerateContentConfig(response_mime_type="application/json")
+                contents=full_prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.85
+                )
             )
             parsed = json.loads(resp.text)
-            if "script" in parsed and "scene1_prompt" in parsed:
+            if "script" in parsed:
                 return parsed, None
         except Exception as e:
+            err_list.append(f"{mod}: {e}")
             continue
             
-    return None, "API error generating concept. Please verify your Gemini API key."
+    return None, " | ".join(err_list)
 
 # ---------------------------------------------------------
 # 6. HEADER & TELEMETRY DASHBOARD
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v1.0 // FAST-TRACK</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v1.1 // STABLE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -418,7 +421,7 @@ target_date, target_slot, target_time, display_slot = get_next_slot()
 st.markdown(f"""
 <div class="telemetry-bar">
     <div class="badge badge-green"><span class="dot"></span> ENGINE: ONLINE</div>
-    <div class="badge badge-blue">⚡ GEMINI 3.8 + EDGE-TTS</div>
+    <div class="badge badge-blue">⚡ GEMINI + EDGE-TTS</div>
     <div class="badge badge-amber">📅 NEXT DROP: {target_date} @ {target_time} IST ({display_slot})</div>
 </div>
 """, unsafe_allow_html=True)
@@ -431,17 +434,19 @@ if "status_banner" in st.session_state:
     """, unsafe_allow_html=True)
     del st.session_state["status_banner"]
 
-# API Key Resolution
-api_key = ""
-if "GEMINI_API_KEY" in st.secrets:
-    api_key = str(st.secrets["GEMINI_API_KEY"]).strip().strip('"').strip("'")
-elif os.getenv("GEMINI_API_KEY"):
-    api_key = str(os.getenv("GEMINI_API_KEY")).strip().strip('"').strip("'")
+# Session-Safe API Key Resolution
+if "api_key" not in st.session_state:
+    st.session_state["api_key"] = ""
 
-with st.expander("🔑 API CREDENTIALS", expanded=(not bool(api_key))):
-    user_key = st.text_input("Gemini API Key", value=api_key, type="password", placeholder="AIzaSy...")
+if "GEMINI_API_KEY" in st.secrets:
+    st.session_state["api_key"] = str(st.secrets["GEMINI_API_KEY"]).strip().strip('"').strip("'")
+elif os.getenv("GEMINI_API_KEY"):
+    st.session_state["api_key"] = str(os.getenv("GEMINI_API_KEY")).strip().strip('"').strip("'")
+
+with st.expander("🔑 API CREDENTIALS", expanded=(not bool(st.session_state["api_key"]))):
+    user_key = st.text_input("Gemini API Key", value=st.session_state["api_key"], type="password", placeholder="AIzaSy...")
     if user_key:
-        api_key = user_key.strip().strip('"').strip("'")
+        st.session_state["api_key"] = user_key.strip().strip('"').strip("'")
 
 # ---------------------------------------------------------
 # 7. TAB NAVIGATION (SYNTHESIZE -> RENDER -> AUDIT)
@@ -454,8 +459,9 @@ with tab_synth:
     chosen_theme_name = st.selectbox("Stoic Psychological Angle", theme_options)
     
     if st.button("🚀 Generate Video Package & Spoken Audio", type="primary"):
-        if not api_key:
-            st.error("Please supply a valid Gemini API Key above.")
+        active_key = st.session_state.get("api_key", "").strip()
+        if not active_key:
+            st.error("Please enter your Gemini API Key in the '🔑 API CREDENTIALS' panel above.")
         else:
             with st.spinner("⚡ Synthesizing script & generating timed voiceover..."):
                 if chosen_theme_name.startswith("🎲"):
@@ -463,9 +469,9 @@ with tab_synth:
                 else:
                     angle_data = next((a for a in VIRAL_ANGLES if a["theme"] == chosen_theme_name), VIRAL_ANGLES[0])
 
-                package, err = generate_video_package(api_key, angle_data)
+                package, err = generate_video_package(active_key, angle_data)
                 if err or not package:
-                    st.error(f"⚠️ {err}")
+                    st.error(f"⚠️ Synthesis Failed: {err}")
                 else:
                     audio_path = os.path.join(TMP_DIR, "audio.mp3")
                     word_timings = asyncio.run(synthesize_speech_timed(package["script"], audio_path))
@@ -480,14 +486,14 @@ with tab_synth:
     if "active_video_pkg" in st.session_state:
         pkg = st.session_state["active_video_pkg"]["package"]
         st.divider()
-        st.subheader(f"📜 Concept: {pkg['title_concept']}")
-        st.info(f"🎯 **Hook Banner:** `{pkg['hook_banner']}`\n\n🗣️ **Script ({len(pkg['script'].split())} words):**\n\n*{pkg['script']}*")
+        st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
+        st.info(f"🎯 **Hook Banner:** `{pkg.get('hook_banner', 'MOVE IN SILENCE')}`\n\n🗣️ **Script ({len(pkg['script'].split())} words):**\n\n*{pkg['script']}*")
         
         st.audio(st.session_state["active_video_pkg"]["audio_path"])
         
         st.markdown("### 📋 Copy Google Flow Prompts")
         for idx, key in enumerate(["scene1_prompt", "scene2_prompt", "scene3_prompt", "scene4_prompt"]):
-            prompt_text = pkg[key]
+            prompt_text = pkg.get(key, "")
             st.text_area(f"Scene {idx+1} Prompt", prompt_text, height=75)
             escaped_prompt = json.dumps(prompt_text)
             components.html(f"""
@@ -534,7 +540,6 @@ with tab_render:
                 timings = st.session_state["active_video_pkg"]["timings"]
                 audio_path = st.session_state["active_video_pkg"]["audio_path"]
                 
-                # Save uploaded clips locally
                 clip_paths = []
                 for i, clip in enumerate(uploaded_clips[:4]):
                     c_path = os.path.join(TMP_DIR, f"clip_{i}.mp4")
@@ -542,7 +547,6 @@ with tab_render:
                         f.write(clip.read())
                     clip_paths.append(c_path)
                     
-                # Determine audio duration via ffprobe
                 probe_cmd = ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', audio_path]
                 res = subprocess.run(probe_cmd, capture_output=True, text=True)
                 vo_dur = float(res.stdout.strip()) if res.stdout.strip() else 24.0
@@ -550,14 +554,10 @@ with tab_render:
                 per_clip_dur = target_dur / 4.0
                 speed_factor = per_clip_dur / 4.0
 
-                # Build ASS subtitle track
                 ass_path = os.path.join(TMP_DIR, "subtitles.ass")
                 build_ass_subtitles(timings, ass_path, target_dur)
 
-                # Logo detection
                 logo_file = "logo.png" if os.path.exists("logo.png") else None
-
-                # Assemble FFmpeg filter graph
                 banner_text = pkg_data.get("hook_banner", "MOVE IN SILENCE").replace("'", "\\'").replace(":", "\\:")
                 out_video_path = os.path.join(TMP_DIR, "output_master.mp4")
 
@@ -580,7 +580,6 @@ with tab_render:
                 else:
                     filter_chains.append(";[v_sub]copy[vout]")
 
-                # Background music mixing
                 if uploaded_music:
                     m_path = os.path.join(TMP_DIR, "user_music.mp3")
                     with open(m_path, "wb") as f:
