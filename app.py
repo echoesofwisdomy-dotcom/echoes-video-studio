@@ -163,7 +163,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. WORKSPACE & FONT FOUNDRY
+# 2. WORKSPACE, FONT FOUNDRY & UNICODE FORMATTER
 # ---------------------------------------------------------
 DATA_DIR = os.path.join(os.getcwd(), "data")
 TMP_DIR = os.path.join(os.getcwd(), "tmp")
@@ -193,25 +193,34 @@ def ensure_dejavu_font():
 
 ensure_dejavu_font()
 
-# Subtitle Stylistic Archetypes (BGR format for ASS subtitles)
+def to_unicode_bold(text):
+    """Converts regular text to true mathematical bold Unicode for Facebook feeds."""
+    normal_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    bold_chars   = "𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"
+    trans = str.maketrans(normal_chars, bold_chars)
+    return text.translate(trans)
+
 SUBTITLE_ARCHETYPES = {
     "IMPERIAL_GOLD": {
         "label": "👑 Imperial Gold (Sovereignty & Power)",
-        "ass_primary": "&H0000E5FF",  # BGR for #FFE500
+        "ass_primary": "&H0000E5FF",
         "banner_hex": "0xFFE500"
     },
     "GLACIAL_ICE": {
         "label": "❄️ Glacial Ice (Detachment & Boundaries)",
-        "ass_primary": "&H00FFF500",  # BGR for #00F5FF
+        "ass_primary": "&H00FFF500",
         "banner_hex": "0x00F5FF"
     },
     "FORGE_AMBER": {
         "label": "🔥 Forge Amber (Discipline & Raw Truth)",
-        "ass_primary": "&H000099FF",  # BGR for #FF9900
+        "ass_primary": "&H000099FF",
         "banner_hex": "0xFF9900"
     }
 }
 
+# ---------------------------------------------------------
+# 3. DUAL-SLOT CADENCE ENGINE (PERSISTENT LOGIC)
+# ---------------------------------------------------------
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
 
 def load_db():
@@ -219,7 +228,9 @@ def load_db():
         "scheduled_videos": [],
         "used_hooks": [],
         "last_scheduled_date": None,
-        "last_scheduled_slot": None
+        "last_scheduled_slot": None,
+        "slot1_time": "05:00",
+        "slot2_time": "20:00"
     }
     if os.path.exists(DB_PATH):
         try:
@@ -239,43 +250,54 @@ def save_db(data):
 
 db = load_db()
 
-def get_next_slot():
+def parse_time_str(t_str, fallback):
+    try:
+        parts = t_str.split(":")
+        return time(int(parts[0]), int(parts[1]))
+    except Exception:
+        return fallback
+
+def get_next_slot(base_date=None, base_slot=None):
     now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
-    last_d_str = db.get("last_scheduled_date")
-    last_slot = db.get("last_scheduled_slot")
+    last_d_str = base_date if base_date else db.get("last_scheduled_date")
+    last_slot = base_slot if base_slot else db.get("last_scheduled_slot")
+    s1_t_str = db.get("slot1_time", "05:00")
+    s2_t_str = db.get("slot2_time", "20:00")
 
     if last_d_str and last_slot:
-        last_d = datetime.strptime(last_d_str, "%Y-%m-%d").date()
-        if last_slot == "SLOT 1":
+        try:
+            last_d = datetime.strptime(str(last_d_str), "%Y-%m-%d").date()
+        except ValueError:
+            last_d = now_ist.date()
+
+        if "SLOT 1" in str(last_slot).upper():
             target_d = last_d
-            target_slot = "SLOT 2"
-            target_time = "20:00"
-            display_slot = "Slot 2 (Evening)"
+            target_slot = "SLOT 2 (EVENING)"
+            target_time = s2_t_str
         else:
             target_d = last_d + timedelta(days=1)
-            target_slot = "SLOT 1"
-            target_time = "05:00"
-            display_slot = "Slot 1 (Morning)"
+            target_slot = "SLOT 1 (MORNING)"
+            target_time = s1_t_str
     else:
         target_d = now_ist.date()
-        if now_ist.hour < 5:
-            target_slot = "SLOT 1"
-            target_time = "05:00"
-            display_slot = "Slot 1 (Morning)"
-        elif now_ist.hour < 20:
-            target_slot = "SLOT 2"
-            target_time = "20:00"
-            display_slot = "Slot 2 (Evening)"
+        s1_time = parse_time_str(s1_t_str, time(5, 0))
+        s2_time = parse_time_str(s2_t_str, time(20, 0))
+
+        if now_ist.time() < s1_time:
+            target_slot = "SLOT 1 (MORNING)"
+            target_time = s1_t_str
+        elif now_ist.time() < s2_time:
+            target_slot = "SLOT 2 (EVENING)"
+            target_time = s2_t_str
         else:
             target_d = now_ist.date() + timedelta(days=1)
-            target_slot = "SLOT 1"
-            target_time = "05:00"
-            display_slot = "Slot 1 (Morning)"
+            target_slot = "SLOT 1 (MORNING)"
+            target_time = s1_t_str
 
-    return target_d.strftime("%Y-%m-%d"), target_slot, target_time, display_slot
+    return target_d.strftime("%Y-%m-%d"), target_slot, target_time
 
 # ---------------------------------------------------------
-# 3. HIGH-RETENTION VIRAL THEMES MATRIX
+# 4. VIRAL Stoic THEMES
 # ---------------------------------------------------------
 VIRAL_ANGLES = [
     {
@@ -323,7 +345,7 @@ VIRAL_ANGLES = [
 ]
 
 # ---------------------------------------------------------
-# 4. EDGE-TTS WORD-LEVEL TIMESTAMPS ENGINE (NO WHISPER)
+# 5. AUDIO SYNTHESIS & SUBTITLES
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     communicate = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
@@ -408,7 +430,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return dialogue_events
 
 # ---------------------------------------------------------
-# 5. GEMINI SCRIPT & PROMPT GENERATOR
+# 6. GEMINI 3.8 FLASH GENERATOR (MULTI-PLATFORM COPY)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, angle):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -435,7 +457,13 @@ def generate_video_package(raw_api_key, angle):
        - 'GLACIAL_ICE' for cold silence, indifference, setting boundaries, or walking away.
        - 'FORGE_AMBER' for discipline, hard work, focus, dopamine detox, or overcoming overthinking.
        - 'IMPERIAL_GOLD' for inner sovereignty, regal composure, high-status stillness, or wisdom.
-    5. Google Flow Compliance:
+    5. Facebook & Instagram Copy:
+       - caption_hook: 4-6 explosive words (e.g. NEVER ANNOUNCE YOUR EXIT).
+       - caption_lesson: 2 punchy psychological sentences explaining the deeper truth.
+       - debate_question: 1 binary dilemma (e.g. When someone disrespects you:).
+       - choice_1: The stoic silent reaction.
+       - choice_2: The impulsive reaction.
+    6. Google Flow Compliance:
        - Character MUST always be described as: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'
        - Never use names like Marcus, Seneca, Epictetus in visual prompts.
        - Natural silence: 'Dignified silent composure, serene stoic expression, calm and steady gaze.'
@@ -453,13 +481,20 @@ def generate_video_package(raw_api_key, angle):
       "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 prompt",
       "thumbnail_prompt": "High-contrast 9:16 vertical portrait prompt with bold hook text suggestion",
       "youtube_title": "High CTR Title #shorts #stoicism",
-      "youtube_description": "Full description with handles and hashtags",
-      "youtube_pinned_comment": "Debate question with 1️⃣/2️⃣ options"
+      "youtube_description": "Full YouTube description with handles and hashtags",
+      "youtube_tags": "stoicism, stoic mindset, power of silence, boundaries, discipline, echoes of wisdom",
+      "youtube_pinned_comment": "Binary debate question with 1️⃣ and 2️⃣ choices",
+      "facebook_title": "High CTR Facebook Title",
+      "caption_hook": "PUNCHY 4-6 WORD HOOK",
+      "caption_lesson": "Two sentences of high-value wisdom.",
+      "debate_question": "When someone disrespects you:",
+      "choice_1": "Walk away in cold silence",
+      "choice_2": "Confront them directly",
+      "facebook_hashtags": "#StoicMindset #EchoesOfWisdom #PowerOfSilence #Reels #Stoicism"
     }}
     """
 
-    err_list = []
-    for mod in ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
+    for mod in ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-flash-latest"]:
         try:
             resp = client.models.generate_content(
                 model=mod,
@@ -473,27 +508,26 @@ def generate_video_package(raw_api_key, angle):
             if "script" in parsed:
                 return parsed, None
         except Exception as e:
-            err_list.append(f"{mod}: {e}")
             continue
             
-    return None, " | ".join(err_list)
+    return None, "API error generating concept. Please verify your Gemini API key."
 
 # ---------------------------------------------------------
-# 6. HEADER & TELEMETRY DASHBOARD
+# 7. TELEMETRY BAR & CADENCE MANAGER (ACCORDION)
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v1.4 // ADAPTIVE PALETTES</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 500;">v2.0 // CADENCE SUITE</span>
 </div>
 """, unsafe_allow_html=True)
 
-target_date, target_slot, target_time, display_slot = get_next_slot()
+target_date, target_slot, target_time = get_next_slot()
 
 st.markdown(f"""
 <div class="telemetry-bar">
     <div class="badge badge-green"><span class="dot"></span> ENGINE: ONLINE</div>
-    <div class="badge badge-blue">⚡ SUBTITLE ENGINE: ARMED</div>
-    <div class="badge badge-amber">📅 NEXT DROP: {target_date} @ {target_time} IST ({display_slot})</div>
+    <div class="badge badge-blue">⚡ GEMINI 3.8 + EDGE-TTS</div>
+    <div class="badge badge-amber">📅 NEXT DROP: {target_date} @ {target_time} IST ({target_slot})</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -505,6 +539,44 @@ if "status_banner" in st.session_state:
     """, unsafe_allow_html=True)
     del st.session_state["status_banner"]
 
+# Cadence Manager Accordion
+with st.expander("📅 PUBLISHING CADENCE & TIME MANAGER", expanded=False):
+    col_c1, col_c2 = st.columns(2)
+    saved_last_d_str = db.get("last_scheduled_date")
+    saved_last_d = None
+    if saved_last_d_str:
+        try:
+            saved_last_d = datetime.strptime(saved_last_d_str, "%Y-%m-%d").date()
+        except Exception:
+            pass
+            
+    with col_c1:
+        custom_last_d = st.date_input(
+            "Last Scheduled Date",
+            value=saved_last_d if saved_last_d else datetime.now(timezone(timedelta(hours=5, minutes=30))).date()
+        )
+        slot_choices = ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"]
+        current_saved_slot = db.get("last_scheduled_slot", "SLOT 2 (EVENING)")
+        slot_idx = 0 if "SLOT 1" in str(current_saved_slot).upper() else 1
+        custom_last_slot = st.selectbox("Last Completed Slot", slot_choices, index=slot_idx)
+
+    with col_c2:
+        t1_val = parse_time_str(db.get("slot1_time", "05:00"), time(5, 0))
+        t2_val = parse_time_str(db.get("slot2_time", "20:00"), time(20, 0))
+        custom_t1 = st.time_input("Slot 1 Morning Time (IST)", value=t1_val)
+        custom_t2 = st.time_input("Slot 2 Evening Time (IST)", value=t2_val)
+
+    if st.button("💾 Save Schedule Cadence Preference"):
+        db["last_scheduled_date"] = custom_last_d.strftime("%Y-%m-%d")
+        db["last_scheduled_slot"] = custom_last_slot
+        db["slot1_time"] = custom_t1.strftime("%H:%M")
+        db["slot2_time"] = custom_t2.strftime("%H:%M")
+        save_db(db)
+        calc_d, calc_s, calc_t = get_next_slot(db["last_scheduled_date"], db["last_scheduled_slot"])
+        st.session_state["status_banner"] = f"✓ CADENCE PREFERENCE SAVED! Next queue locked to: {calc_d} @ {calc_t} IST ({calc_s})"
+        st.rerun()
+
+# API Key Resolution
 if "api_key" not in st.session_state:
     st.session_state["api_key"] = ""
 
@@ -519,7 +591,61 @@ with st.expander("🔑 API CREDENTIALS", expanded=(not bool(st.session_state["ap
         st.session_state["api_key"] = user_key.strip().strip('"').strip("'")
 
 # ---------------------------------------------------------
-# 7. TAB NAVIGATION
+# 8. COPY BUTTON COMPONENT (FLASHES SOLID GREEN)
+# ---------------------------------------------------------
+def render_copy_deck(btn_id, label, text_content):
+    escaped_json = json.dumps(text_content)
+    components.html(f"""
+    <div style="margin: 0; padding: 0;">
+        <button id="btn_{btn_id}" onclick="copyText_{btn_id}()" style="width: 100%; height: 2.6rem; background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 8px; font-weight: 700; font-family: monospace; font-size: 12px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.2s;">
+            📋 {label}
+        </button>
+    </div>
+    <script>
+        function copyText_{btn_id}() {{
+            var str = {escaped_json};
+            function setSuccess() {{
+                var btn = document.getElementById("btn_{btn_id}");
+                btn.innerText = "✓ COPIED TO CLIPBOARD!";
+                btn.style.background = "#059669";
+                btn.style.color = "#FFFFFF";
+                btn.style.borderColor = "#34D399";
+                setTimeout(function() {{
+                    btn.innerText = "📋 {label}";
+                    btn.style.background = "rgba(56, 189, 248, 0.15)";
+                    btn.style.color = "#38BDF8";
+                    btn.style.borderColor = "rgba(56, 189, 248, 0.4)";
+                }}, 2500);
+            }}
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {{
+                navigator.clipboard.writeText(str).then(setSuccess).catch(function() {{
+                    fallback(str);
+                }});
+            }} else {{
+                fallback(str);
+            }}
+
+            function fallback(t) {{
+                var el = document.createElement('textarea');
+                el.value = t;
+                el.setAttribute('readonly', '');
+                el.style.position = 'absolute';
+                el.style.left = '-9999px';
+                document.body.appendChild(el);
+                el.select();
+                try {{
+                    document.execCommand('copy');
+                    setSuccess();
+                }} catch(err) {{}}
+                document.body.removeChild(el);
+            }}
+        }}
+    </script>
+    """, height=48)
+
+# ---------------------------------------------------------
+# 9. TABS NAVIGATION
 # ---------------------------------------------------------
 tab_synth, tab_render, tab_queue = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER"])
 
@@ -567,9 +693,12 @@ with tab_synth:
                     st.session_state["active_video_pkg"] = {
                         "package": package,
                         "audio_path": audio_path,
-                        "timings": word_timings
+                        "timings": word_timings,
+                        "target_date": target_date,
+                        "target_slot": target_slot,
+                        "target_time": target_time
                     }
-                    st.success(f"✅ Script ready! Subtitle style locked to: {SUBTITLE_ARCHETYPES[final_arch]['label']}")
+                    st.success(f"✅ Script ready! Palette: {SUBTITLE_ARCHETYPES[final_arch]['label']}")
 
     if "active_video_pkg" in st.session_state:
         pkg = st.session_state["active_video_pkg"]["package"]
@@ -578,7 +707,7 @@ with tab_synth:
 
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
-        st.markdown(f"**🎨 Active Subtitle Palette:** `{arch_meta['label']}`")
+        st.markdown(f"**🎨 Subtitle Palette:** `{arch_meta['label']}`")
         st.info(f"🎯 **Hook Banner:** `{pkg.get('hook_banner', 'MOVE IN SILENCE')}`\n\n🗣️ **Script ({len(pkg['script'].split())} words):**\n\n*{pkg['script']}*")
         
         st.audio(st.session_state["active_video_pkg"]["audio_path"])
@@ -592,30 +721,9 @@ with tab_synth:
             ("5. THUMBNAIL PROMPT (9:16 HIGH-CTR)", "thumbnail_prompt")
         ]
         for idx, (label, key) in enumerate(prompt_cards):
-            prompt_text = pkg.get(key, "")
-            st.text_area(label, prompt_text, height=75)
-            escaped_prompt = json.dumps(prompt_text)
-            components.html(f"""
-            <button id="pbtn_{idx}" onclick="copyPrompt({idx})" style="width: 100%; height: 2.2rem; background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; font-weight: 700; font-family: monospace; font-size: 11px; cursor: pointer;">
-                📋 COPY {label}
-            </button>
-            <script>
-            function copyPrompt(i) {{
-                var t = {escaped_prompt};
-                navigator.clipboard.writeText(t).then(function() {{
-                    var b = document.getElementById("pbtn_" + i);
-                    b.innerText = "✓ COPIED!";
-                    b.style.background = "#059669";
-                    b.style.color = "#FFFFFF";
-                    setTimeout(function() {{
-                        b.innerText = "📋 COPY {label}";
-                        b.style.background = "rgba(56, 189, 248, 0.15)";
-                        b.style.color = "#38BDF8";
-                    }}, 2000);
-                }});
-            }}
-            </script>
-            """, height=42)
+            p_text = pkg.get(key, "")
+            st.text_area(label, p_text, height=75)
+            render_copy_deck(f"p_{idx}", f"COPY {label}", p_text)
 
 # --- TAB 2: COMPOSE & RENDER REEL ---
 with tab_render:
@@ -662,7 +770,6 @@ with tab_render:
                 audio_path = st.session_state["active_video_pkg"]["audio_path"]
                 script_txt = pkg_data.get("script", "")
                 
-                # Active Archetype Palette
                 arch_key = pkg_data.get("subtitle_archetype", "IMPERIAL_GOLD")
                 arch_meta = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
                 banner_color = arch_meta["banner_hex"]
@@ -681,7 +788,6 @@ with tab_render:
                 per_clip_dur = target_dur / 4.0
                 speed_factor = per_clip_dur / 4.0
 
-                # Build ASS subtitle file with dynamic archetype colors
                 ass_path = os.path.join(TMP_DIR, "subtitles.ass")
                 cues = build_ass_subtitles(timings, script_txt, ass_path, target_dur, archetype_key=arch_key)
 
@@ -741,45 +847,103 @@ with tab_render:
                     st.error(f"FFmpeg Compilation Error: {proc.stderr[:400]}")
                 else:
                     st.session_state["rendered_video_path"] = out_video_path
-                    st.success(f"🎉 Master Reel Rendered! Dynamic Palette Applied: {arch_meta['label']}")
+                    st.success(f"🎉 Master Reel Rendered! Subtitle Palette: {arch_meta['label']}")
 
     if "rendered_video_path" in st.session_state:
         v_path = st.session_state["rendered_video_path"]
         st.video(v_path)
         
-        pkg = st.session_state["active_video_pkg"]["package"]
-        file_slug = re.sub(r'[^a-zA-Z0-9]', '_', pkg.get('hook_banner', 'stoic_reel')).lower()
-        export_name = f"{target_date.replace('-', '')}_{file_slug}.mp4"
+        active_sess = st.session_state["active_video_pkg"]
+        pkg = active_sess["package"]
+        curr_date = active_sess.get("target_date", target_date)
+        curr_slot = active_sess.get("target_slot", target_slot)
+        curr_time = active_sess.get("target_time", target_time)
+
+        # Exact Colab naming convention: YYYYMMDD_<slug>.mp4
+        raw_slug = re.sub(r'[^a-zA-Z0-9]+', '_', pkg.get('hook_banner', 'stoic_reel')).strip('_').lower()
+        export_name = f"{curr_date.replace('-', '')}_{raw_slug}.mp4"
 
         with open(v_path, "rb") as f:
             v_bytes = f.read()
 
         st.download_button(
-            label="💾 Download Master Reel (1080x1920 MP4)",
+            label=f"💾 Download Master Reel ({export_name})",
             data=v_bytes,
             file_name=export_name,
             mime="video/mp4"
         )
 
-        st.markdown("### 📋 Formatted Metadata")
-        st.text_input("YouTube Title", pkg.get("youtube_title", ""))
-        st.text_area("YouTube Description", pkg.get("youtube_description", ""), height=120)
-        st.text_area("Pinned Debate Comment", pkg.get("youtube_pinned_comment", ""), height=70)
+        st.divider()
+        st.markdown(f"### 🎯 QUEUE: {curr_date} @ {curr_time} IST ({curr_slot})")
+
+        # --- YOUTUBE SHORTS METADATA SUITE ---
+        st.markdown("#### 🔴 YOUTUBE SHORTS SUITE")
+        yt_t = pkg.get("youtube_title", f"{pkg.get('hook_banner', 'Stoic Reel').title()} #shorts #stoicism")
+        st.text_input("YouTube Title", yt_t, key="yt_title_field")
+        render_copy_deck("yt_t", "COPY YOUTUBE TITLE", yt_t)
+
+        yt_desc = pkg.get("youtube_description", (
+            f"{pkg['script']}\n\n"
+            "Subscribe to @EchoesOfWisdomOfficial for daily ancient Stoic philosophy:\n"
+            "https://www.youtube.com/@EchoesOfWisdomOfficial\n\n"
+            "#stoicism #stoicmindset #powerofsilence #boundaries #shorts"
+        ))
+        st.text_area("YouTube Description", yt_desc, height=130, key="yt_desc_field")
+        render_copy_deck("yt_d", "COPY YOUTUBE DESCRIPTION", yt_desc)
+
+        yt_pin = pkg.get("youtube_pinned_comment", "When someone disrespects you: 1. Walk away in cold silence, or 2. Confront them directly? Drop 1 or 2 below. 👇")
+        st.text_area("YouTube Pinned Debate Comment", yt_pin, height=75, key="yt_pin_field")
+        render_copy_deck("yt_p", "COPY PINNED COMMENT", yt_pin)
+
+        # --- FACEBOOK & INSTAGRAM REELS SUITE ---
+        st.markdown("#### 🔵 FACEBOOK & INSTAGRAM REELS SUITE")
+        fb_t = pkg.get("facebook_title", f"{pkg.get('hook_banner', 'Stoic Reel').title()} | Stoic Wisdom")
+        st.text_input("Facebook Reel Title", fb_t, key="fb_title_field")
+        render_copy_deck("fb_t", "COPY FACEBOOK TITLE", fb_t)
+
+        # Dynamic high-converting Unicode Bold Caption
+        raw_fb_hook = pkg.get("caption_hook", pkg.get("hook_banner", "NEVER ANNOUNCE YOUR EXIT"))
+        bold_fb_hook = to_unicode_bold(re.sub(r'[^\w\s]', '', raw_fb_hook).strip().upper())
+        fb_caption = (
+            f"⚡ {bold_fb_hook} 🏛️\n\n"
+            f"{pkg.get('caption_lesson', pkg['script'])}\n\n"
+            f"🤔 {pkg.get('debate_question', 'When conflict strikes your peace:')}\n"
+            f"1️⃣ {pkg.get('choice_1', 'Walk away in cold silence')}\n"
+            f"2️⃣ {pkg.get('choice_2', 'Confront them directly')}\n\n"
+            f"Drop 1 or 2 below. 👇\n\n"
+            f"• Follow @EchoesOfWisdomOfficial for daily timeless clarity.\n\n"
+            f"{pkg.get('facebook_hashtags', '#StoicMindset #EchoesOfWisdom #PowerOfSilence #Reels')}"
+        )
+        st.text_area("Facebook Reel Caption (with Unicode Bold)", fb_caption, height=200, key="fb_cap_field")
+        render_copy_deck("fb_c", "COPY FACEBOOK CAPTION", fb_caption)
+
+        st.markdown("""
+        <div style="margin: 12px 0 16px 0;">
+            <a href="https://business.facebook.com/latest/composer" target="_blank" style="text-decoration: none;">
+                <button style="width: 100%; height: 3rem; background: #1877F2; color: white; border: none; border-radius: 8px; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);">
+                    🌐 OPEN META BUSINESS SUITE SCHEDULER
+                </button>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
             db["scheduled_videos"].append({
-                "date": target_date,
-                "slot": target_slot,
-                "time": target_time,
-                "title": pkg.get("youtube_title", "Stoic Reel"),
+                "date": curr_date,
+                "slot": curr_slot,
+                "time": curr_time,
+                "title": yt_t,
                 "file": export_name
             })
             if pkg.get("hook_banner") not in db.get("used_hooks", []):
                 db["used_hooks"].append(pkg.get("hook_banner"))
-            db["last_scheduled_date"] = target_date
-            db["last_scheduled_slot"] = target_slot
+            db["last_scheduled_date"] = curr_date
+            db["last_scheduled_slot"] = curr_slot
             save_db(db)
-            st.session_state["status_banner"] = f"✓ LOCKED: {export_name} scheduled for {target_date} @ {target_time} IST ({target_slot}). Slot advanced!"
+            
+            # Compute new target for telemetry notification
+            next_d, next_s, next_t = get_next_slot(curr_date, curr_slot)
+            st.session_state["status_banner"] = f"✓ LOCKED: {export_name} scheduled for {curr_date} @ {curr_time} IST ({curr_slot}). Next slot advanced to: {next_d} @ {next_t} IST ({next_s})"
             del st.session_state["rendered_video_path"]
             del st.session_state["active_video_pkg"]
             st.rerun()
@@ -798,6 +962,7 @@ with tab_queue:
                     <span style="color: #64748B;"> @ </span>
                     <span style="color: #FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
                     <div style="color: #F8FAFC; font-weight: 600; margin-top: 2px;">{item.get('title')}</div>
+                    <div style="color: #64748B; font-size: 11px; margin-top: 1px;">📁 {item.get('file')}</div>
                 </div>
                 <div style="color: #34D399; font-weight: 700; font-size: 11px;">● SCHEDULED</div>
             </div>
