@@ -373,7 +373,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR
+# 6. GEMINI GENERATOR (HARDENED ANATOMICAL RULES)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     client = genai.Client(api_key=raw_api_key.strip().strip('"').strip("'"))
@@ -384,19 +384,22 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f"PILLAR: {t_obj['p']} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
         f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\nFORBIDDEN HOOKS:\n{used_h}\n"
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
-        f"4. Google Flow Character: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.' (Serene, dignified silence).\n"
-        f"5. All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
+        f"4. Google Flow Character Rules (STRICT ANATOMY ENFORCEMENT):\n"
+        f"   - Character description MUST be: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'\n"
+        f"   - ANATOMICAL CONSTRAINTS: Exactly two arms and two hands only. Hands are kept resting naturally inside the deep folds of the woolen mantle or clasped calmly at waist level. Absolutely no extra limbs, no phantom hands emerging from cloth folds, no mutated fingers, anatomically flawless human anatomy.\n"
+        f"   - Composure: Dignified silent composure, serene stoic expression, calm steady gaze.\n"
+        f"5. Prompt Formatting: All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
         '  "hook_banner": "3-4 WORDS IN CAPS",\n'
         f'  "subtitle_archetype": "{t_obj["a"]}",\n'
         '  "script": "Full 65-70 word script.",\n'
-        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting",\n'
+        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting, hands resting inside woolen mantle, flawless anatomy, exactly two arms",\n'
         f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c})",\n'
-        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action",\n'
-        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up",\n'
-        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion",\n'
+        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action, natural posture, no phantom limbs",\n'
+        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up head and shoulders, serene resolve",\n'
+        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, anatomically correct",\n'
         '  "youtube_title": "High CTR Title #shorts #stoicism",\n'
         '  "youtube_description": "Description with handles and hashtags",\n'
         '  "youtube_pinned_comment": "Binary debate question with 1️⃣/2️⃣ options",\n'
@@ -410,7 +413,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    for m in ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"]:
+    for m in ["gemini-2.5-flash", "gemini-2.0-flash"]:
         try:
             r = client.models.generate_content(model=m, contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85))
             parsed = json.loads(r.text)
