@@ -83,7 +83,7 @@ st.markdown("""
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         border-radius: 8px !important; 
         font-family: 'Plus Jakarta Sans', sans-serif !important; 
-        font-weight: 600 !important;
+        font-weight: 600 !important; 
     }
     
     .stDownloadButton>button { 
@@ -154,7 +154,7 @@ SUBTITLE_ARCHETYPES = {
 }
 
 def get_library_tracks():
-    """Scans the music/ directory for all available MP3 files."""
+    """Scans the music/ folder for all available MP3 tracks."""
     if not os.path.exists(MUSIC_DIR):
         return []
     return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith(".mp3")])
@@ -330,10 +330,9 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             if txt:
                 events.append((st_t, en_t, txt))
     else:
-        # Acoustic safety fallback: step through word groups with vocal lead-in
         tokens = script_text.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
-        vocal_start = 0.35  # Do not display before narrator begins speaking
+        vocal_start = 0.35
         step = max(0.5, (total_dur - vocal_start - 0.4) / max(1, len(token_groups)))
         
         for idx, grp in enumerate(token_groups):
@@ -428,7 +427,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v3.7 // STUDIO SUITE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v3.8 // FAULT-TOLERANT</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -537,11 +536,12 @@ with tab1:
                     with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
                         json.dump(draft_data, f, indent=2)
                     st.session_state["active_video_pkg"] = draft_data
+                    st.session_state.pop("rendered_video_path", None)
                     st.success(f"Locked to Cloud Draft Vault! {t_obj['t']} | {s_obj['n']}")
 
     if "active_video_pkg" in st.session_state:
         p_data = st.session_state["active_video_pkg"]
-        pkg = p_data["pkg"]
+        pkg = p_data.get("pkg", {})
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
         st.markdown(f"**🏛️ Pillar:** `{p_data.get('p', 'Relentless Focus')}` | **Palette:** `{SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}`")
@@ -560,7 +560,8 @@ with tab1:
         if st.button("🗑️ Discard Draft & Start Fresh"):
             if os.path.exists(DRAFT_JSON_PATH): os.remove(DRAFT_JSON_PATH)
             if os.path.exists(DRAFT_AUDIO_PATH): os.remove(DRAFT_AUDIO_PATH)
-            if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
+            st.session_state.pop("active_video_pkg", None)
+            st.session_state.pop("rendered_video_path", None)
             st.rerun()
 
 # --- TAB 2: COMPOSE & RENDER MASTER REEL ---
@@ -611,8 +612,6 @@ with tab2:
         try:
             im = Image.open(thumb).convert("RGB")
             w, h = im.size
-            
-            # Lossless crop: trim bottom 5.5% watermark area while preserving true 9:16 vertical framing
             crop_h = h - int(h * 0.055)
             target_aspect = 9.0 / 16.0
             crop_w = int(crop_h * target_aspect)
@@ -681,7 +680,6 @@ with tab2:
                 else: 
                     v_filters.append(";[vsub]copy[vout]")
 
-                # Background audio track resolution
                 active_bgm_path = None
                 if chosen_bgm_mode == "UPLOAD" and custom_music_file:
                     custom_p = os.path.join(TMP_DIR, "custom_bgm.mp3")
@@ -690,7 +688,6 @@ with tab2:
                 else:
                     active_bgm_path, _ = resolve_background_track(chosen_bgm_mode, arch_key)
 
-                # Dynamic Audio Leveling Engine: EBU R128 + Sidechain Auto-Ducking
                 if active_bgm_path and os.path.exists(active_bgm_path):
                     inputs.extend(['-i', active_bgm_path])
                     midx = 6 if logo else 5
@@ -719,7 +716,7 @@ with tab2:
                     st.session_state["rendered_video_path"] = out_p
                     st.success(f"🎉 Master Reel Rendered! Subtitles: {arch['label']} (Dynamic Audio Leveled)")
 
-    if "rendered_video_path" in st.session_state:
+    if "rendered_video_path" in st.session_state and "active_video_pkg" in st.session_state:
         vp = st.session_state["rendered_video_path"]
         st.video(vp)
         p_data = st.session_state["active_video_pkg"]
@@ -765,8 +762,8 @@ with tab2:
             
             nd, ns, nt = get_next_slot(c_d, c_s)
             st.session_state["status_banner"] = f"✓ LOCKED: {exp_name} scheduled! Next slot: {nd} @ {nt} IST ({ns})"
-            if "rendered_video_path" in st.session_state: del st.session_state["rendered_video_path"]
-            if "active_video_pkg" in st.session_state: del st.session_state["active_video_pkg"]
+            st.session_state.pop("rendered_video_path", None)
+            st.session_state.pop("active_video_pkg", None)
             st.rerun()
 
 # --- TAB 3: QUEUE LEDGER ---
