@@ -4,3 +4,5 @@ edge-tts
 numpy
 Pillow
 requests
+edge-tts>=6.1.19
+gTTS>=2.5.1
