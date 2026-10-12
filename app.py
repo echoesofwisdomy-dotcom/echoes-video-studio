@@ -507,7 +507,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.2 // SELF-HEALING ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.3 // DYNAMIC CADENCE & DEEP CROP</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -607,7 +607,7 @@ with tab1:
                     try:
                         timings = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
                         if not timings:
-                            st.info("ℹ️ Edge-TTS endpoint throttled: switched seamlessly to Google British English voice bed.")
+                            st.info("ℹ️ Switched to backup British English voice.")
                     except Exception as tts_err:
                         st.warning(f"Voiceover notice: {str(tts_err)[:80]}")
                         timings = []
@@ -702,23 +702,36 @@ with tab2:
     elif chosen_bgm_mode != "NONE":
         st.markdown(f'<div style="color: #FBBF24; font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">ℹ️ Library empty ({len(avail_tracks)} tracks). Upload an MP3 above or commit tracks to GitHub.</div>', unsafe_allow_html=True)
 
-    st.markdown("### 🖼️ 3. Thumbnail Watermark Elimination (Lossless Aspect-Ratio Crop)")
+    # ---------------------------------------------------------
+    # ADAPTIVE LOSSLESS THUMBNAIL CROP ENGINE
+    # ---------------------------------------------------------
+    st.markdown("### 🖼️ 3. Thumbnail Watermark Elimination")
     thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
     if thumb:
         try:
             im = Image.open(thumb).convert("RGB")
             w, h = im.size
-            crop_h = h - int(h * 0.055)
+            
+            crop_mode = st.radio(
+                "Watermark Removal Depth",
+                ["Standard (Single Watermark - 5.5% Bottom Crop)", "Deep (Expanded/Double Watermark - 12.5% Bottom Crop)"],
+                horizontal=True,
+                help="Choose Deep if your thumbnail was created by outpainting/expanding in Flow and has two sparkles."
+            )
+            pct = 0.125 if "Deep" in crop_mode else 0.055
+            
+            crop_h = h - int(h * pct)
             target_aspect = 9.0 / 16.0
             crop_w = int(crop_h * target_aspect)
-            margin_x = (w - crop_w) // 2
+            margin_x = max(0, (w - crop_w) // 2)
             
             clean_im = im.crop((margin_x, 0, margin_x + crop_w, crop_h)).resize((1080, 1920), Image.Resampling.LANCZOS)
             
             buf = io.BytesIO()
             clean_im.save(buf, format="PNG", quality=98)
+            st.image(clean_im, caption=f"✓ Clean 9:16 Master ({crop_mode.split()[0]} Crop Applied)", use_container_width=True)
             st.download_button("💾 Download Cleaned Master Thumbnail", buf.getvalue(), f"{target_d.replace('-','')}_clean_thumbnail.png", "image/png")
-            st.caption("✓ Bottom watermark cleanly cropped out; true 9:16 vertical framing preserved with zero patch boxes.")
+            st.caption("✓ Lossless 9:16 vertical crop removes watermarks without dark bars or overlays.")
         except Exception as e: 
             st.warning(f"Could not crop thumbnail: {e}")
 
@@ -785,7 +798,6 @@ with tab2:
                 else:
                     active_bgm_path, _ = resolve_background_track(chosen_bgm_mode, arch_key)
 
-                # Voiceover split: maintains audio presence and triggers music ducking
                 if active_bgm_path and os.path.exists(active_bgm_path):
                     inputs.extend(['-i', active_bgm_path])
                     midx = 6 if logo else 5
@@ -819,11 +831,33 @@ with tab2:
         st.video(vp)
         p_data = st.session_state["active_video_pkg"]
         pkg = p_data["pkg"]
-        c_d = p_data.get("date", target_d)
-        c_s = p_data.get("slot", target_s)
-        c_t = p_data.get("time", target_t)
-        active_pillar = p_data.get("p", "Relentless Focus")
         
+        # ---------------------------------------------------------
+        # DYNAMIC QUEUE TARGET OVERRIDE (NEVER GET DESYNCED WITH META)
+        # ---------------------------------------------------------
+        st.divider()
+        st.markdown("### 🎯 SCHEDULING QUEUE SLOT")
+        
+        col_qd1, col_qd2 = st.columns(2)
+        default_target_date = datetime.strptime(target_d, "%Y-%m-%d").date()
+        with col_qd1:
+            chosen_date_target = st.date_input("Target Schedule Date", value=default_target_date)
+        with col_qd2:
+            chosen_slot_target = st.selectbox(
+                "Target Schedule Slot",
+                ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"],
+                index=(0 if "SLOT 1" in target_s else 1)
+            )
+            
+        s1_t, s2_t = db.get("slot1_time", "05:00"), db.get("slot2_time", "20:00")
+        chosen_time_target = s1_t if "SLOT 1" in chosen_slot_target else s2_t
+        c_d = chosen_date_target.strftime("%Y-%m-%d")
+        c_s = chosen_slot_target
+        c_t = chosen_time_target
+
+        st.info(f"Targeting: **{c_d} @ {c_t} IST ({c_s})**")
+
+        active_pillar = p_data.get("p", "Relentless Focus")
         PLAYLIST_MAP = {
             "Emotional Immunity": "Echoes of Wisdom | Emotional Immunity & Boundaries",
             "Relentless Focus": "Echoes of Wisdom | Relentless Focus & Execution",
@@ -838,9 +872,6 @@ with tab2:
         with open(vp, "rb") as f: vb = f.read()
         st.download_button(f"💾 Download Master Reel ({exp_name})", vb, exp_name, "video/mp4")
 
-        st.divider()
-        st.markdown(f"### 🎯 QUEUE: {c_d} @ {c_t} IST ({c_s})")
-        
         # -------------------------------------------------
         # YOUTUBE SHORTS SUITE (WITH PLAYLIST & PINNED COMMENT)
         # -------------------------------------------------
