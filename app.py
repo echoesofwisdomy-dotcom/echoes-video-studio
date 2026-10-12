@@ -232,7 +232,7 @@ THEMES_DATABASE = [
     # Pillar III: Mental Fortress
     {"id": "FUTURE_RUIN", "p": "Mental Fortress", "t": "The Illusion of Future Ruin", "prem": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will never arrive.", "h": "YOU SUFFER IN YOUR HEAD", "a": "IMPERIAL_GOLD", "m": ["Cold morning mist dissolving over ancient stone arches under sunlight", "Troubled pool of dark water settling into a crystal mirror as ripples fade", "Dark storm cloud dispersing harmlessly across a barren plain"]},
     {"id": "CALAMITY_TRAINING", "p": "Mental Fortress", "t": "Calamity as Training", "prem": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character comfort cannot buy.", "h": "THE STRUGGLE IS THE TEACHER", "a": "IMPERIAL_GOLD", "m": ["Roaring forge furnace turning raw scrap iron into hardened steel", "Mountain pine tree growing dense and unshakeable in freezing gale winds", "Diamond blade grinding down rough raw stone into a sharp facet"]},
-    {"id": "BURDEN_EXPECTATIONS", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
+    {"id": "BURDEN_EXPECTATIONS", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self- deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
     {"id": "DEATH_OF_PRIDE", "p": "Mental Fortress", "t": "The Death of Pride", "prem": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.", "h": "KILL YOUR NEED FOR PRAISE", "a": "IMPERIAL_GOLD", "m": ["Deep subterranean bedrock supporting an entire city without showing itself", "Dark iron anchor resting silently at the bottom of the ocean floor", "Ancient oak tree whose strength lies in its hidden root network"]},
     {"id": "CONTROL_DESIRE", "p": "Mental Fortress", "t": "The Chains of Wanting", "prem": "Wealth does not consist in great possessions, but in few wants. He who is content cannot be enslaved.", "h": "WANT LESS TO RULE MORE", "a": "IMPERIAL_GOLD", "m": ["Heavy broken iron shackles lying in dust beside an open cell gate", "Simple earthenware cup filled with cool clear mountain well water", "Rustic wooden staff supporting a traveler over rugged mountain ridges"]},
     {"id": "ANGER_POISON", "p": "Mental Fortress", "t": "Anger Is Self-Poison", "prem": "Holding onto anger is drinking poison and expecting the other person to die. Calmness is the ultimate weapon.", "h": "ANGER IS TEMPORARY MADNESS", "a": "GLACIAL_ICE", "m": ["Boiling water in a bronze cauldron cooling down to smooth stillness", "Wild brushfire hitting a wide dirt trench and running out of fuel", "Raging wild stallion brought to stillness by a steady hand on the reins"]},
@@ -295,20 +295,40 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE ENGINE (PROVEN ACOUSTIC TIMINGS)
+# 5. SUBTITLE SYNCHRONIZER (WITH RETRY & FALLBACK)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
-    comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
-    timings = []
-    with open(audio_path, "wb") as f:
-        async for chunk in comm.stream():
-            if chunk["type"] == "audio": 
-                f.write(chunk["data"])
-            elif chunk["type"] == "WordBoundary":
-                st_s = chunk["offset"] / 10_000_000.0
-                dur_s = chunk["duration"] / 10_000_000.0
-                timings.append({"word": chunk.get("text", ""), "start": round(st_s, 3), "end": round(st_s + dur_s, 3)})
-    return timings
+    """Synthesizes speech with acoustic word boundaries and automatic retry on handshake drop."""
+    max_retries = 3
+    last_exception = None
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
+            timings = []
+            
+            with open(audio_path, "wb") as f:
+                async for chunk in comm.stream():
+                    if chunk["type"] == "audio": 
+                        f.write(chunk["data"])
+                    elif chunk["type"] == "WordBoundary":
+                        st_s = chunk["offset"] / 10_000_000.0
+                        dur_s = chunk["duration"] / 10_000_000.0
+                        timings.append({
+                            "word": chunk.get("text", ""), 
+                            "start": round(st_s, 3), 
+                            "end": round(st_s + dur_s, 3)
+                        })
+            
+            if os.path.exists(audio_path) and os.path.getsize(audio_path) > 5000:
+                return timings
+        except Exception as e:
+            last_exception = e
+            if attempt < max_retries:
+                await asyncio.sleep(2.0 * attempt)
+            continue
+            
+    raise RuntimeError(f"Edge-TTS Handshake failed after {max_retries} attempts: {last_exception}")
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -393,12 +413,12 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (DYNAMIC MODEL DISCOVERY)
+# 6. GEMINI GENERATOR (ANATOMICAL CONSTRAINTS ENFORCED)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     clean_key = raw_api_key.strip().strip('"').strip("'")
     if not clean_key:
-        return None, "API Key is empty. Please enter your Gemini API key in '🔑 API CREDENTIALS'."
+        return None, "API Key is empty. Please enter your Gemini API key in 'API CREDENTIALS'."
     
     try:
         client = genai.Client(api_key=clean_key)
@@ -441,21 +461,8 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    # 1. Query the user's account dynamically for available generateContent models
-    candidate_models = []
-    try:
-        for m in client.models.list():
-            m_name = m.name.replace("models/", "")
-            if "flash" in m_name.lower() and not any(x in m_name.lower() for x in ["tts", "image", "realtime", "live", "audio"]):
-                candidate_models.append(m_name)
-    except Exception:
-        pass
-
-    # 2. Append standard active models as fallbacks
-    fallback_order = ["gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"]
-    models_to_try = candidate_models + [m for m in fallback_order if m not in candidate_models]
-
-    attempt_errors = []
+    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    last_err = ""
     for m in models_to_try:
         try:
             r = client.models.generate_content(
@@ -467,11 +474,10 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
             if "script" in parsed: 
                 return parsed, None
         except Exception as err:
-            attempt_errors.append(f"{m}: {str(err)[:80]}")
+            last_err = str(err)
             continue
             
-    err_summary = "; ".join(attempt_errors[-2:]) if attempt_errors else "All models failed"
-    return None, f"Gemini API Error: {err_summary}. Check your API Key or quota at aistudio.google.com."
+    return None, f"Gemini Error ({last_err[:120]}...). Please verify your API Key."
 
 # ---------------------------------------------------------
 # 7. TELEMETRY BAR & CADENCE MANAGER
@@ -574,7 +580,12 @@ with tab1:
                     st.error(f"Synthesis Failed: {err}")
                 else:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
-                    timings = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
+                    
+                    try:
+                        timings = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
+                    except Exception as tts_err:
+                        st.error(f"Voiceover Synthesis Warning: {tts_err}. Please click 'Synthesize Fresh Stoic Package' once more to retry the connection.")
+                        st.stop()
                     
                     draft_data = {
                         "pkg": pkg,
@@ -702,8 +713,11 @@ with tab2:
                 
                 timings = p_data.get("timings", [])
                 if not timings or len(timings) < 5:
-                    timings = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
-                    p_data["timings"] = timings
+                    try:
+                        timings = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
+                        p_data["timings"] = timings
+                    except Exception as e:
+                        pass
 
                 c_paths = []
                 for idx, c in enumerate(uploaded_clips[:4]):
