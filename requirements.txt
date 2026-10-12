@@ -1,6 +1,5 @@
 streamlit
 google-genai
-edge-tts
 numpy
 Pillow
 requests
