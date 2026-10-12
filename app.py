@@ -259,12 +259,33 @@ SETTINGS_MATRIX = [
 # ---------------------------------------------------------
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
 def load_db():
-    d = {"scheduled_videos": [], "used_hooks": [], "used_theme_ids": [], "last_scheduled_date": None, "last_scheduled_slot": None, "slot1_time": "05:00", "slot2_time": "20:00"}
+    d = {
+        "scheduled_videos": [], 
+        "used_hooks": [], 
+        "used_theme_ids": [], 
+        "last_scheduled_date": None, 
+        "last_scheduled_slot": None, 
+        "slot1_time": "05:00", 
+        "slot2_time": "20:00",
+        "playlists": {
+            "Emotional Immunity": "Emotional Immunity",
+            "Relentless Focus": "Relentless Focus",
+            "Mental Fortress": "Mental Fortress",
+            "Radical Acceptance": "Radical Acceptance"
+        }
+    }
     if os.path.exists(DB_PATH):
         try:
             with open(DB_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 d.update(data)
+                if "playlists" not in d or not isinstance(d["playlists"], dict):
+                    d["playlists"] = {
+                        "Emotional Immunity": "Emotional Immunity",
+                        "Relentless Focus": "Relentless Focus",
+                        "Mental Fortress": "Mental Fortress",
+                        "Radical Acceptance": "Radical Acceptance"
+                    }
         except Exception: pass
     return d
 
@@ -417,7 +438,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (DYNAMIC MODEL DISCOVERY + SAFE JSON)
+# 6. GEMINI GENERATOR (DYNAMIC MODEL DISCOVERY + ENGAGING METADATA)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -441,6 +462,12 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f"   - ANATOMY CONSTRAINTS: Strictly two arms and two hands only. Hands resting calmly inside the deep woolen mantle folds or clasped at waist level. Flawless human anatomy, no phantom limbs, no extra hands or fingers emerging from fabric folds.\n"
         f"   - Composure: Dignified silent composure, serene stoic expression, calm steady gaze.\n"
         f"5. Prompt Formatting: All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
+        f"6. Social Media Formatting:\n"
+        f"   - youtube_title: High CTR title with attractive emojis (e.g., '⚡ This Too Shall Pass 🏛️ #shorts #stoicism')\n"
+        f"   - youtube_description: Engaging, aesthetic layout with emojis (⚡ Hook, 🏛️ Lesson, 🤔 Debate Question with 1️⃣ and 2️⃣, Subscribe CTA, and 6-8 popular hashtags).\n"
+        f"   - youtube_tags: Comma-separated list of 12-15 high-ranking tags (e.g. 'stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts, stoic mindset, life lessons').\n"
+        f"   - meta_reel_text: All-in-one text for Meta Reel (Unicode bold hook, lesson, 1️⃣/2️⃣ debate, hashtags).\n"
+        f"   - youtube_pinned_comment: Binary debate question with 1️⃣/2️⃣ options.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
@@ -452,16 +479,16 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action, natural posture, no phantom limbs",\n'
         '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up, serene resolve",\n'
         '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, anatomically correct",\n'
-        '  "youtube_title": "High CTR Title #shorts #stoicism",\n'
-        '  "youtube_description": "Description with handles and hashtags",\n'
+        '  "youtube_title": "⚡ Hook Title 🏛️ #shorts #stoicism",\n'
+        '  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n🤔 QUESTION:\\n1️⃣ Option 1\\n2️⃣ Option 2\\n\\n🏛️ Subscribe to @EchoesOfWisdomOfficial\\n\\n#stoicism #shorts",\n'
+        '  "youtube_tags": "stoicism, echoes of wisdom, stoic philosophy, discipline, mental strength, self improvement, marcus aurelius, daily stoic, shorts",\n'
         '  "youtube_pinned_comment": "Binary debate question with 1️⃣/2️⃣ options",\n'
-        '  "facebook_title": "Facebook Title",\n'
         '  "caption_hook": "PUNCHY 4-6 WORD HOOK",\n'
         '  "caption_lesson": "Two sentences of wisdom.",\n'
         '  "debate_question": "When faced with this choice:",\n'
         '  "choice_1": "Stoic action",\n'
         '  "choice_2": "Impulsive action",\n'
-        '  "facebook_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Reels"\n'
+        '  "meta_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Reels"\n'
         "}"
     )
 
@@ -503,11 +530,11 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     return None, f"Synthesis error: {summary_err}. Please verify your API Key and billing status at ai.google.dev."
 
 # ---------------------------------------------------------
-# 7. TELEMETRY BAR & CADENCE MANAGER
+# 7. TELEMETRY BAR & CADENCE / PLAYLIST SETTINGS MANAGER
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.3 // DYNAMIC CADENCE & DEEP CROP</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.4 // WORKFLOW SUITE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -527,7 +554,8 @@ st.markdown(f"""
 if "status_banner" in st.session_state:
     st.success(st.session_state.pop("status_banner"))
 
-with st.expander("📅 PUBLISHING CADENCE & SETTINGS"):
+with st.expander("📅 PUBLISHING CADENCE & PLAYLIST SETTINGS"):
+    st.markdown("#### ⏰ Posting Slots")
     c1, c2 = st.columns(2)
     saved_d = datetime.strptime(db["last_scheduled_date"], "%Y-%m-%d").date() if db.get("last_scheduled_date") else datetime.now(timezone(timedelta(hours=5, minutes=30))).date()
     with c1:
@@ -536,11 +564,33 @@ with st.expander("📅 PUBLISHING CADENCE & SETTINGS"):
     with c2:
         ct1 = st.time_input("Slot 1 (IST)", value=time(int(db.get("slot1_time","05:00").split(":")[0]), int(db.get("slot1_time","05:00").split(":")[1])))
         ct2 = st.time_input("Slot 2 (IST)", value=time(int(db.get("slot2_time","20:00").split(":")[0]), int(db.get("slot2_time","20:00").split(":")[1])))
-    if st.button("💾 Save Cadence"):
-        db.update({"last_scheduled_date": cd.strftime("%Y-%m-%d"), "last_scheduled_slot": cs, "slot1_time": ct1.strftime("%H:%M"), "slot2_time": ct2.strftime("%H:%M")})
+    
+    st.markdown("#### 📺 Exact YouTube Playlist Names")
+    cur_pl = db.get("playlists", {})
+    pl_c1, pl_c2 = st.columns(2)
+    with pl_c1:
+        p_em = st.text_input("Pillar 1: Emotional Immunity", value=cur_pl.get("Emotional Immunity", "Emotional Immunity"))
+        p_rf = st.text_input("Pillar 2: Relentless Focus", value=cur_pl.get("Relentless Focus", "Relentless Focus"))
+    with pl_c2:
+        p_mf = st.text_input("Pillar 3: Mental Fortress", value=cur_pl.get("Mental Fortress", "Mental Fortress"))
+        p_ra = st.text_input("Pillar 4: Radical Acceptance", value=cur_pl.get("Radical Acceptance", "Radical Acceptance"))
+
+    if st.button("💾 Save Settings & Playlists"):
+        db.update({
+            "last_scheduled_date": cd.strftime("%Y-%m-%d"), 
+            "last_scheduled_slot": cs, 
+            "slot1_time": ct1.strftime("%H:%M"), 
+            "slot2_time": ct2.strftime("%H:%M"),
+            "playlists": {
+                "Emotional Immunity": p_em.strip(),
+                "Relentless Focus": p_rf.strip(),
+                "Mental Fortress": p_mf.strip(),
+                "Radical Acceptance": p_ra.strip()
+            }
+        })
         save_db(db)
         nd, ns, nt = get_next_slot(db["last_scheduled_date"], db["last_scheduled_slot"])
-        st.session_state["status_banner"] = f"Cadence locked! Next: {nd} @ {nt} IST ({ns})"
+        st.session_state["status_banner"] = f"Settings saved! Next slot: {nd} @ {nt} IST ({ns})"
         st.rerun()
 
 curr_saved_key = get_persistent_api_key()
@@ -716,7 +766,7 @@ with tab2:
                 "Watermark Removal Depth",
                 ["Standard (Single Watermark - 5.5% Bottom Crop)", "Deep (Expanded/Double Watermark - 12.5% Bottom Crop)"],
                 horizontal=True,
-                help="Choose Deep if your thumbnail was created by outpainting/expanding in Flow and has two sparkles."
+                help="Choose Deep if your thumbnail was expanded in Flow and has two sparkles."
             )
             pct = 0.125 if "Deep" in crop_mode else 0.055
             
@@ -857,15 +907,6 @@ with tab2:
 
         st.info(f"Targeting: **{c_d} @ {c_t} IST ({c_s})**")
 
-        active_pillar = p_data.get("p", "Relentless Focus")
-        PLAYLIST_MAP = {
-            "Emotional Immunity": "Echoes of Wisdom | Emotional Immunity & Boundaries",
-            "Relentless Focus": "Echoes of Wisdom | Relentless Focus & Execution",
-            "Mental Fortress": "Echoes of Wisdom | Mental Fortress & Resilience",
-            "Radical Acceptance": "Echoes of Wisdom | Radical Acceptance & Amor Fati"
-        }
-        yt_playlist = PLAYLIST_MAP.get(active_pillar, "Echoes of Wisdom | Timeless Stoicism")
-
         slug = re.sub(r'[^a-zA-Z0-9]+', '_', pkg.get('hook_banner', 'reel')).strip('_').lower()
         exp_name = f"{c_d.replace('-','')}_{slug}.mp4"
 
@@ -873,33 +914,60 @@ with tab2:
         st.download_button(f"💾 Download Master Reel ({exp_name})", vb, exp_name, "video/mp4")
 
         # -------------------------------------------------
-        # YOUTUBE SHORTS SUITE (WITH PLAYLIST & PINNED COMMENT)
+        # 🔴 YOUTUBE SHORTS PUBLISHING FLOW (SEQUENTIAL FORM ORDER)
         # -------------------------------------------------
-        st.markdown("#### 🔴 YOUTUBE SHORTS SUITE")
+        st.divider()
+        st.markdown("### 🔴 1. YOUTUBE SHORTS PUBLISHING FLOW")
+        st.caption("Fields are arranged in the exact order you paste them into YouTube Studio:")
         
-        st.text_input("YouTube Playlist", yt_playlist, key="yt_pl_val")
-        render_copy("yt_pl", "COPY PLAYLIST NAME", yt_playlist)
-
-        yt_t = pkg.get("youtube_title", f"{pkg.get('hook_banner', 'Stoic Wisdom').title()} #shorts #stoicism")
-        st.text_input("YouTube Title", yt_t, key="yt_t_val")
+        # 1. YouTube Title (Attractive with Emojis)
+        raw_hook = pkg.get("hook_banner", "DISCIPLINE OVER COMFORT").title()
+        yt_t = pkg.get("youtube_title", f"⚡ {raw_hook} 🏛️ #shorts #stoicism")
+        if not yt_t.startswith("⚡"): yt_t = f"⚡ {yt_t}"
+        st.text_input("1. YouTube Title (100 char limit)", yt_t, key="yt_t_val")
         render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
         
-        yt_d = pkg.get("youtube_description", f"{pkg.get('script', '')}\n\nSubscribe to @EchoesOfWisdomOfficial\n#stoicism #shorts")
-        st.text_area("YouTube Description", yt_d, height=110, key="yt_d_val")
-        render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", yt_d)
+        # 2. YouTube Description (Rich Emojis & Spacing)
+        raw_desc = pkg.get("youtube_description", "")
+        if not raw_desc or "Subscribe" not in raw_desc:
+            raw_desc = (
+                f"⚡ {pkg.get('hook_banner', 'DISCIPLINE OVER COMFORT')} 🏛️\n\n"
+                f"{pkg.get('caption_lesson', pkg.get('script', ''))}\n\n"
+                f"🤔 TODAY'S STOIC QUESTION:\n"
+                f"{pkg.get('debate_question', 'When faced with this choice:')}\n"
+                f"1️⃣ {pkg.get('choice_1', 'Stand resolute in silence')}\n"
+                f"2️⃣ {pkg.get('choice_2', 'React immediately')}\n\n"
+                f"Drop 1 or 2 in the comments below! 👇\n\n"
+                f"🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n"
+                f"#stoicism #stoicmindset #mindset #discipline #marcusaurelius #echoesofwisdom #shorts"
+            )
+        st.text_area("2. YouTube Description", raw_desc, height=140, key="yt_d_val")
+        render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", raw_desc)
         
-        yt_pin = pkg.get("youtube_pinned_comment", "When facing this moment: 1️⃣ Stand resolute in silence, or 2️⃣ React immediately? Drop 1 or 2 below. 👇")
-        st.text_area("YouTube Pinned Debate Comment", yt_pin, height=75, key="yt_pin_val")
+        # 3. YouTube Playlist (Exact Pillar Match)
+        active_pillar = p_data.get("p", "Relentless Focus")
+        saved_playlists = db.get("playlists", {})
+        matched_playlist = saved_playlists.get(active_pillar, active_pillar)
+        st.text_input(f"3. YouTube Playlist (Pillar: {active_pillar})", matched_playlist, key="yt_pl_val")
+        render_copy("yt_pl", "COPY PLAYLIST NAME", matched_playlist)
+        
+        # 4. YouTube Tags (Comma-Separated for 'Show More > Tags')
+        default_tags = "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, stoic philosophy, life lessons, shorts, stoic mindset"
+        yt_tags = pkg.get("youtube_tags", default_tags)
+        st.text_area("4. YouTube Video Tags (Copy & paste into 'Tags' box)", yt_tags, height=65, key="yt_tags_val")
+        render_copy("yt_tags", "COPY YOUTUBE TAGS", yt_tags)
+        
+        # 5. YouTube Pinned Debate Comment (Post & Pin in Comments)
+        yt_pin = pkg.get("youtube_pinned_comment", f"When faced with this choice:\n1️⃣ {pkg.get('choice_1', 'Maintain composure')}\n2️⃣ {pkg.get('choice_2', 'React impulsively')}\n\nDrop 1 or 2 below! 👇")
+        st.text_area("5. YouTube Pinned Comment (Post & Pin after upload)", yt_pin, height=75, key="yt_pin_val")
         render_copy("yt_p", "COPY PINNED COMMENT", yt_pin)
 
         # -------------------------------------------------
-        # FACEBOOK & INSTAGRAM REELS SUITE
+        # 🔵 META REELS PUBLISHING FLOW (SINGLE TEXT BOX)
         # -------------------------------------------------
-        st.markdown("#### 🔵 FACEBOOK & INSTAGRAM REELS SUITE")
-        
-        fb_t = pkg.get("facebook_title", f"{pkg.get('hook_banner', 'Stoic Reel').title()} | Stoic Wisdom")
-        st.text_input("Facebook Reel Title", fb_t, key="fb_t_val")
-        render_copy("fb_t", "COPY FACEBOOK TITLE", fb_t)
+        st.divider()
+        st.markdown("### 🔵 2. FACEBOOK & INSTAGRAM REELS FLOW")
+        st.caption("Meta Reels uses ONE text box for the entire caption:")
 
         raw_fb_hook = pkg.get("caption_hook", pkg.get("hook_banner", "DISCIPLINE OVER COMFORT"))
         fb_hook = to_unicode_bold(re.sub(r'[^\w\s-]', '', raw_fb_hook).strip().upper())
@@ -911,10 +979,14 @@ with tab2:
             f"2️⃣ {pkg.get('choice_2', 'Defend your honor verbally')}\n\n"
             f"Drop 1 or 2 below. 👇\n\n"
             f"• Follow @EchoesOfWisdomOfficial for timeless clarity.\n\n"
-            f"{pkg.get('facebook_hashtags', '#StoicMindset #EchoesOfWisdom #Discipline #Reels')}"
+            f"{pkg.get('meta_hashtags', '#StoicMindset #EchoesOfWisdom #Discipline #Reels')}"
         )
-        st.text_area("Facebook Reel Caption (Unicode Bold)", fb_cap, height=160, key="fb_cap_val")
-        render_copy("fb_c", "COPY FACEBOOK CAPTION", fb_cap)
+        st.text_area("1. Meta Reel Text (Paste into 'Text • optional')", fb_cap, height=160, key="fb_cap_val")
+        render_copy("fb_c", "COPY META REEL TEXT", fb_cap)
+
+        # Meta Tags
+        st.text_input("2. Meta Topic Tags", "Stoicism, Philosophy, Personal Growth, Motivation", key="fb_tags_val")
+        render_copy("fb_tags", "COPY META TAGS", "Stoicism, Philosophy, Personal Growth, Motivation")
 
         st.markdown('''
         <div style="margin: 12px 0 16px 0;">
