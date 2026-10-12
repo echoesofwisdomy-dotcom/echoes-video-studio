@@ -143,7 +143,6 @@ def ensure_dejavu_font():
 
 ensure_dejavu_font()
 
-# Persistent API Key Resolver
 def get_persistent_api_key():
     if "GEMINI_API_KEY" in st.secrets:
         return str(st.secrets["GEMINI_API_KEY"]).strip().strip('"').strip("'")
@@ -296,7 +295,7 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE SYNCHRONIZER (WITH ACOUSTIC SAFETY FALLBACK)
+# 5. SUBTITLE ENGINE (PROVEN ACOUSTIC TIMINGS)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
@@ -394,12 +393,12 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (FAULT-TOLERANT WITH DETAILED ERROR)
+# 6. GEMINI GENERATOR (DYNAMIC MODEL DISCOVERY)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     clean_key = raw_api_key.strip().strip('"').strip("'")
     if not clean_key:
-        return None, "API Key is empty. Please enter your Gemini API key in 'API CREDENTIALS'."
+        return None, "API Key is empty. Please enter your Gemini API key in '🔑 API CREDENTIALS'."
     
     try:
         client = genai.Client(api_key=clean_key)
@@ -442,8 +441,21 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
-    last_err = ""
+    # 1. Query the user's account dynamically for available generateContent models
+    candidate_models = []
+    try:
+        for m in client.models.list():
+            m_name = m.name.replace("models/", "")
+            if "flash" in m_name.lower() and not any(x in m_name.lower() for x in ["tts", "image", "realtime", "live", "audio"]):
+                candidate_models.append(m_name)
+    except Exception:
+        pass
+
+    # 2. Append standard active models as fallbacks
+    fallback_order = ["gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"]
+    models_to_try = candidate_models + [m for m in fallback_order if m not in candidate_models]
+
+    attempt_errors = []
     for m in models_to_try:
         try:
             r = client.models.generate_content(
@@ -455,10 +467,11 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
             if "script" in parsed: 
                 return parsed, None
         except Exception as err:
-            last_err = str(err)
+            attempt_errors.append(f"{m}: {str(err)[:80]}")
             continue
             
-    return None, f"Gemini Error ({last_err[:120]}...). Please verify your API Key."
+    err_summary = "; ".join(attempt_errors[-2:]) if attempt_errors else "All models failed"
+    return None, f"Gemini API Error: {err_summary}. Check your API Key or quota at aistudio.google.com."
 
 # ---------------------------------------------------------
 # 7. TELEMETRY BAR & CADENCE MANAGER
