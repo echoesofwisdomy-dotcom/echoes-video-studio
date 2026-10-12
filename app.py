@@ -232,7 +232,7 @@ THEMES_DATABASE = [
     # Pillar III: Mental Fortress
     {"id": "FUTURE_RUIN", "p": "Mental Fortress", "t": "The Illusion of Future Ruin", "prem": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will never arrive.", "h": "YOU SUFFER IN YOUR HEAD", "a": "IMPERIAL_GOLD", "m": ["Cold morning mist dissolving over ancient stone arches under sunlight", "Troubled pool of dark water settling into a crystal mirror as ripples fade", "Dark storm cloud dispersing harmlessly across a barren plain"]},
     {"id": "CALAMITY_TRAINING", "p": "Mental Fortress", "t": "Calamity as Training", "prem": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character comfort cannot buy.", "h": "THE STRUGGLE IS THE TEACHER", "a": "IMPERIAL_GOLD", "m": ["Roaring forge furnace turning raw scrap iron into hardened steel", "Mountain pine tree growing dense and unshakeable in freezing gale winds", "Diamond blade grinding down rough raw stone into a sharp facet"]},
-    {"id": "BURDEN_EXPECTATIONS", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self- deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
+    {"id": "BURDEN_EXPECTATIONS", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
     {"id": "DEATH_OF_PRIDE", "p": "Mental Fortress", "t": "The Death of Pride", "prem": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.", "h": "KILL YOUR NEED FOR PRAISE", "a": "IMPERIAL_GOLD", "m": ["Deep subterranean bedrock supporting an entire city without showing itself", "Dark iron anchor resting silently at the bottom of the ocean floor", "Ancient oak tree whose strength lies in its hidden root network"]},
     {"id": "CONTROL_DESIRE", "p": "Mental Fortress", "t": "The Chains of Wanting", "prem": "Wealth does not consist in great possessions, but in few wants. He who is content cannot be enslaved.", "h": "WANT LESS TO RULE MORE", "a": "IMPERIAL_GOLD", "m": ["Heavy broken iron shackles lying in dust beside an open cell gate", "Simple earthenware cup filled with cool clear mountain well water", "Rustic wooden staff supporting a traveler over rugged mountain ridges"]},
     {"id": "ANGER_POISON", "p": "Mental Fortress", "t": "Anger Is Self-Poison", "prem": "Holding onto anger is drinking poison and expecting the other person to die. Calmness is the ultimate weapon.", "h": "ANGER IS TEMPORARY MADNESS", "a": "GLACIAL_ICE", "m": ["Boiling water in a bronze cauldron cooling down to smooth stillness", "Wild brushfire hitting a wide dirt trench and running out of fuel", "Raging wild stallion brought to stillness by a steady hand on the reins"]},
@@ -295,7 +295,7 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE SYNCHRONIZER (WITH RETRY & FALLBACK)
+# 5. SUBTITLE SYNCHRONIZER (WITH RETRY & ACOUSTIC SAFETY)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
     """Synthesizes speech with acoustic word boundaries and automatic retry on handshake drop."""
@@ -325,10 +325,10 @@ async def synthesize_speech_timed(text, audio_path):
         except Exception as e:
             last_exception = e
             if attempt < max_retries:
-                await asyncio.sleep(2.0 * attempt)
+                await asyncio.sleep(1.5 * attempt)
             continue
             
-    raise RuntimeError(f"Edge-TTS Handshake failed after {max_retries} attempts: {last_exception}")
+    raise RuntimeError(f"Edge-TTS failed after {max_retries} attempts: {last_exception}")
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -413,7 +413,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (ANATOMICAL CONSTRAINTS ENFORCED)
+# 6. GEMINI GENERATOR (DYNAMIC MODEL DISCOVERY + SAFE JSON)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -461,8 +461,22 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
-    last_err = ""
+    models_to_try = [
+        "gemini-flash-latest",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash-lite"
+    ]
+    
+    try:
+        discovered = [m.name.replace("models/", "") for m in client.models.list() if "flash" in m.name.lower() and "exp" not in m.name.lower()]
+        if discovered:
+            models_to_try = discovered + [m for m in models_to_try if m not in discovered]
+    except Exception:
+        pass
+
+    errors = []
     for m in models_to_try:
         try:
             r = client.models.generate_content(
@@ -470,21 +484,26 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
                 contents=prompt, 
                 config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85)
             )
-            parsed = json.loads(r.text)
+            raw = r.text.strip()
+            raw = re.sub(r'^```json\s*', '', raw, flags=re.MULTILINE)
+            raw = re.sub(r'^```\s*', '', raw, flags=re.MULTILINE)
+            raw = re.sub(r'```$', '', raw, flags=re.MULTILINE)
+            parsed = json.loads(raw.strip())
             if "script" in parsed: 
                 return parsed, None
         except Exception as err:
-            last_err = str(err)
+            errors.append(f"{m} ({str(err)[:60]})")
             continue
             
-    return None, f"Gemini Error ({last_err[:120]}...). Please verify your API Key."
+    summary_err = " | ".join(errors[:2]) if errors else "No valid response from Gemini API"
+    return None, f"Synthesis error: {summary_err}. Please verify your API Key and billing status at ai.google.dev."
 
 # ---------------------------------------------------------
 # 7. TELEMETRY BAR & CADENCE MANAGER
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.0 // PRODUCTION REEL ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.1 // RESILIENT PRO ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -577,7 +596,7 @@ with tab1:
                 m_choice = random.choice(t_obj["m"])
                 pkg, err = generate_video_package(k, t_obj, m_choice, s_obj)
                 if err or not pkg: 
-                    st.error(f"Synthesis Failed: {err}")
+                    st.error(err)
                 else:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
                     
@@ -671,7 +690,6 @@ with tab2:
             st.success(f"✓ Saved '{custom_music_file.name}' to music library!")
             st.rerun()
 
-    # Track readiness indicator
     res_path, res_name = resolve_background_track(chosen_bgm_mode, current_arch_key)
     if res_path and os.path.exists(res_path):
         st.markdown(f'<div style="color: #34D399; font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
@@ -863,7 +881,7 @@ with tab2:
 
         st.markdown('''
         <div style="margin: 12px 0 16px 0;">
-            <a href="https://business.facebook.com/latest/reels_composer" target="_blank" style="text-decoration: none;">
+            <a href="[https://business.facebook.com/latest/reels_composer](https://business.facebook.com/latest/reels_composer)" target="_blank" style="text-decoration: none;">
                 <button style="width: 100%; height: 3.2rem; background: #1877F2; color: white; border: none; border-radius: 8px; font-weight: 700; font-family: -apple-system, sans-serif; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.35);">
                     🌐 OPEN META REELS COMPOSER (9:16 NATIVE)
                 </button>
