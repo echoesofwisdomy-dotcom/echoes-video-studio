@@ -7,6 +7,7 @@ import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
 import edge_tts
+from gtts import gTTS
 
 # ---------------------------------------------------------
 # 1. PAGE SETUP & MODERN CLEAN STUDIO UI
@@ -295,16 +296,15 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE SYNCHRONIZER (WITH RETRY & ACOUSTIC SAFETY)
+# 5. SUBTITLE SYNCHRONIZER (WITH DUAL-ENGINE 403 FALLBACK)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
-    """Synthesizes speech with acoustic word boundaries and automatic retry on handshake drop."""
-    max_retries = 3
-    last_exception = None
+    """Synthesizes speech via Edge-TTS; automatically falls back to British gTTS if 403 occurs."""
+    voices_to_try = ["en-GB-RyanNeural", "en-US-ChristopherNeural", "en-GB-ThomasNeural"]
     
-    for attempt in range(1, max_retries + 1):
+    for voice in voices_to_try:
         try:
-            comm = edge_tts.Communicate(text, voice="en-GB-RyanNeural", rate="+15%", pitch="-2Hz")
+            comm = edge_tts.Communicate(text, voice=voice, rate="+15%", pitch="-2Hz")
             timings = []
             
             with open(audio_path, "wb") as f:
@@ -322,13 +322,16 @@ async def synthesize_speech_timed(text, audio_path):
             
             if os.path.exists(audio_path) and os.path.getsize(audio_path) > 5000:
                 return timings
-        except Exception as e:
-            last_exception = e
-            if attempt < max_retries:
-                await asyncio.sleep(1.5 * attempt)
+        except Exception:
             continue
             
-    raise RuntimeError(f"Edge-TTS failed after {max_retries} attempts: {last_exception}")
+    # Resilient Fallback: Google TTS (British Accent) when Microsoft blocks cloud IP
+    try:
+        tts = gTTS(text=text, lang='en', tld='co.uk', slow=False)
+        tts.save(audio_path)
+        return []
+    except Exception as ge:
+        raise RuntimeError(f"Narration engine failure: {ge}")
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -366,6 +369,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             if txt:
                 events.append((st_t, en_t, txt))
     else:
+        # Acoustic safety fallback: step through word groups with vocal lead-in
         tokens = script_text.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
         vocal_start = 0.35
@@ -503,7 +507,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.1 // RESILIENT PRO ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.2 // SELF-HEALING ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -602,9 +606,11 @@ with tab1:
                     
                     try:
                         timings = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
+                        if not timings:
+                            st.info("ℹ️ Edge-TTS endpoint throttled: switched seamlessly to Google British English voice bed.")
                     except Exception as tts_err:
-                        st.error(f"Voiceover Synthesis Warning: {tts_err}. Please click 'Synthesize Fresh Stoic Package' once more to retry the connection.")
-                        st.stop()
+                        st.warning(f"Voiceover notice: {str(tts_err)[:80]}")
+                        timings = []
                     
                     draft_data = {
                         "pkg": pkg,
