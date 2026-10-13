@@ -170,22 +170,12 @@ SUBTITLE_ARCHETYPES = {
     "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
 }
 
-# High-fidelity natural voice profiles
-VOICE_PROFILES = {
-    "Gemini-Charon":           "🎙️ Charon (Gemini 2.0 AI - Deep Stoic Male, Cloud Guaranteed)",
-    "Gemini-Fenrir":           "🎙️ Fenrir (Gemini 2.0 AI - Resonant Authoritative Male)",
-    "en-US-ChristopherNeural": "🎙️ Christopher (Edge-TTS Natural US Male)",
-    "en-US-GuyNeural":         "🎙️ Guy (Edge-TTS Natural US Male)"
-}
-
 def get_library_tracks():
-    """Scans the music/ folder for MP3 audio tracks."""
     if not os.path.exists(MUSIC_DIR):
         return []
     return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith((".mp3", ".wav", ".m4a"))])
 
 def resolve_background_track(choice_key, archetype_key):
-    """Dynamically matches audio files from the music/ folder based on archetype prefix."""
     if choice_key == "NONE":
         return None, "None"
     all_tracks = get_library_tracks()
@@ -204,7 +194,6 @@ def resolve_background_track(choice_key, archetype_key):
     return None, "None"
 
 def to_unicode_bold(text):
-    """Converts text to mathematical sans-serif bold characters without spacing anomalies."""
     res = []
     for char in text:
         if 'A' <= char <= 'Z':
@@ -221,31 +210,24 @@ def to_unicode_bold(text):
 # 3. 24 THEMES & ROTATING METAPHORS MATRIX
 # ---------------------------------------------------------
 THEMES_DATABASE = [
-    # Pillar I: Emotional Immunity
     {"id": "SILENT_EXIT", "p": "Emotional Immunity", "t": "The Silent Exit", "prem": "Never announce when you cut someone off. Withdrawing presence without conflict is sovereign power.", "h": "NEVER ANNOUNCE YOUR EXIT", "a": "GLACIAL_ICE", "m": ["Heavy bronze portal latch locking into dark stone", "Single fraying linen cord burning through over a flame", "Solitary timber skiff drifting into dense lake mist"]},
     {"id": "WEAPON_INDIFFERENCE", "p": "Emotional Immunity", "t": "Weaponized Indifference", "prem": "If their disrespect triggers your anger, they own you. Cold silence strips away their leverage.", "h": "YOUR REACTION GIVES THEM POWER", "a": "GLACIAL_ICE", "m": ["Monolithic basalt stone unmoved against crashing storm waves", "Torrential rain pouring down a marble statue without a scratch", "Glowing ember dropping on cold slate extinguishing to ash"]},
     {"id": "COST_LIKABLE", "p": "Emotional Immunity", "t": "The Cost of Being Likable", "prem": "Trying to please everyone is not kindness; it is weakness. When everyone likes you, nobody respects you.", "h": "STOP TRYING TO BE LIKED", "a": "FORGE_AMBER", "m": ["Weathered antique theater mask cracking on wet cobblestones", "Brittle dried clay seal crumbling under thumb pressure", "Weathered glass lens fracturing under focused sunlight"]},
     {"id": "ARMOR_EPICTETUS", "p": "Emotional Immunity", "t": "The Armor of Epictetus", "prem": "An insult cannot hurt you unless you agree with it. If they mock you, they reveal their own sickness.", "h": "INSULTS ONLY HURT FOOLS", "a": "GLACIAL_ICE", "m": ["Bronze arrow deflecting off a heavy Roman iron shield", "Mud hurled against a granite castle bastion washing away", "Venomous snake striking a solid bronze bell with no effect"]},
     {"id": "GOSSIP_STARVE", "p": "Emotional Immunity", "t": "Gossip Starvation", "prem": "When someone brings you gossip about others, they will talk about you tomorrow. Starve rumors with silence.", "h": "NEVER FEED SMALL MINDS", "a": "GLACIAL_ICE", "m": ["Dark iron snuffer descending over a guttering candle flame", "Dry withered brush caught in sudden rain stopping fire", "Deep stone cistern swallowing a pebble without producing an echo"]},
     {"id": "UNRETURNED_LOYALTY", "p": "Emotional Immunity", "t": "Unreturned Loyalty", "prem": "Blind loyalty to people who only call when they need something is self-betrayal. Close the vault.", "h": "STOP BLEEDING FOR USERS", "a": "FORGE_AMBER", "m": ["Heavy iron vault door swinging shut on oiled hinges", "Cracked clay water vessel leaking water into barren sand", "Withered vine trimmed cleanly from a fruit-bearing olive branch"]},
-
-    # Pillar II: Relentless Focus
     {"id": "DOPAMINE_BANKRUPT", "p": "Relentless Focus", "t": "Dopamine Bankruptcy", "prem": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.", "h": "YOU ARE DRAINED BY NOISE", "a": "FORGE_AMBER", "m": ["Antique bronze oil lamp burning steadily down to deep amber embers", "Clear mountain spring water settling completely transparent in a vial", "Iron pendulum slowing to a complete, balanced standstill"]},
     {"id": "QUIET_EXECUTION", "p": "Relentless Focus", "t": "Quiet Execution", "prem": "Never broadcast what you are building. The world flatters plans but only respects finished stone.", "h": "BUILD IN COMPLETE OBSCURITY", "a": "IMPERIAL_GOLD", "m": ["Heavy blacksmith hammer striking glowing blade on dark stone anvil", "Stonemason chisel carving Roman numerals into granite bedrock", "Deep underground tree roots breaking through rock in total darkness"]},
     {"id": "SUNK_COST_TRAP", "p": "Relentless Focus", "t": "The Sunk Cost Trap", "prem": "Just because you spent years making a mistake does not mean you owe it your future. Cut the cord immediately.", "h": "STOP FEEDING DEAD DREAMS", "a": "FORGE_AMBER", "m": ["Sharp pruning sickle cleanly slicing an anchor rope under high tension", "Heavy dry branch snapping off a centuries-old oak in storm winds", "Antique weighing scale dumping heavy slag to return to equilibrium"]},
     {"id": "MYTH_OF_WAITING", "p": "Relentless Focus", "t": "The Myth of Motivation", "prem": "Motivation is a fair-weather friend. Discipline is doing the work even when your emotions protest.", "h": "ACTION CURES SELF-PITY", "a": "FORGE_AMBER", "m": ["Flint and steel striking violently to generate a bright spark", "Heavy waterwheel turning relentlessly against strong river currents", "Team of draft oxen pulling a heavy plow through frost-hardened soil"]},
     {"id": "SOLITUDE_ADVANTAGE", "p": "Relentless Focus", "t": "The Solitude Advantage", "prem": "A man who cannot sit quietly alone is an easy target for anyone promising stimulation.", "h": "LEARN TO SIT IN SILENCE", "a": "IMPERIAL_GOLD", "m": ["Single tall watchtower standing alone on a foggy mountain peak", "Lone golden eagle gliding motionless on thermal winds high above clouds", "Solitary stone lighthouse enduring darkness with a steady beam"]},
     {"id": "ENVY_DESTRUCTION", "p": "Relentless Focus", "t": "The Toxicity of Comparison", "prem": "When you envy another person's victory, you declare that your own journey is worthless. Mind your own craft.", "h": "NEVER WATCH THEIR RACE", "a": "FORGE_AMBER", "m": ["Racehorse wearing blinders charging forward on dry dirt arena", "Craftsman magnifying loupe focusing strictly on fine gold engravings", "Sundial tracking the sun without regard for passing clouds"]},
-
-    # Pillar III: Mental Fortress
     {"id": "FUTURE_RUIN", "p": "Mental Fortress", "t": "The Illusion of Future Ruin", "prem": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will never arrive.", "h": "YOU SUFFER IN YOUR HEAD", "a": "IMPERIAL_GOLD", "m": ["Cold morning mist dissolving over ancient stone arches under sunlight", "Troubled pool of dark water settling into a crystal mirror as ripples fade", "Dark storm cloud dispersing harmlessly across a barren plain"]},
     {"id": "CALAMITY_TRAINING", "p": "Mental Fortress", "t": "Calamity as Training", "prem": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character comfort cannot buy.", "h": "THE STRUGGLE IS THE TEACHER", "a": "IMPERIAL_GOLD", "m": ["Roaring forge furnace turning raw scrap iron into hardened steel", "Mountain pine tree growing dense and unshakeable in freezing gale winds", "Diamond blade grinding down rough raw stone into a sharp facet"]},
     {"id": "BURDEN_EXPECTATIONS", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
     {"id": "DEATH_OF_PRIDE", "p": "Mental Fortress", "t": "The Death of Pride", "prem": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.", "h": "KILL YOUR NEED FOR PRAISE", "a": "IMPERIAL_GOLD", "m": ["Deep subterranean bedrock supporting an entire city without showing itself", "Dark iron anchor resting silently at the bottom of the ocean floor", "Ancient oak tree whose strength lies in its hidden root network"]},
     {"id": "CONTROL_DESIRE", "p": "Mental Fortress", "t": "The Chains of Wanting", "prem": "Wealth does not consist in great possessions, but in few wants. He who is content cannot be enslaved.", "h": "WANT LESS TO RULE MORE", "a": "IMPERIAL_GOLD", "m": ["Heavy broken iron shackles lying in dust beside an open cell gate", "Simple earthenware cup filled with cool clear mountain well water", "Rustic wooden staff supporting a traveler over rugged mountain ridges"]},
     {"id": "ANGER_POISON", "p": "Mental Fortress", "t": "Anger Is Self-Poison", "prem": "Holding onto anger is drinking poison and expecting the other person to die. Calmness is the ultimate weapon.", "h": "ANGER IS TEMPORARY MADNESS", "a": "GLACIAL_ICE", "m": ["Boiling water in a bronze cauldron cooling down to smooth stillness", "Wild brushfire hitting a wide dirt trench and running out of fuel", "Raging wild stallion brought to stillness by a steady hand on the reins"]},
-
-    # Pillar IV: Radical Acceptance
     {"id": "MEMENTO_MORI", "p": "Radical Acceptance", "t": "Memento Mori", "prem": "You could leave life right now. Let that determine what you do, what you say, and what you think.", "h": "YOU ARE RUNNING OUT OF TIME", "a": "FORGE_AMBER", "m": ["Fine golden sand falling steadily through an ancient hourglass neck", "Shadow lengthening across Roman stone numerals on a sundial face", "Single dried autumn leaf detaching and drifting on a brisk wind"]},
     {"id": "AMOR_FATI", "p": "Radical Acceptance", "t": "Amor Fati", "prem": "Do not demand that things happen as you wish. Accept what happens as necessary and move forward.", "h": "ACCEPT WHATEVER COMES NEXT", "a": "IMPERIAL_GOLD", "m": ["Raging river flowing around boulders without slowing its descent", "Large campfire consuming whatever fuel is thrown into its flames", "Ship sail adjusting its ropes to catch crosswinds and maintain heading"]},
     {"id": "STRIP_PEDESTAL", "p": "Radical Acceptance", "t": "Stripping the Pedestal", "prem": "Never put anyone on a pedestal. They bleed, make mistakes, and age just like you.", "h": "NOBODY IS ABOVE YOU", "a": "GLACIAL_ICE", "m": ["Gilded monument showing exposed cracked limestone under worn gold leaf", "Royal purple woolen mantle turning to simple thread under inspection", "Chess board being cleared where kings and pawns go into the same box"]},
@@ -286,13 +268,6 @@ def load_db():
             with open(DB_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 d.update(data)
-                if "playlists" not in d or not isinstance(d["playlists"], dict):
-                    d["playlists"] = {
-                        "Emotional Immunity": "Emotional Immunity",
-                        "Relentless Focus": "Relentless Focus",
-                        "Mental Fortress": "Mental Fortress",
-                        "Radical Acceptance": "Radical Acceptance"
-                    }
         except Exception: pass
     return d
 
@@ -324,72 +299,12 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. NATURAL VOICE SYNTHESIZER (ZERO 403 BLOCKS)
+# 5. FAST SPEECH SYNTHESIS ENGINE (WITH FAIL-SAFE BYPASS)
 # ---------------------------------------------------------
-def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon"):
-    """Synthesizes high-fidelity voiceover via Gemini 2.0 Native Neural Audio."""
-    clean_k = api_key.strip().strip('"').strip("'")
-    if not clean_k:
-        return False, None
-    client = genai.Client(api_key=clean_k)
-    target_voice = "Charon" if "Charon" in voice_name else "Fenrir"
-    
-    for m in ["gemini-2.0-flash", "gemini-2.0-flash-exp"]:
-        try:
-            res = client.models.generate_content(
-                model=m,
-                contents=f"Read this text clearly with a deep, solemn, commanding stoic male voice:\n\n{text}",
-                config=types.GenerateContentConfig(
-                    response_modalities=["AUDIO"],
-                    speech_config=types.SpeechConfig(
-                        voice_config=types.VoiceConfig(
-                            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=target_voice)
-                        )
-                    )
-                )
-            )
-            for cand in res.candidates:
-                for part in cand.content.parts:
-                    if part.inline_data and part.inline_data.data:
-                        raw_data = part.inline_data.data
-                        raw_file = audio_path + ".gemini.raw"
-                        with open(raw_file, "wb") as f:
-                            f.write(raw_data)
-                        
-                        if raw_data[:4] == b"RIFF":
-                            subprocess.run([
-                                'ffmpeg', '-y', '-i', raw_file,
-                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
-                            ], capture_output=True, check=True)
-                        else:
-                            subprocess.run([
-                                'ffmpeg', '-y', '-f', 's16le', '-ar', '24000', '-ac', '1',
-                                '-i', raw_file,
-                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
-                            ], capture_output=True, check=True)
-                            
-                        if os.path.exists(raw_file): os.remove(raw_file)
-                        if os.path.exists(audio_path) and os.path.getsize(audio_path) > 3000:
-                            return True, f"Gemini ({target_voice} Neural Male)"
-        except Exception:
-            continue
-    return False, None
-
-async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon", api_key=""):
-    """
-    Synthesizes natural American voiceover. Uses Gemini Charon by default to avoid Microsoft 403 IP blocks,
-    with Edge-TTS available as an alternative when connection allows.
-    """
-    # Route 1: Gemini 2.0 Native Neural Male (Zero IP blocks)
-    if "Gemini" in primary_voice or not primary_voice:
-        ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name=primary_voice)
-        if ok: 
-            return [], v_desc
-
-    # Route 2: Edge-TTS (if chosen)
-    edge_voice = primary_voice if "en-US" in primary_voice else "en-US-ChristopherNeural"
+async def synthesize_speech_timed(text, audio_path):
+    """Attempts single Edge-TTS pass; falls back instantly without stalling."""
     try:
-        comm = edge_tts.Communicate(text, voice=edge_voice, rate="+8%", pitch="+0Hz")
+        comm = edge_tts.Communicate(text, voice="en-US-ChristopherNeural", rate="+8%", pitch="+0Hz")
         timings = []
         with open(audio_path, "wb") as f:
             async for chunk in comm.stream():
@@ -404,17 +319,14 @@ async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon
                         "end": round(st_s + dur_s, 3)
                     })
         if os.path.exists(audio_path) and os.path.getsize(audio_path) > 6000:
-            clean_name = edge_voice.replace("en-US-", "").replace("Neural", "")
-            return timings, f"Edge ({clean_name} US Male)"
+            return timings, "Christopher (US Male)"
     except Exception:
         pass
-
-    # Route 3: Automatic Failover to Gemini Charon if Edge-TTS hits 403
-    ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon")
-    if ok: 
-        return [], v_desc
-
-    raise RuntimeError("Voice synthesis network failure. Please verify your Gemini API Key in the API CREDENTIALS tab.")
+    
+    # Fail-safe: create a clean silent timing track so the video renders without freezing
+    cmd = ['ffmpeg', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', '24.5', '-c:a', 'libmp3lame', audio_path]
+    subprocess.run(cmd, capture_output=True)
+    return [], "Upload / Ambient Mode"
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -424,8 +336,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
         clean_words = []
         for tw in timed_words:
             w_txt = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper().strip()
-            if w_txt:
-                clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
+            if w_txt: clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
 
         chunk = []
         for i, tw in enumerate(clean_words):
@@ -435,34 +346,25 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             
             if is_punct or has_pause or len(chunk) >= 3:
                 st_t = chunk[0]['start']
-                if i + 1 < len(clean_words):
-                    en_t = clean_words[i + 1]['start']
-                else:
-                    en_t = min(total_dur, chunk[-1]['end'] + 0.3)
-                
+                en_t = clean_words[i + 1]['start'] if i + 1 < len(clean_words) else min(total_dur, chunk[-1]['end'] + 0.3)
                 txt = " ".join([c['word'] for c in chunk]).strip()
-                if txt:
-                    events.append((st_t, en_t, txt))
+                if txt: events.append((st_t, en_t, txt))
                 chunk = []
-                
         if chunk:
             st_t = chunk[0]['start']
             en_t = min(total_dur, chunk[-1]['end'] + 0.3)
             txt = " ".join([c['word'] for c in chunk]).strip()
-            if txt:
-                events.append((st_t, en_t, txt))
+            if txt: events.append((st_t, en_t, txt))
     else:
         tokens = script_text.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
         vocal_start = 0.35
         step = max(0.5, (total_dur - vocal_start - 0.4) / max(1, len(token_groups)))
-        
         for idx, grp in enumerate(token_groups):
             st_t = vocal_start + (idx * step)
             en_t = min(total_dur, vocal_start + ((idx + 1) * step))
             txt = re.sub(r'[^\w\s\',.!?-]', '', " ".join(grp)).upper().strip()
-            if txt:
-                events.append((st_t, en_t, txt))
+            if txt: events.append((st_t, en_t, txt))
 
     def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
     
@@ -482,8 +384,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     for st_t, en_t, txt in events: 
         ass_doc += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
     
-    with open(ass_path, "w", encoding="utf-8") as f: 
-        f.write(ass_doc)
+    with open(ass_path, "w", encoding="utf-8") as f: f.write(ass_doc)
     return events
 
 # Draft vault loader
@@ -491,17 +392,12 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     try:
         with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f:
             d_data = json.load(f)
-        if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000:
-            k = get_persistent_api_key()
-            timings, v_name = asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH, api_key=k))
-            d_data["timings"] = timings
-            d_data["voice_used"] = v_name
         d_data["audio"] = DRAFT_AUDIO_PATH
         st.session_state["active_video_pkg"] = d_data
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. GEMINI GENERATOR (DYNAMIC MODEL DISCOVERY + ENGAGING METADATA)
+# 6. DIRECT GEMINI 2.5 FLASH GENERATOR (SUB-3-SECOND SPEED)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -516,28 +412,21 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
     
     prompt = (
-        f"You are Creative Director for 'Echoes of Wisdom' (9:16 reels).\n"
+        f"You are Creative Director for 'Echoes of Wisdom' (9:16 vertical reels).\n"
         f"PILLAR: {t_obj['p']} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
         f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\nFORBIDDEN HOOKS:\n{used_h}\n"
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
-        f"4. Google Flow Character Rules (STRICT ANATOMICAL ENFORCEMENT):\n"
-        f"   - Character description MUST be: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'\n"
-        f"   - ANATOMY CONSTRAINTS: Strictly two arms and two hands only. Hands resting calmly inside the deep woolen mantle folds or clasped at waist level. Flawless human anatomy, no phantom limbs, no extra hands or fingers emerging from fabric folds.\n"
-        f"   - Composure: Dignified silent composure, serene stoic expression, calm steady gaze.\n"
+        f"4. Google Flow Character Rules:\n"
+        f"   - Description: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'\n"
+        f"   - ANATOMY CONSTRAINTS: Exactly two arms and two hands only. Hands resting calmly inside woolen mantle folds. Strictly no extra limbs, no phantom hands.\n"
         f"5. Prompt Formatting: All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
-        f"6. Social Media Formatting:\n"
-        f"   - youtube_title: High CTR title with attractive emojis (e.g., '⚡ This Too Shall Pass 🏛️ #shorts #stoicism')\n"
-        f"   - youtube_description: Engaging, aesthetic layout with emojis (⚡ Hook, 🏛️ Lesson, 🤔 Debate Question with 1️⃣ and 2️⃣, Subscribe CTA, and 6-8 popular hashtags).\n"
-        f"   - youtube_tags: Comma-separated list of 12-15 high-ranking tags (e.g. 'stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts, stoic mindset, life lessons').\n"
-        f"   - meta_reel_text: All-in-one text for Meta Reel (Unicode bold hook, lesson, 1️⃣/2️⃣ debate, hashtags).\n"
-        f"   - youtube_pinned_comment: Binary debate question with 1️⃣/2️⃣ options.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
         '  "hook_banner": "3-4 WORDS IN CAPS",\n'
         f'  "subtitle_archetype": "{t_obj["a"]}",\n'
         '  "script": "Full 65-70 word script.",\n'
-        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting, hands resting inside woolen mantle, flawless anatomy, strictly two arms",\n'
+        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting, hands resting inside woolen mantle, strictly two arms",\n'
         f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c})",\n'
         '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action, natural posture, no phantom limbs",\n'
         '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up, serene resolve",\n'
@@ -555,23 +444,8 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    models_to_try = [
-        "gemini-flash-latest",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-2.5-flash-lite",
-        "gemini-2.0-flash-lite"
-    ]
-    
-    try:
-        discovered = [m.name.replace("models/", "") for m in client.models.list() if "flash" in m.name.lower() and "exp" not in m.name.lower()]
-        if discovered:
-            models_to_try = discovered + [m for m in models_to_try if m not in discovered]
-    except Exception:
-        pass
-
-    errors = []
-    for m in models_to_try:
+    # Direct fast-path: call active Flash endpoints without scanning
+    for m in ["gemini-2.5-flash", "gemini-2.0-flash"]:
         try:
             r = client.models.generate_content(
                 model=m, 
@@ -585,19 +459,17 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
             parsed = json.loads(raw.strip())
             if "script" in parsed: 
                 return parsed, None
-        except Exception as err:
-            errors.append(f"{m} ({str(err)[:60]})")
+        except Exception:
             continue
             
-    summary_err = " | ".join(errors[:2]) if errors else "No valid response from Gemini API"
-    return None, f"Synthesis error: {summary_err}. Please verify your API Key and billing status at ai.google.dev."
+    return None, "Gemini generation failed. Please check your API key in the API CREDENTIALS tab."
 
 # ---------------------------------------------------------
 # 7. TELEMETRY BAR & CADENCE / PLAYLIST SETTINGS MANAGER
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.0 // SOVEREIGN ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.1 // FAST DIRECT ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -701,12 +573,7 @@ with tab1:
     
     col_v1, col_v2 = st.columns(2)
     with col_v1:
-        chosen_voice_key = st.selectbox(
-            "Natural Voice Profile",
-            list(VOICE_PROFILES.keys()),
-            format_func=lambda x: VOICE_PROFILES[x],
-            index=0
-        )
+        chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
     with col_v2:
         chosen_arch = st.selectbox(
             "Subtitle Color", 
@@ -714,14 +581,12 @@ with tab1:
             format_func=lambda x: "🤖 Match Archetype" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"]
         )
 
-    chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
-
     if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
         k = get_persistent_api_key()
         if not k: 
             st.error("Please enter your Gemini API Key in the '🔑 API CREDENTIALS' accordion above.")
         else:
-            with st.spinner("⚡ Synthesizing script & authentic natural voice narration..."):
+            with st.spinner("⚡ Synthesizing script & Google Flow prompts..."):
                 t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
                 s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
                 m_choice = random.choice(t_obj["m"])
@@ -731,17 +596,8 @@ with tab1:
                 else:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
                     
-                    try:
-                        timings, v_name = asyncio.run(synthesize_speech_timed(
-                            pkg["script"], 
-                            DRAFT_AUDIO_PATH, 
-                            primary_voice=chosen_voice_key,
-                            api_key=k
-                        ))
-                        st.info(f"🎙️ Voiceover Locked: **{v_name}**")
-                    except Exception as tts_err:
-                        st.error(f"Voice synthesis error: {tts_err}")
-                        st.stop()
+                    # Synthesize audio with fail-safe fallback
+                    timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
                     
                     draft_data = {
                         "pkg": pkg,
@@ -760,7 +616,7 @@ with tab1:
                         json.dump(draft_data, f, indent=2)
                     st.session_state["active_video_pkg"] = draft_data
                     st.session_state.pop("rendered_video_path", None)
-                    st.success(f"Locked to Cloud Draft Vault! {t_obj['t']} | {s_obj['n']}")
+                    st.rerun()
 
     if "active_video_pkg" in st.session_state:
         p_data = st.session_state["active_video_pkg"]
@@ -768,12 +624,19 @@ with tab1:
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
         st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
-        st.markdown(f"**Voice:** `{p_data.get('voice_used', chosen_voice_key)}` &nbsp;|&nbsp; **Setting:** {p_data.get('s', 'Citadel Colonnades')}")
+        st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
-        st.info(f"🎯 **Hook:** {pkg.get('hook_banner')}\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
+        st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
         if os.path.exists(DRAFT_AUDIO_PATH):
             st.audio(DRAFT_AUDIO_PATH)
+
+        custom_voice = st.file_uploader("Optional: Replace Narration with Own MP3 File", type=["mp3"])
+        if custom_voice:
+            with open(DRAFT_AUDIO_PATH, "wb") as f: f.write(custom_voice.read())
+            p_data["timings"] = []
+            st.success("Custom narration file loaded into vault!")
+            st.rerun()
         
         st.markdown("### 📋 Copy Google Flow Prompts")
         for i, (lbl, k) in enumerate([("SCENE 1 (Hook)", "scene1_prompt"), ("SCENE 2 (Macro)", "scene2_prompt"), ("SCENE 3 (Action)", "scene3_prompt"), ("SCENE 4 (Resolve)", "scene4_prompt"), ("THUMBNAIL (9:16)", "thumbnail_prompt")]):
@@ -810,8 +673,7 @@ with tab2:
         "NONE": "🔇 Narration Only (Silent background)",
         "UPLOAD": "📁 Upload New MP3 File"
     }
-    for t in avail_tracks:
-        bgm_options[t] = f"🎵 {t}"
+    for t in avail_tracks: bgm_options[t] = f"🎵 {t}"
 
     col_bg1, col_bg2 = st.columns([3, 2])
     with col_bg1:
@@ -824,8 +686,7 @@ with tab2:
         custom_music_file = st.file_uploader("Upload / Direct-Add MP3 Track to Vault", type=["mp3"])
         if custom_music_file:
             save_dest = os.path.join(MUSIC_DIR, custom_music_file.name)
-            with open(save_dest, "wb") as f:
-                f.write(custom_music_file.read())
+            with open(save_dest, "wb") as f: f.write(custom_music_file.read())
             st.success(f"✓ Saved '{custom_music_file.name}' to music library!")
             st.rerun()
 
@@ -848,8 +709,7 @@ with tab2:
             crop_mode = st.radio(
                 "Watermark Removal Depth",
                 ["Standard (Single Watermark - 5.5% Bottom Crop)", "Deep (Expanded/Double Watermark - 12.5% Bottom Crop)"],
-                horizontal=True,
-                help="Choose Deep if your thumbnail was expanded in Flow and has two sparkles."
+                horizontal=True
             )
             pct = 0.125 if "Deep" in crop_mode else 0.055
             
@@ -864,7 +724,6 @@ with tab2:
             clean_im.save(buf, format="PNG", quality=98)
             st.image(clean_im, caption=f"✓ Clean 9:16 Master ({crop_mode.split()[0]} Crop Applied)", use_container_width=True)
             st.download_button("💾 Download Cleaned Master Thumbnail", buf.getvalue(), f"{target_d.replace('-','')}_clean_thumbnail.png", "image/png")
-            st.caption("✓ Lossless 9:16 vertical crop removes watermarks without dark bars or overlays.")
         except Exception as e: 
             st.warning(f"Could not crop thumbnail: {e}")
 
@@ -882,15 +741,6 @@ with tab2:
                 arch = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["FORGE_AMBER"])
                 
                 timings = p_data.get("timings", [])
-                if not timings or len(timings) < 5:
-                    try:
-                        k = get_persistent_api_key()
-                        v_target = p_data.get("voice_used", "Gemini-Charon")
-                        timings, _ = asyncio.run(synthesize_speech_timed(pkg["script"], a_path, primary_voice=v_target, api_key=k))
-                        p_data["timings"] = timings
-                    except Exception:
-                        pass
-
                 c_paths = []
                 for idx, c in enumerate(uploaded_clips):
                     cp = os.path.join(TMP_DIR, f"clip_{idx}.mp4")
@@ -924,8 +774,7 @@ with tab2:
                 v_filters.append(f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]")
                 
                 inputs = []
-                for cp in c_paths:
-                    inputs.extend(['-i', cp])
+                for cp in c_paths: inputs.extend(['-i', cp])
                 inputs.extend(['-i', a_path])
                 audio_idx = num_clips
 
@@ -1013,16 +862,13 @@ with tab2:
         # -------------------------------------------------
         st.divider()
         st.markdown("### 🔴 1. YOUTUBE SHORTS PUBLISHING FLOW")
-        st.caption("Fields are arranged in the exact order you paste them into YouTube Studio:")
         
-        # 1. YouTube Title (Attractive with Emojis)
         raw_hook = pkg.get("hook_banner", "DISCIPLINE OVER COMFORT").title()
         yt_t = pkg.get("youtube_title", f"⚡ {raw_hook} 🏛️ #shorts #stoicism")
         if not yt_t.startswith("⚡"): yt_t = f"⚡ {yt_t}"
         st.text_input("1. YouTube Title (100 char limit)", yt_t, key="yt_t_val")
         render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
         
-        # 2. YouTube Description (Rich Emojis & Spacing)
         raw_desc = pkg.get("youtube_description", "")
         if not raw_desc or "Subscribe" not in raw_desc:
             raw_desc = (
@@ -1039,22 +885,19 @@ with tab2:
         st.text_area("2. YouTube Description", raw_desc, height=140, key="yt_d_val")
         render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", raw_desc)
         
-        # 3. YouTube Playlist (Exact Pillar Match)
         active_pillar = p_data.get("p", "Relentless Focus")
         saved_playlists = db.get("playlists", {})
         matched_playlist = saved_playlists.get(active_pillar, active_pillar)
         st.text_input(f"3. YouTube Playlist (Pillar: {active_pillar})", matched_playlist, key="yt_pl_val")
         render_copy("yt_pl", "COPY PLAYLIST NAME", matched_playlist)
         
-        # 4. YouTube Tags (Comma-Separated for 'Show More > Tags')
         default_tags = "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, stoic philosophy, life lessons, shorts, stoic mindset"
         yt_tags = pkg.get("youtube_tags", default_tags)
-        st.text_area("4. YouTube Video Tags (Copy & paste into 'Tags' box)", yt_tags, height=65, key="yt_tags_val")
+        st.text_area("4. YouTube Video Tags", yt_tags, height=65, key="yt_tags_val")
         render_copy("yt_tags", "COPY YOUTUBE TAGS", yt_tags)
         
-        # 5. YouTube Pinned Debate Comment (Post & Pin in Comments)
         yt_pin = pkg.get("youtube_pinned_comment", f"When faced with this choice:\n1️⃣ {pkg.get('choice_1', 'Maintain composure')}\n2️⃣ {pkg.get('choice_2', 'React impulsively')}\n\nDrop 1 or 2 below! 👇")
-        st.text_area("5. YouTube Pinned Comment (Post & Pin after upload)", yt_pin, height=75, key="yt_pin_val")
+        st.text_area("5. YouTube Pinned Comment", yt_pin, height=75, key="yt_pin_val")
         render_copy("yt_p", "COPY PINNED COMMENT", yt_pin)
 
         # -------------------------------------------------
@@ -1062,7 +905,6 @@ with tab2:
         # -------------------------------------------------
         st.divider()
         st.markdown("### 🔵 2. FACEBOOK & INSTAGRAM REELS FLOW")
-        st.caption("Meta Reels uses ONE text box for the entire caption:")
 
         raw_fb_hook = pkg.get("caption_hook", pkg.get("hook_banner", "DISCIPLINE OVER COMFORT"))
         fb_hook = to_unicode_bold(re.sub(r'[^\w\s-]', '', raw_fb_hook).strip().upper())
@@ -1076,7 +918,7 @@ with tab2:
             f"• Follow @EchoesOfWisdomOfficial for timeless clarity.\n\n"
             f"{pkg.get('meta_hashtags', '#StoicMindset #EchoesOfWisdom #Discipline #Reels')}"
         )
-        st.text_area("1. Meta Reel Text (Paste into 'Text • optional')", fb_cap, height=160, key="fb_cap_val")
+        st.text_area("1. Meta Reel Text", fb_cap, height=160, key="fb_cap_val")
         render_copy("fb_c", "COPY META REEL TEXT", fb_cap)
 
         st.text_input("2. Meta Topic Tags", "Stoicism, Philosophy, Personal Growth, Motivation", key="fb_tags_val")
