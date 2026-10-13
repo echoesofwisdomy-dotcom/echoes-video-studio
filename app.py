@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 from google import genai
 from google.genai import types
 import edge_tts
-from gtts import gTTS
 
 # ---------------------------------------------------------
 # 1. PAGE SETUP & MODERN CLEAN STUDIO UI
@@ -171,6 +170,13 @@ SUBTITLE_ARCHETYPES = {
     "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
 }
 
+VOICE_PROFILES = {
+    "en-US-ChristopherNeural": "🎙️ Christopher (US Deep & Authoritative - Recommended)",
+    "en-US-GuyNeural":         "🎙️ Guy (US Natural Storyteller)",
+    "en-US-EricNeural":        "🎙️ Eric (US Grounded & Resolute)",
+    "en-US-AndrewMultilingualNeural": "🎙️ Andrew (US Warm & Philosophical)"
+}
+
 def get_library_tracks():
     """Scans the music/ folder for MP3 audio tracks."""
     if not os.path.exists(MUSIC_DIR):
@@ -317,20 +323,29 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE SYNCHRONIZER (MULTI-MALE ENGINE + PITCH-LOCKED BACKUP)
+# 5. SUBTITLE SYNCHRONIZER (NATURAL US MALE VOICES ONLY)
 # ---------------------------------------------------------
-async def synthesize_speech_timed(text, audio_path):
-    """Rotates Edge-TTS male voices; falls back to male-pitch-adjusted gTTS if 403 occurs."""
-    male_voices = [
-        "en-GB-RyanNeural",
+async def synthesize_speech_timed(text, audio_path, primary_voice="en-US-ChristopherNeural"):
+    """
+    Synthesizes speech using natural, deep US male voices with progressive exponential backoff.
+    Completely eliminates robotic / British female fallbacks.
+    """
+    voice_pool = [
+        primary_voice,
         "en-US-ChristopherNeural",
         "en-US-GuyNeural",
-        "en-US-BrianNeural"
+        "en-US-EricNeural",
+        "en-US-AndrewMultilingualNeural"
     ]
+    voices_to_try = list(dict.fromkeys(voice_pool))
+    backoff_delays = [3.0, 6.0, 10.0, 15.0]
     
-    for voice in male_voices:
+    last_err = None
+    for attempt, delay in enumerate(backoff_delays):
+        active_voice = voices_to_try[attempt % len(voices_to_try)]
         try:
-            comm = edge_tts.Communicate(text, voice=voice, rate="+15%", pitch="-2Hz")
+            # Clean natural cadence: rate=+8%, pitch=+0Hz preserves authentic vocal resonance
+            comm = edge_tts.Communicate(text, voice=active_voice, rate="+8%", pitch="+0Hz")
             timings = []
             
             with open(audio_path, "wb") as f:
@@ -346,29 +361,15 @@ async def synthesize_speech_timed(text, audio_path):
                             "end": round(st_s + dur_s, 3)
                         })
             
-            if os.path.exists(audio_path) and os.path.getsize(audio_path) > 5000:
-                return timings, voice
-        except Exception:
+            if os.path.exists(audio_path) and os.path.getsize(audio_path) > 8000:
+                return timings, active_voice
+        except Exception as e:
+            last_err = e
+            if attempt < len(backoff_delays) - 1:
+                await asyncio.sleep(delay)
             continue
             
-    # Emergency Fallback: Google TTS with masculine pitch transformation
-    try:
-        raw_gtts = audio_path + ".raw.mp3"
-        tts = gTTS(text=text, lang='en', tld='co.uk', slow=False)
-        tts.save(raw_gtts)
-        
-        # Transform pitch to deep masculine tone via FFmpeg
-        subprocess.run([
-            'ffmpeg', '-y', '-i', raw_gtts,
-            '-af', 'asetrate=24000*0.84,aresample=24000,atempo=1.18',
-            audio_path
-        ], capture_output=True, check=True)
-        
-        if os.path.exists(raw_gtts):
-            os.remove(raw_gtts)
-        return [], "Google British (Male-Tuned)"
-    except Exception as ge:
-        raise RuntimeError(f"Narration engine failure: {ge}")
+    raise RuntimeError(f"Edge-TTS temporary network lock ({last_err}). Please wait 10 seconds and click synthesize again.")
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -406,6 +407,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             if txt:
                 events.append((st_t, en_t, txt))
     else:
+        # Acoustic safety fallback: step through word groups with vocal lead-in
         tokens = script_text.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
         vocal_start = 0.35
@@ -550,7 +552,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.5 // DYNAMIC N-CLIPS</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.6 // NATURAL VOICES ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -651,16 +653,30 @@ tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER RE
 with tab1:
     theme_opts = ["🎲 Smart AI Rotation (Cooldown-Protected)"] + THEMES_DATABASE
     chosen_theme = st.selectbox("Stoic Core Theme", theme_opts, format_func=lambda x: "🎲 Smart AI Rotation" if isinstance(x, str) else f"{'⏳' if x['id'] in recent_ids else '✨'} {x['t']} ({x['p']})")
-    col_s1, col_s2 = st.columns(2)
-    with col_s1: chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
-    with col_s2: chosen_arch = st.selectbox("Subtitle Color", ["🤖 Match Theme Archetype"] + list(SUBTITLE_ARCHETYPES.keys()), format_func=lambda x: "🤖 Match Archetype" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"])
+    
+    col_v1, col_v2 = st.columns(2)
+    with col_v1:
+        chosen_voice_key = st.selectbox(
+            "Natural Voice Actor",
+            list(VOICE_PROFILES.keys()),
+            format_func=lambda x: VOICE_PROFILES[x],
+            index=0
+        )
+    with col_v2:
+        chosen_arch = st.selectbox(
+            "Subtitle Color", 
+            ["🤖 Match Theme Archetype"] + list(SUBTITLE_ARCHETYPES.keys()), 
+            format_func=lambda x: "🤖 Match Archetype" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"]
+        )
+
+    chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
 
     if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
         k = get_persistent_api_key()
         if not k: 
             st.error("Please enter your Gemini API Key in the '🔑 API CREDENTIALS' accordion above.")
         else:
-            with st.spinner("⚡ Synthesizing script & timed narration..."):
+            with st.spinner("⚡ Synthesizing script & natural voice narration..."):
                 t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
                 s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
                 m_choice = random.choice(t_obj["m"])
@@ -671,11 +687,11 @@ with tab1:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
                     
                     try:
-                        timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
-                        st.info(f"🎙️ Narration synthesized using: **{v_name}**")
+                        timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH, primary_voice=chosen_voice_key))
+                        st.info(f"🎙️ Natural Narration Locked: **{v_name}**")
                     except Exception as tts_err:
-                        st.warning(f"Voiceover notice: {str(tts_err)[:80]}")
-                        timings, v_name = [], "Emergency Fallback"
+                        st.error(f"Voice synthesis error: {tts_err}")
+                        st.stop()
                     
                     draft_data = {
                         "pkg": pkg,
@@ -702,7 +718,7 @@ with tab1:
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
         st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
-        st.markdown(f"**Voice:** `{p_data.get('voice_used', 'en-GB-RyanNeural')}` &nbsp;|&nbsp; **Setting:** {p_data.get('s', 'Citadel Colonnades')}")
+        st.markdown(f"**Voice:** `{p_data.get('voice_used', chosen_voice_key)}` &nbsp;|&nbsp; **Setting:** {p_data.get('s', 'Citadel Colonnades')}")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
         st.info(f"🎯 **Hook:** {pkg.get('hook_banner')}\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
@@ -818,9 +834,10 @@ with tab2:
                 timings = p_data.get("timings", [])
                 if not timings or len(timings) < 5:
                     try:
-                        timings, _ = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
+                        v_target = p_data.get("voice_used", "en-US-ChristopherNeural")
+                        timings, _ = asyncio.run(synthesize_speech_timed(pkg["script"], a_path, primary_voice=v_target))
                         p_data["timings"] = timings
-                    except Exception as e:
+                    except Exception:
                         pass
 
                 c_paths = []
@@ -832,7 +849,6 @@ with tab2:
                 probe = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', a_path], capture_output=True, text=True)
                 dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 24.0) + 0.6
                 
-                # Dynamic N-Clips Speed Allocation: Divides total duration across all uploaded clips
                 clip_target_dur = dur / float(num_clips)
                 clip_speed = clip_target_dur / 4.0
 
@@ -844,7 +860,6 @@ with tab2:
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
-                # Dynamic filter graph construction for any N number of clips
                 v_filters = []
                 for i in range(num_clips):
                     v_filters.append(
@@ -860,7 +875,7 @@ with tab2:
                 inputs = []
                 for cp in c_paths:
                     inputs.extend(['-i', cp])
-                inputs.extend(['-i', a_path])  # Audio input index = num_clips
+                inputs.extend(['-i', a_path])
                 audio_idx = num_clips
 
                 logo = "logo.png" if os.path.exists("logo.png") else None
