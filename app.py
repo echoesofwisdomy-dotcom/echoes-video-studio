@@ -144,17 +144,24 @@ def ensure_dejavu_font():
 ensure_dejavu_font()
 
 def get_persistent_api_key():
+    # 1. Direct session state input
+    if st.session_state.get("user_key_input"):
+        return st.session_state["user_key_input"].strip().strip('"').strip("'")
+    if st.session_state.get("api_key"):
+        return st.session_state["api_key"].strip().strip('"').strip("'")
+    # 2. Secrets or env
     if "GEMINI_API_KEY" in st.secrets:
         return str(st.secrets["GEMINI_API_KEY"]).strip().strip('"').strip("'")
     if os.getenv("GEMINI_API_KEY"):
         return os.getenv("GEMINI_API_KEY").strip()
+    # 3. Local file storage
     if os.path.exists(API_KEY_FILE):
         try:
             with open(API_KEY_FILE, "r", encoding="utf-8") as f:
                 saved = f.read().strip()
                 if saved: return saved
         except Exception: pass
-    return st.session_state.get("api_key", "").strip()
+    return ""
 
 def save_persistent_api_key(key_val):
     clean = key_val.strip().strip('"').strip("'")
@@ -302,7 +309,7 @@ target_d, target_s, target_t = get_next_slot()
 # 5. FAST SPEECH SYNTHESIS ENGINE (WITH FAIL-SAFE BYPASS)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
-    """Attempts single Edge-TTS pass; falls back instantly without stalling."""
+    """Attempts single Edge-TTS pass; falls back instantly to clean audio bed without stalling."""
     try:
         comm = edge_tts.Communicate(text, voice="en-US-ChristopherNeural", rate="+8%", pitch="+0Hz")
         timings = []
@@ -323,10 +330,10 @@ async def synthesize_speech_timed(text, audio_path):
     except Exception:
         pass
     
-    # Fail-safe: create a clean silent timing track so the video renders without freezing
+    # Instant fallback audio bed so workflow continues smoothly
     cmd = ['ffmpeg', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', '24.5', '-c:a', 'libmp3lame', audio_path]
     subprocess.run(cmd, capture_output=True)
-    return [], "Upload / Ambient Mode"
+    return [], "Ambient Bed / Direct Upload Mode"
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -397,7 +404,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. DIRECT GEMINI 2.5 FLASH GENERATOR (SUB-3-SECOND SPEED)
+# 6. DIRECT GEMINI GENERATOR (EXACT ERROR SURFACING)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -407,7 +414,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     try:
         client = genai.Client(api_key=clean_key)
     except Exception as e:
-        return None, f"Could not initialize Gemini Client: {str(e)}"
+        return None, f"Client Initialization Error: {str(e)}"
         
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
     
@@ -418,7 +425,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
         f"4. Google Flow Character Rules:\n"
         f"   - Description: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'\n"
-        f"   - ANATOMY CONSTRAINTS: Exactly two arms and two hands only. Hands resting calmly inside woolen mantle folds. Strictly no extra limbs, no phantom hands.\n"
+        f"   - ANATOMY CONSTRAINTS: Strictly two arms and two hands only. Hands resting calmly inside woolen mantle folds. No phantom hands, no extra limbs.\n"
         f"5. Prompt Formatting: All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
@@ -444,8 +451,9 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    # Direct fast-path: call active Flash endpoints without scanning
-    for m in ["gemini-2.5-flash", "gemini-2.0-flash"]:
+    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash"]
+    last_raw_err = ""
+    for m in models_to_try:
         try:
             r = client.models.generate_content(
                 model=m, 
@@ -453,23 +461,24 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
                 config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85)
             )
             raw = r.text.strip()
-            raw = re.sub(r'^```json\s*', '', raw, flags=re.MULTILINE)
-            raw = re.sub(r'^```\s*', '', raw, flags=re.MULTILINE)
-            raw = re.sub(r'```$', '', raw, flags=re.MULTILINE)
-            parsed = json.loads(raw.strip())
+            # Extract JSON block accurately
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            clean_json = match.group(0) if match else raw
+            parsed = json.loads(clean_json)
             if "script" in parsed: 
                 return parsed, None
-        except Exception:
+        except Exception as e:
+            last_raw_err = str(e)
             continue
             
-    return None, "Gemini generation failed. Please check your API key in the API CREDENTIALS tab."
+    return None, f"Gemini API Error: {last_raw_err}"
 
 # ---------------------------------------------------------
 # 7. TELEMETRY BAR & CADENCE / PLAYLIST SETTINGS MANAGER
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.1 // FAST DIRECT ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.2 // DIAGNOSTIC ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -530,10 +539,10 @@ with st.expander("📅 PUBLISHING CADENCE & PLAYLIST SETTINGS"):
 
 curr_saved_key = get_persistent_api_key()
 with st.expander("🔑 API CREDENTIALS", expanded=(not bool(curr_saved_key))):
-    uk = st.text_input("Gemini API Key", value=curr_saved_key, type="password", placeholder="AIzaSy...")
-    if uk and uk != curr_saved_key:
+    uk = st.text_input("Gemini API Key", value=curr_saved_key, type="password", placeholder="AIzaSy...", key="user_key_input")
+    if uk:
         save_persistent_api_key(uk)
-        st.success("API key stored securely in vault!")
+        st.caption("✓ API Key active")
 
 def render_copy(bid, label, text):
     b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
@@ -596,7 +605,6 @@ with tab1:
                 else:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
                     
-                    # Synthesize audio with fail-safe fallback
                     timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
                     
                     draft_data = {
@@ -686,7 +694,8 @@ with tab2:
         custom_music_file = st.file_uploader("Upload / Direct-Add MP3 Track to Vault", type=["mp3"])
         if custom_music_file:
             save_dest = os.path.join(MUSIC_DIR, custom_music_file.name)
-            with open(save_dest, "wb") as f: f.write(custom_music_file.read())
+            with open(save_dest, "wb") as f:
+                f.write(custom_music_file.read())
             st.success(f"✓ Saved '{custom_music_file.name}' to music library!")
             st.rerun()
 
@@ -926,7 +935,7 @@ with tab2:
 
         st.markdown('''
         <div style="margin: 12px 0 16px 0;">
-            <a href="[https://business.facebook.com/latest/reels_composer](https://business.facebook.com/latest/reels_composer)" target="_blank" style="text-decoration: none;">
+            <a href="https://business.facebook.com/latest/reels_composer" target="_blank" style="text-decoration: none;">
                 <button style="width: 100%; height: 3.2rem; background: #1877F2; color: white; border: none; border-radius: 8px; font-weight: 700; font-family: -apple-system, sans-serif; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.35);">
                     🌐 OPEN META REELS COMPOSER (9:16 NATIVE)
                 </button>
