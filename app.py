@@ -144,17 +144,14 @@ def ensure_dejavu_font():
 ensure_dejavu_font()
 
 def get_persistent_api_key():
-    # 1. Direct session state input
     if st.session_state.get("user_key_input"):
         return st.session_state["user_key_input"].strip().strip('"').strip("'")
     if st.session_state.get("api_key"):
         return st.session_state["api_key"].strip().strip('"').strip("'")
-    # 2. Secrets or env
     if "GEMINI_API_KEY" in st.secrets:
         return str(st.secrets["GEMINI_API_KEY"]).strip().strip('"').strip("'")
     if os.getenv("GEMINI_API_KEY"):
         return os.getenv("GEMINI_API_KEY").strip()
-    # 3. Local file storage
     if os.path.exists(API_KEY_FILE):
         try:
             with open(API_KEY_FILE, "r", encoding="utf-8") as f:
@@ -175,6 +172,13 @@ SUBTITLE_ARCHETYPES = {
     "IMPERIAL_GOLD": {"label": "👑 Imperial Gold", "ass_primary": "&H0000E5FF", "banner_hex": "0xFFE500", "prefix": "gold_"},
     "GLACIAL_ICE":   {"label": "❄️ Glacial Ice",   "ass_primary": "&H00FFF500", "banner_hex": "0x00F5FF", "prefix": "ice_"},
     "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
+}
+
+VOICE_PROFILES = {
+    "Gemini-Charon":           "🎙️ Charon (Gemini 3.8 AI - Deep Stoic US Male, 100% Reliable)",
+    "Gemini-Fenrir":           "🎙️ Fenrir (Gemini 3.8 AI - Resonant Authoritative US Male)",
+    "en-US-ChristopherNeural": "🎙️ Christopher (Edge-TTS Natural US Male)",
+    "en-US-GuyNeural":         "🎙️ Guy (Edge-TTS Natural US Male)"
 }
 
 def get_library_tracks():
@@ -306,12 +310,70 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. FAST SPEECH SYNTHESIS ENGINE (WITH FAIL-SAFE BYPASS)
+# 5. NATURAL VOICE SYNTHESIZER (ZERO 403 BLOCKS)
 # ---------------------------------------------------------
-async def synthesize_speech_timed(text, audio_path):
-    """Attempts single Edge-TTS pass; falls back instantly to clean audio bed without stalling."""
+def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon"):
+    clean_k = api_key.strip().strip('"').strip("'")
+    if not clean_k:
+        return False, None
+    client = genai.Client(api_key=clean_k)
+    target_voice = "Charon" if "Charon" in voice_name else ("Fenrir" if "Fenrir" in voice_name else "Puck")
+    
+    tts_models = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts"]
+    for m in tts_models:
+        try:
+            res = client.models.generate_content(
+                model=m,
+                contents=text,
+                config=types.GenerateContentConfig(
+                    response_modalities=["AUDIO"],
+                    speech_config=types.SpeechConfig(
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                voice_name=target_voice
+                            )
+                        )
+                    )
+                )
+            )
+            for cand in res.candidates:
+                for part in cand.content.parts:
+                    if part.inline_data and part.inline_data.data:
+                        raw_data = part.inline_data.data
+                        raw_file = audio_path + ".gemini.raw"
+                        with open(raw_file, "wb") as f:
+                            f.write(raw_data)
+                        
+                        if raw_data[:4] == b"RIFF":
+                            subprocess.run([
+                                'ffmpeg', '-y', '-i', raw_file,
+                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
+                            ], capture_output=True, check=True)
+                        else:
+                            subprocess.run([
+                                'ffmpeg', '-y', '-f', 's16le', '-ar', '24000', '-ac', '1',
+                                '-i', raw_file,
+                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
+                            ], capture_output=True, check=True)
+                            
+                        if os.path.exists(raw_file): os.remove(raw_file)
+                        if os.path.exists(audio_path) and os.path.getsize(audio_path) > 3000:
+                            return True, f"Gemini 3.8 ({target_voice} Natural US Male)"
+        except Exception:
+            continue
+    return False, None
+
+async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon", api_key=""):
+    # 1. Primary: Gemini 3.8 Flash TTS (No 403 blocks from Microsoft, natural American male voice)
+    if "Gemini" in primary_voice or not primary_voice:
+        ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name=primary_voice)
+        if ok:
+            return [], v_desc
+
+    # 2. Edge-TTS attempt (if chosen or as fallback)
+    edge_voice = primary_voice if "en-US" in primary_voice else "en-US-ChristopherNeural"
     try:
-        comm = edge_tts.Communicate(text, voice="en-US-ChristopherNeural", rate="+8%", pitch="+0Hz")
+        comm = edge_tts.Communicate(text, voice=edge_voice, rate="+8%", pitch="+0Hz")
         timings = []
         with open(audio_path, "wb") as f:
             async for chunk in comm.stream():
@@ -326,14 +388,21 @@ async def synthesize_speech_timed(text, audio_path):
                         "end": round(st_s + dur_s, 3)
                     })
         if os.path.exists(audio_path) and os.path.getsize(audio_path) > 6000:
-            return timings, "Christopher (US Male)"
+            clean_name = edge_voice.replace("en-US-", "").replace("Neural", "")
+            return timings, f"Edge ({clean_name} US Male)"
     except Exception:
         pass
-    
-    # Instant fallback audio bed so workflow continues smoothly
+
+    # 3. Failover to Gemini 3.8 Charon if Edge-TTS failed
+    if api_key:
+        ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon")
+        if ok:
+            return [], v_desc
+
+    # 4. Fail-safe timing bed if network temporarily refuses connections
     cmd = ['ffmpeg', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', '24.5', '-c:a', 'libmp3lame', audio_path]
     subprocess.run(cmd, capture_output=True)
-    return [], "Ambient Bed / Direct Upload Mode"
+    return [], "Ambient Timing Bed (Upload Ready)"
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -404,7 +473,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. DIRECT GEMINI GENERATOR (EXACT ERROR SURFACING)
+# 6. DIRECT GEMINI 3.8 FLASH GENERATOR (LATEST 2026 MODEL)
 # ---------------------------------------------------------
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     clean_key = raw_api_key.strip().strip('"').strip("'")
@@ -451,7 +520,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash"]
+    models_to_try = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-flash-latest"]
     last_raw_err = ""
     for m in models_to_try:
         try:
@@ -461,7 +530,6 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
                 config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85)
             )
             raw = r.text.strip()
-            # Extract JSON block accurately
             match = re.search(r'\{.*\}', raw, re.DOTALL)
             clean_json = match.group(0) if match else raw
             parsed = json.loads(clean_json)
@@ -478,7 +546,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.2 // DIAGNOSTIC ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.3 // PURE GEMINI 3.8 NEURAL ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -582,7 +650,12 @@ with tab1:
     
     col_v1, col_v2 = st.columns(2)
     with col_v1:
-        chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
+        chosen_voice_key = st.selectbox(
+            "Natural Voice Profile",
+            list(VOICE_PROFILES.keys()),
+            format_func=lambda x: VOICE_PROFILES[x],
+            index=0
+        )
     with col_v2:
         chosen_arch = st.selectbox(
             "Subtitle Color", 
@@ -590,12 +663,14 @@ with tab1:
             format_func=lambda x: "🤖 Match Archetype" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"]
         )
 
+    chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
+
     if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
         k = get_persistent_api_key()
         if not k: 
             st.error("Please enter your Gemini API Key in the '🔑 API CREDENTIALS' accordion above.")
         else:
-            with st.spinner("⚡ Synthesizing script & Google Flow prompts..."):
+            with st.spinner("⚡ Synthesizing script & natural voice narration..."):
                 t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
                 s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
                 m_choice = random.choice(t_obj["m"])
@@ -605,7 +680,12 @@ with tab1:
                 else:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
                     
-                    timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
+                    timings, v_name = asyncio.run(synthesize_speech_timed(
+                        pkg["script"], 
+                        DRAFT_AUDIO_PATH, 
+                        primary_voice=chosen_voice_key,
+                        api_key=k
+                    ))
                     
                     draft_data = {
                         "pkg": pkg,
@@ -632,7 +712,7 @@ with tab1:
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
         st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
-        st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
+        st.markdown(f"**Voice:** `{p_data.get('voice_used', chosen_voice_key)}` &nbsp;|&nbsp; **Setting:** {p_data.get('s', 'Citadel Colonnades')}")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
         st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
@@ -694,8 +774,7 @@ with tab2:
         custom_music_file = st.file_uploader("Upload / Direct-Add MP3 Track to Vault", type=["mp3"])
         if custom_music_file:
             save_dest = os.path.join(MUSIC_DIR, custom_music_file.name)
-            with open(save_dest, "wb") as f:
-                f.write(custom_music_file.read())
+            with open(save_dest, "wb") as f: f.write(custom_music_file.read())
             st.success(f"✓ Saved '{custom_music_file.name}' to music library!")
             st.rerun()
 
