@@ -170,12 +170,12 @@ SUBTITLE_ARCHETYPES = {
     "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
 }
 
-# Strictly authentic, deep, and authoritative American male voices
+# High-fidelity natural voice profiles
 VOICE_PROFILES = {
-    "en-US-ChristopherNeural": "🎙️ Christopher (Deep, Stoic & Authoritative US Male)",
-    "en-US-GuyNeural":         "🎙️ Guy (Natural & Resonant US Male)",
-    "en-US-EricNeural":        "🎙️ Eric (Commanding & Firm US Male)",
-    "en-US-BrianNeural":       "🎙️ Brian (Clear & Grounded US Male)"
+    "Gemini-Charon":           "🎙️ Charon (Gemini 2.0 AI - Deep Stoic Male, Cloud Guaranteed)",
+    "Gemini-Fenrir":           "🎙️ Fenrir (Gemini 2.0 AI - Resonant Authoritative Male)",
+    "en-US-ChristopherNeural": "🎙️ Christopher (Edge-TTS Natural US Male)",
+    "en-US-GuyNeural":         "🎙️ Guy (Edge-TTS Natural US Male)"
 }
 
 def get_library_tracks():
@@ -324,54 +324,97 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. NATURAL US MALE SPEECH ENGINE (PROGRESSIVE RETRY)
+# 5. NATURAL VOICE SYNTHESIZER (ZERO 403 BLOCKS)
 # ---------------------------------------------------------
-async def synthesize_speech_timed(text, audio_path, primary_voice="en-US-ChristopherNeural"):
-    """
-    Synthesizes speech using authentic US male neural voices.
-    Uses exponential backoff delays (2s, 4s, 7s) across natural American endpoints.
-    """
-    voice_candidates = [
-        primary_voice,
-        "en-US-ChristopherNeural",
-        "en-US-GuyNeural",
-        "en-US-EricNeural",
-        "en-US-BrianNeural"
-    ]
-    unique_voices = list(dict.fromkeys(voice_candidates))
-    backoff_seconds = [2.0, 4.0, 7.0]
-
-    last_error = None
-    for attempt, wait_time in enumerate(backoff_seconds):
-        voice_to_try = unique_voices[attempt % len(unique_voices)]
+def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon"):
+    """Synthesizes high-fidelity voiceover via Gemini 2.0 Native Neural Audio."""
+    clean_k = api_key.strip().strip('"').strip("'")
+    if not clean_k:
+        return False, None
+    client = genai.Client(api_key=clean_k)
+    target_voice = "Charon" if "Charon" in voice_name else "Fenrir"
+    
+    for m in ["gemini-2.0-flash", "gemini-2.0-flash-exp"]:
         try:
-            # 8% speed enhancement retains warm, authoritative resonance
-            comm = edge_tts.Communicate(text, voice=voice_to_try, rate="+8%", pitch="+0Hz")
-            timings = []
-            
-            with open(audio_path, "wb") as f:
-                async for chunk in comm.stream():
-                    if chunk["type"] == "audio": 
-                        f.write(chunk["data"])
-                    elif chunk["type"] == "WordBoundary":
-                        st_s = chunk["offset"] / 10_000_000.0
-                        dur_s = chunk["duration"] / 10_000_000.0
-                        timings.append({
-                            "word": chunk.get("text", ""), 
-                            "start": round(st_s, 3), 
-                            "end": round(st_s + dur_s, 3)
-                        })
-            
-            if os.path.exists(audio_path) and os.path.getsize(audio_path) > 6000:
-                clean_name = voice_to_try.replace("en-US-", "").replace("Neural", "")
-                return timings, f"{clean_name} (US Male)"
-        except Exception as e:
-            last_error = e
-            if attempt < len(backoff_seconds) - 1:
-                await asyncio.sleep(wait_time)
+            res = client.models.generate_content(
+                model=m,
+                contents=f"Read this text clearly with a deep, solemn, commanding stoic male voice:\n\n{text}",
+                config=types.GenerateContentConfig(
+                    response_modalities=["AUDIO"],
+                    speech_config=types.SpeechConfig(
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=target_voice)
+                        )
+                    )
+                )
+            )
+            for cand in res.candidates:
+                for part in cand.content.parts:
+                    if part.inline_data and part.inline_data.data:
+                        raw_data = part.inline_data.data
+                        raw_file = audio_path + ".gemini.raw"
+                        with open(raw_file, "wb") as f:
+                            f.write(raw_data)
+                        
+                        if raw_data[:4] == b"RIFF":
+                            subprocess.run([
+                                'ffmpeg', '-y', '-i', raw_file,
+                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
+                            ], capture_output=True, check=True)
+                        else:
+                            subprocess.run([
+                                'ffmpeg', '-y', '-f', 's16le', '-ar', '24000', '-ac', '1',
+                                '-i', raw_file,
+                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
+                            ], capture_output=True, check=True)
+                            
+                        if os.path.exists(raw_file): os.remove(raw_file)
+                        if os.path.exists(audio_path) and os.path.getsize(audio_path) > 3000:
+                            return True, f"Gemini ({target_voice} Neural Male)"
+        except Exception:
             continue
+    return False, None
 
-    raise RuntimeError(f"Edge-TTS Handshake error ({last_error}). Please update requirements.txt to 'edge-tts>=7.2.8'.")
+async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon", api_key=""):
+    """
+    Synthesizes natural American voiceover. Uses Gemini Charon by default to avoid Microsoft 403 IP blocks,
+    with Edge-TTS available as an alternative when connection allows.
+    """
+    # Route 1: Gemini 2.0 Native Neural Male (Zero IP blocks)
+    if "Gemini" in primary_voice or not primary_voice:
+        ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name=primary_voice)
+        if ok: 
+            return [], v_desc
+
+    # Route 2: Edge-TTS (if chosen)
+    edge_voice = primary_voice if "en-US" in primary_voice else "en-US-ChristopherNeural"
+    try:
+        comm = edge_tts.Communicate(text, voice=edge_voice, rate="+8%", pitch="+0Hz")
+        timings = []
+        with open(audio_path, "wb") as f:
+            async for chunk in comm.stream():
+                if chunk["type"] == "audio": 
+                    f.write(chunk["data"])
+                elif chunk["type"] == "WordBoundary":
+                    st_s = chunk["offset"] / 10_000_000.0
+                    dur_s = chunk["duration"] / 10_000_000.0
+                    timings.append({
+                        "word": chunk.get("text", ""), 
+                        "start": round(st_s, 3), 
+                        "end": round(st_s + dur_s, 3)
+                    })
+        if os.path.exists(audio_path) and os.path.getsize(audio_path) > 6000:
+            clean_name = edge_voice.replace("en-US-", "").replace("Neural", "")
+            return timings, f"Edge ({clean_name} US Male)"
+    except Exception:
+        pass
+
+    # Route 3: Automatic Failover to Gemini Charon if Edge-TTS hits 403
+    ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon")
+    if ok: 
+        return [], v_desc
+
+    raise RuntimeError("Voice synthesis network failure. Please verify your Gemini API Key in the API CREDENTIALS tab.")
 
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
@@ -449,7 +492,8 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
         with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f:
             d_data = json.load(f)
         if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000:
-            timings, v_name = asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH))
+            k = get_persistent_api_key()
+            timings, v_name = asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH, api_key=k))
             d_data["timings"] = timings
             d_data["voice_used"] = v_name
         d_data["audio"] = DRAFT_AUDIO_PATH
@@ -553,7 +597,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.8 // PURE NEURAL ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.0 // SOVEREIGN ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -658,7 +702,7 @@ with tab1:
     col_v1, col_v2 = st.columns(2)
     with col_v1:
         chosen_voice_key = st.selectbox(
-            "Natural US Voice Actor",
+            "Natural Voice Profile",
             list(VOICE_PROFILES.keys()),
             format_func=lambda x: VOICE_PROFILES[x],
             index=0
@@ -691,9 +735,10 @@ with tab1:
                         timings, v_name = asyncio.run(synthesize_speech_timed(
                             pkg["script"], 
                             DRAFT_AUDIO_PATH, 
-                            primary_voice=chosen_voice_key
+                            primary_voice=chosen_voice_key,
+                            api_key=k
                         ))
-                        st.info(f"🎙️ Natural Narration Locked: **{v_name}**")
+                        st.info(f"🎙️ Voiceover Locked: **{v_name}**")
                     except Exception as tts_err:
                         st.error(f"Voice synthesis error: {tts_err}")
                         st.stop()
@@ -729,15 +774,6 @@ with tab1:
         
         if os.path.exists(DRAFT_AUDIO_PATH):
             st.audio(DRAFT_AUDIO_PATH)
-
-        # Direct audio uploader allows custom voice clips if external APIs fail
-        custom_voice = st.file_uploader("Optional: Replace Narration with Own MP3 File", type=["mp3"])
-        if custom_voice:
-            with open(DRAFT_AUDIO_PATH, "wb") as f:
-                f.write(custom_voice.read())
-            p_data["timings"] = []
-            st.success("Custom narration file loaded into vault!")
-            st.rerun()
         
         st.markdown("### 📋 Copy Google Flow Prompts")
         for i, (lbl, k) in enumerate([("SCENE 1 (Hook)", "scene1_prompt"), ("SCENE 2 (Macro)", "scene2_prompt"), ("SCENE 3 (Action)", "scene3_prompt"), ("SCENE 4 (Resolve)", "scene4_prompt"), ("THUMBNAIL (9:16)", "thumbnail_prompt")]):
@@ -848,8 +884,9 @@ with tab2:
                 timings = p_data.get("timings", [])
                 if not timings or len(timings) < 5:
                     try:
-                        v_target = p_data.get("voice_used", "en-US-ChristopherNeural")
-                        timings, _ = asyncio.run(synthesize_speech_timed(pkg["script"], a_path, primary_voice=v_target))
+                        k = get_persistent_api_key()
+                        v_target = p_data.get("voice_used", "Gemini-Charon")
+                        timings, _ = asyncio.run(synthesize_speech_timed(pkg["script"], a_path, primary_voice=v_target, api_key=k))
                         p_data["timings"] = timings
                     except Exception:
                         pass
@@ -884,8 +921,7 @@ with tab2:
                 
                 concat_labels = "".join([f"[v{i}]" for i in range(num_clips)])
                 v_filters.append(f"{concat_labels}concat=n={num_clips}:v=1:a=0[vb];")
-                v_filters.append(f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]"
-                )
+                v_filters.append(f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]")
                 
                 inputs = []
                 for cp in c_paths:
