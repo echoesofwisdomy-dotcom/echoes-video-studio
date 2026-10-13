@@ -1,5 +1,5 @@
-import os, io, json, re, random, asyncio, subprocess, requests, base64
-from datetime import datetime, timedelta, timezone, time
+import os, io, json, re, random, asyncio, subprocess, requests, base64, time
+from datetime import datetime, timedelta, timezone, time as dt_time
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
@@ -9,71 +9,55 @@ from google.genai import types
 import edge_tts
 
 # ---------------------------------------------------------
-# 1. PAGE SETUP & MODERN CLEAN STUDIO UI
+# 1. PAGE SETUP & STUDIO UI
 # ---------------------------------------------------------
 st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-    
     header[data-testid="stHeader"] { background: transparent !important; }
-    
     .stApp { 
         background-color: #080B11 !important; 
         background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important; 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; 
         color: #E2E8F0 !important; 
-        -webkit-font-smoothing: antialiased !important;
     }
-    
     .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; max-width: 720px !important; }
-    
     div[data-testid="stExpander"] { 
         background: #0E1626 !important; 
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         border-radius: 12px !important; 
         margin-bottom: 1rem !important; 
     }
-    
     div[data-testid="stExpander"] summary { 
         background: #111B30 !important; 
         color: #38BDF8 !important; 
         font-size: 13px !important; 
         font-weight: 700 !important; 
-        letter-spacing: 0.02em !important;
     }
-    
     label[data-testid="stWidgetLabel"] p { 
         color: #94A3B8 !important; 
         font-size: 12px !important; 
         font-weight: 700 !important; 
         text-transform: uppercase !important; 
-        letter-spacing: 0.04em !important;
     }
-    
     .stTextInput>div>div>input, .stTextArea textarea { 
         background-color: #0A0F1D !important; 
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         color: #F8FAFC !important; 
         border-radius: 8px !important; 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-size: 14px !important;
-        line-height: 1.6 !important;
     }
-    
     .stButton>button[kind="primary"] { 
         background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important; 
         color: #FFF !important; 
         border-radius: 10px !important; 
         height: 3.4rem !important; 
         font-weight: 700 !important; 
-        font-size: 14px !important; 
-        letter-spacing: 0.02em !important;
         text-transform: uppercase !important; 
         width: 100% !important; 
     }
-    
     .stButton>button:not([kind="primary"]) { 
         background: #111B30 !important; 
         color: #E2E8F0 !important; 
@@ -81,7 +65,6 @@ st.markdown("""
         border-radius: 8px !important; 
         font-weight: 600 !important; 
     }
-    
     .stDownloadButton>button { 
         background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; 
         color: white !important; 
@@ -90,7 +73,6 @@ st.markdown("""
         font-weight: 700 !important; 
         width: 100% !important; 
     }
-    
     .badge { 
         font-family: 'JetBrains Mono', monospace; 
         font-size: 11px; 
@@ -99,7 +81,6 @@ st.markdown("""
         border-radius: 6px; 
         display: inline-flex; 
         align-items: center; 
-        gap: 6px; 
         margin: 2px; 
     }
     .badge-green { background: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.25); }
@@ -110,7 +91,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 2. FILE PATHWAYS & PERSISTENCE ANCHORS
+# 2. FILE PATHWAYS & PERSISTENCE
 # ---------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -174,32 +155,19 @@ SUBTITLE_ARCHETYPES = {
     "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
 }
 
-VOICE_PROFILES = {
-    "Gemini-Charon":           "🎙️ Charon (Gemini 3.8 AI - Deep Stoic US Male, 100% Reliable)",
-    "Gemini-Fenrir":           "🎙️ Fenrir (Gemini 3.8 AI - Resonant Authoritative US Male)",
-    "en-US-ChristopherNeural": "🎙️ Christopher (Edge-TTS Natural US Male)",
-    "en-US-GuyNeural":         "🎙️ Guy (Edge-TTS Natural US Male)"
-}
-
 def get_library_tracks():
-    if not os.path.exists(MUSIC_DIR):
-        return []
+    if not os.path.exists(MUSIC_DIR): return []
     return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith((".mp3", ".wav", ".m4a"))])
 
 def resolve_background_track(choice_key, archetype_key):
-    if choice_key == "NONE":
-        return None, "None"
+    if choice_key == "NONE": return None, "None"
     all_tracks = get_library_tracks()
-    if not all_tracks:
-        return None, "None"
-    
+    if not all_tracks: return None, "None"
     if choice_key == "AUTO":
         target_prefix = SUBTITLE_ARCHETYPES.get(archetype_key, {}).get("prefix", "gold_")
         matched = [f for f in all_tracks if f.lower().startswith(target_prefix)]
-        pool = matched if matched else all_tracks
-        chosen_file = random.choice(pool)
+        chosen_file = random.choice(matched if matched else all_tracks)
         return os.path.join(MUSIC_DIR, chosen_file), chosen_file
-    
     if choice_key in all_tracks:
         return os.path.join(MUSIC_DIR, choice_key), choice_key
     return None, "None"
@@ -207,18 +175,14 @@ def resolve_background_track(choice_key, archetype_key):
 def to_unicode_bold(text):
     res = []
     for char in text:
-        if 'A' <= char <= 'Z':
-            res.append(chr(0x1D5D4 + ord(char) - ord('A')))
-        elif 'a' <= char <= 'z':
-            res.append(chr(0x1D5EE + ord(char) - ord('a')))
-        elif '0' <= char <= '9':
-            res.append(chr(0x1D7EC + ord(char) - ord('0')))
-        else:
-            res.append(char)
+        if 'A' <= char <= 'Z': res.append(chr(0x1D5D4 + ord(char) - ord('A')))
+        elif 'a' <= char <= 'z': res.append(chr(0x1D5EE + ord(char) - ord('a')))
+        elif '0' <= char <= '9': res.append(chr(0x1D7EC + ord(char) - ord('0')))
+        else: res.append(char)
     return ''.join(res)
 
 # ---------------------------------------------------------
-# 3. 24 THEMES & ROTATING METAPHORS MATRIX
+# 3. THEMES DATABASE
 # ---------------------------------------------------------
 THEMES_DATABASE = [
     {"id": "SILENT_EXIT", "p": "Emotional Immunity", "t": "The Silent Exit", "prem": "Never announce when you cut someone off. Withdrawing presence without conflict is sovereign power.", "h": "NEVER ANNOUNCE YOUR EXIT", "a": "GLACIAL_ICE", "m": ["Heavy bronze portal latch locking into dark stone", "Single fraying linen cord burning through over a flame", "Solitary timber skiff drifting into dense lake mist"]},
@@ -301,8 +265,8 @@ def get_next_slot(base_d=None, base_s=None):
             return (ld + timedelta(days=1)).strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
     else:
         td = now_ist.date()
-        t1 = time(int(s1_t.split(":")[0]), int(s1_t.split(":")[1]))
-        t2 = time(int(s2_t.split(":")[0]), int(s2_t.split(":")[1]))
+        t1 = dt_time(int(s1_t.split(":")[0]), int(s1_t.split(":")[1]))
+        t2 = dt_time(int(s2_t.split(":")[0]), int(s2_t.split(":")[1]))
         if now_ist.time() < t1: return td.strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
         elif now_ist.time() < t2: return td.strftime("%Y-%m-%d"), "SLOT 2 (EVENING)", s2_t
         else: return (td + timedelta(days=1)).strftime("%Y-%m-%d"), "SLOT 1 (MORNING)", s1_t
@@ -310,17 +274,14 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. NATURAL VOICE SYNTHESIZER (ZERO 403 BLOCKS)
+# 5. RESILIENT VOICE SYNTHESIZER
 # ---------------------------------------------------------
 def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon"):
     clean_k = api_key.strip().strip('"').strip("'")
-    if not clean_k:
-        return False, None
+    if not clean_k: return False, None
     client = genai.Client(api_key=clean_k)
-    target_voice = "Charon" if "Charon" in voice_name else ("Fenrir" if "Fenrir" in voice_name else "Puck")
-    
-    tts_models = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts"]
-    for m in tts_models:
+    target_voice = "Charon" if "Charon" in voice_name else "Fenrir"
+    for m in ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-3.7-flash-tts"]:
         try:
             res = client.models.generate_content(
                 model=m,
@@ -329,9 +290,7 @@ def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon")
                     response_modalities=["AUDIO"],
                     speech_config=types.SpeechConfig(
                         voice_config=types.VoiceConfig(
-                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                voice_name=target_voice
-                            )
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=target_voice)
                         )
                     )
                 )
@@ -341,65 +300,37 @@ def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon")
                     if part.inline_data and part.inline_data.data:
                         raw_data = part.inline_data.data
                         raw_file = audio_path + ".gemini.raw"
-                        with open(raw_file, "wb") as f:
-                            f.write(raw_data)
-                        
+                        with open(raw_file, "wb") as f: f.write(raw_data)
                         if raw_data[:4] == b"RIFF":
-                            subprocess.run([
-                                'ffmpeg', '-y', '-i', raw_file,
-                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
-                            ], capture_output=True, check=True)
+                            subprocess.run(['ffmpeg', '-y', '-i', raw_file, '-c:a', 'libmp3lame', '-b:a', '192k', audio_path], capture_output=True, check=True)
                         else:
-                            subprocess.run([
-                                'ffmpeg', '-y', '-f', 's16le', '-ar', '24000', '-ac', '1',
-                                '-i', raw_file,
-                                '-c:a', 'libmp3lame', '-b:a', '192k', audio_path
-                            ], capture_output=True, check=True)
-                            
+                            subprocess.run(['ffmpeg', '-y', '-f', 's16le', '-ar', '24000', '-ac', '1', '-i', raw_file, '-c:a', 'libmp3lame', '-b:a', '192k', audio_path], capture_output=True, check=True)
                         if os.path.exists(raw_file): os.remove(raw_file)
                         if os.path.exists(audio_path) and os.path.getsize(audio_path) > 3000:
                             return True, f"Gemini 3.8 ({target_voice} Natural US Male)"
-        except Exception:
-            continue
+        except Exception: continue
     return False, None
 
 async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon", api_key=""):
-    # 1. Primary: Gemini 3.8 Flash TTS (No 403 blocks from Microsoft, natural American male voice)
-    if "Gemini" in primary_voice or not primary_voice:
+    # 1. Gemini AI Audio (Zero cloud IP blocks)
+    if api_key:
         ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name=primary_voice)
-        if ok:
-            return [], v_desc
-
-    # 2. Edge-TTS attempt (if chosen or as fallback)
-    edge_voice = primary_voice if "en-US" in primary_voice else "en-US-ChristopherNeural"
+        if ok: return [], v_desc
+    # 2. Edge-TTS attempt
     try:
-        comm = edge_tts.Communicate(text, voice=edge_voice, rate="+8%", pitch="+0Hz")
+        comm = edge_tts.Communicate(text, voice="en-US-ChristopherNeural", rate="+8%", pitch="+0Hz")
         timings = []
         with open(audio_path, "wb") as f:
             async for chunk in comm.stream():
-                if chunk["type"] == "audio": 
-                    f.write(chunk["data"])
+                if chunk["type"] == "audio": f.write(chunk["data"])
                 elif chunk["type"] == "WordBoundary":
                     st_s = chunk["offset"] / 10_000_000.0
                     dur_s = chunk["duration"] / 10_000_000.0
-                    timings.append({
-                        "word": chunk.get("text", ""), 
-                        "start": round(st_s, 3), 
-                        "end": round(st_s + dur_s, 3)
-                    })
+                    timings.append({"word": chunk.get("text", ""), "start": round(st_s, 3), "end": round(st_s + dur_s, 3)})
         if os.path.exists(audio_path) and os.path.getsize(audio_path) > 6000:
-            clean_name = edge_voice.replace("en-US-", "").replace("Neural", "")
-            return timings, f"Edge ({clean_name} US Male)"
-    except Exception:
-        pass
-
-    # 3. Failover to Gemini 3.8 Charon if Edge-TTS failed
-    if api_key:
-        ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon")
-        if ok:
-            return [], v_desc
-
-    # 4. Fail-safe timing bed if network temporarily refuses connections
+            return timings, "Christopher (US Male)"
+    except Exception: pass
+    # 3. Fail-safe timing bed
     cmd = ['ffmpeg', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', '24.5', '-c:a', 'libmp3lame', audio_path]
     subprocess.run(cmd, capture_output=True)
     return [], "Ambient Timing Bed (Upload Ready)"
@@ -407,19 +338,16 @@ async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon
 def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     color = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])["ass_primary"]
     events = []
-    
     if timed_words and len(timed_words) >= 5:
         clean_words = []
         for tw in timed_words:
             w_txt = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper().strip()
             if w_txt: clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
-
         chunk = []
         for i, tw in enumerate(clean_words):
             chunk.append(tw)
             is_punct = any(tw['word'].endswith(p) for p in ['.', '!', '?', ':', ';'])
             has_pause = (i + 1 < len(clean_words)) and (clean_words[i + 1]['start'] - tw['end'] >= 0.25)
-            
             if is_punct or has_pause or len(chunk) >= 3:
                 st_t = chunk[0]['start']
                 en_t = clean_words[i + 1]['start'] if i + 1 < len(clean_words) else min(total_dur, chunk[-1]['end'] + 0.3)
@@ -443,48 +371,59 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             if txt: events.append((st_t, en_t, txt))
 
     def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
-    
-    ass_doc = f"""[Script Info]
-ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
-ScaledBorderAndShadow: yes
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,DejaVu Sans,76,{color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1
-
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-"""
-    for st_t, en_t, txt in events: 
-        ass_doc += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
-    
+    ass_doc = f"""[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,DejaVu Sans,76,{color},&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,50,50,420,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"""
+    for st_t, en_t, txt in events: ass_doc += f"Dialogue: 0,{fmt(st_t)},{fmt(en_t)},Default,,0,0,0,,{txt}\n"
     with open(ass_path, "w", encoding="utf-8") as f: f.write(ass_doc)
     return events
 
 # Draft vault loader
 if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH):
     try:
-        with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f:
-            d_data = json.load(f)
+        with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f: d_data = json.load(f)
         d_data["audio"] = DRAFT_AUDIO_PATH
         st.session_state["active_video_pkg"] = d_data
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. DIRECT GEMINI 3.8 FLASH GENERATOR (LATEST 2026 MODEL)
+# 6. ZERO-FAIL STOIC VAULT FALLBACK (100% RELIABILITY)
 # ---------------------------------------------------------
-def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
-    clean_key = raw_api_key.strip().strip('"').strip("'")
-    if not clean_key:
-        return None, "API Key is empty. Please enter your Gemini API key in 'API CREDENTIALS'."
+def build_curated_stoic_package(t_obj, macro_c, sett_obj):
+    hook = t_obj["h"]
+    premise = t_obj["prem"]
+    script = (
+        f"{hook.title()}. {premise} Most people waste energy fighting storms they cannot govern, "
+        f"forgetting that the only empire worth ruling lies within their own chest. "
+        f"Ground your peace in absolute stillness, observe the world without surrendering your center, "
+        f"and let discipline dictate your every move. Remember this: {hook.lower()}."
+    )
+    tokens = script.split()
+    if len(tokens) < 65:
+        script = f"{hook.title()}. {premise} The untrained mind bleeds over every insult, while the sovereign soul remains untouched. Build an unshakeable inner citadel, execute your duty in silence, and refuse to surrender your stillness to chaotic noise. Stand resolute: {hook.lower()}."
     
-    try:
-        client = genai.Client(api_key=clean_key)
-    except Exception as e:
-        return None, f"Client Initialization Error: {str(e)}"
-        
+    return {
+        "title_concept": t_obj["t"],
+        "hook_banner": hook,
+        "subtitle_archetype": t_obj["a"],
+        "script": script,
+        "scene1_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist standing calm in {sett_obj['n'].lower()}, hands resting inside woolen mantle folds, two arms only, flawless anatomy, serene stoic resolve",
+        "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] Extreme macro cinematic shot of {macro_c.lower()}, cinematic depth of field, dramatic atmospheric lighting",
+        "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist walking slowly through {sett_obj['n'].lower()}, steady deliberate pace, dark ancient woolen robes, natural posture",
+        "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist close-up portrait, weathered lined face, calm focused eyes, serene stoic composure",
+        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting",
+        "youtube_title": f"⚡ {hook.title()} 🏛️ #shorts #stoicism",
+        "youtube_description": f"⚡ {hook}\n\n{premise}\n\n🤔 TODAY'S STOIC QUESTION:\nWhen facing uninvited chaos:\n1️⃣ Stand resolute in silence\n2️⃣ Defend your territory verbally\n\nDrop 1 or 2 below! 👇\n\n🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n#stoicism #stoicmindset #discipline #echoesofwisdom #shorts",
+        "youtube_tags": "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts",
+        "youtube_pinned_comment": "When facing uninvited chaos: 1️⃣ Stand resolute in silence, or 2️⃣ React immediately? Drop 1 or 2 below! 👇",
+        "caption_hook": hook,
+        "caption_lesson": premise,
+        "debate_question": "When facing uninvited chaos:",
+        "choice_1": "Stand resolute in silence",
+        "choice_2": "Defend your territory verbally",
+        "meta_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Reels"
+    }
+
+def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
+    clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
     
     prompt = (
@@ -494,7 +433,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
         f"4. Google Flow Character Rules:\n"
         f"   - Description: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'\n"
-        f"   - ANATOMY CONSTRAINTS: Strictly two arms and two hands only. Hands resting calmly inside woolen mantle folds. No phantom hands, no extra limbs.\n"
+        f"   - ANATOMY CONSTRAINTS: Strictly two arms and two hands only. Hands resting calmly inside woolen mantle folds. Strictly no extra limbs, no phantom hands.\n"
         f"5. Prompt Formatting: All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
@@ -520,33 +459,39 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         "}"
     )
 
-    models_to_try = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-flash-latest"]
-    last_raw_err = ""
-    for m in models_to_try:
+    if clean_key:
         try:
-            r = client.models.generate_content(
-                model=m, 
-                contents=prompt, 
-                config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85)
-            )
-            raw = r.text.strip()
-            match = re.search(r'\{.*\}', raw, re.DOTALL)
-            clean_json = match.group(0) if match else raw
-            parsed = json.loads(clean_json)
-            if "script" in parsed: 
-                return parsed, None
-        except Exception as e:
-            last_raw_err = str(e)
-            continue
-            
-    return None, f"Gemini API Error: {last_raw_err}"
+            client = genai.Client(api_key=clean_key)
+            models = ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-3.7-flash"]
+            for m in models:
+                for backoff in [1.5, 3.0]:
+                    try:
+                        r = client.models.generate_content(
+                            model=m, 
+                            contents=prompt, 
+                            config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.85)
+                        )
+                        raw = r.text.strip()
+                        match = re.search(r'\{.*\}', raw, re.DOTALL)
+                        clean_json = match.group(0) if match else raw
+                        parsed = json.loads(clean_json)
+                        if "script" in parsed: 
+                            return parsed, "Gemini 3.8 AI"
+                    except Exception as e:
+                        if "503" in str(e) or "429" in str(e):
+                            time.sleep(backoff)
+                        continue
+        except Exception: pass
+
+    # Seamless Vault Trigger: Guaranteed zero-error fallback
+    return build_curated_stoic_package(t_obj, macro_c, sett_obj), "Stoic Vault (Zero-Fail Mode)"
 
 # ---------------------------------------------------------
-# 7. TELEMETRY BAR & CADENCE / PLAYLIST SETTINGS MANAGER
+# 7. TELEMETRY BAR & CADENCE / PLAYLIST SETTINGS
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.3 // PURE GEMINI 3.8 NEURAL ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.4 // ZERO-FAIL RESILIENT ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -574,8 +519,8 @@ with st.expander("📅 PUBLISHING CADENCE & PLAYLIST SETTINGS"):
         cd = st.date_input("Last Scheduled Date", value=saved_d)
         cs = st.selectbox("Last Slot", ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"], index=(0 if "SLOT 1" in str(db.get("last_scheduled_slot","")).upper() else 1))
     with c2:
-        ct1 = st.time_input("Slot 1 (IST)", value=time(int(db.get("slot1_time","05:00").split(":")[0]), int(db.get("slot1_time","05:00").split(":")[1])))
-        ct2 = st.time_input("Slot 2 (IST)", value=time(int(db.get("slot2_time","20:00").split(":")[0]), int(db.get("slot2_time","20:00").split(":")[1])))
+        ct1 = st.time_input("Slot 1 (IST)", value=dt_time(int(db.get("slot1_time","05:00").split(":")[0]), int(db.get("slot1_time","05:00").split(":")[1])))
+        ct2 = st.time_input("Slot 2 (IST)", value=dt_time(int(db.get("slot2_time","20:00").split(":")[0]), int(db.get("slot2_time","20:00").split(":")[1])))
     
     st.markdown("#### 📺 Exact YouTube Playlist Names")
     cur_pl = db.get("playlists", {})
@@ -616,7 +561,7 @@ def render_copy(bid, label, text):
     b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
     components.html(f"""
     <div style="margin: 0; padding: 0;">
-        <button id="b_{bid}" onclick="copyFromB64('{bid}', '{b64_val}', '{label}')" style="width:100%;height:2.6rem;background:rgba(56,189,248,0.12);color:#38BDF8;border:1px solid rgba(56,189,248,0.35);border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:0.02em;transition:all 0.2s;">
+        <button id="b_{bid}" onclick="copyFromB64('{bid}', '{b64_val}', '{label}')" style="width:100%;height:2.6rem;background:rgba(56,189,248,0.12);color:#38BDF8;border:1px solid rgba(56,189,248,0.35);border-radius:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:0.02em;">
             📋 {label}
         </button>
     </div>
@@ -650,12 +595,7 @@ with tab1:
     
     col_v1, col_v2 = st.columns(2)
     with col_v1:
-        chosen_voice_key = st.selectbox(
-            "Natural Voice Profile",
-            list(VOICE_PROFILES.keys()),
-            format_func=lambda x: VOICE_PROFILES[x],
-            index=0
-        )
+        chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
     with col_v2:
         chosen_arch = st.selectbox(
             "Subtitle Color", 
@@ -663,56 +603,44 @@ with tab1:
             format_func=lambda x: "🤖 Match Archetype" if x.startswith("🤖") else SUBTITLE_ARCHETYPES[x]["label"]
         )
 
-    chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
-
     if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
         k = get_persistent_api_key()
-        if not k: 
-            st.error("Please enter your Gemini API Key in the '🔑 API CREDENTIALS' accordion above.")
-        else:
-            with st.spinner("⚡ Synthesizing script & natural voice narration..."):
-                t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
-                s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
-                m_choice = random.choice(t_obj["m"])
-                pkg, err = generate_video_package(k, t_obj, m_choice, s_obj)
-                if err or not pkg: 
-                    st.error(err)
-                else:
-                    pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
-                    
-                    timings, v_name = asyncio.run(synthesize_speech_timed(
-                        pkg["script"], 
-                        DRAFT_AUDIO_PATH, 
-                        primary_voice=chosen_voice_key,
-                        api_key=k
-                    ))
-                    
-                    draft_data = {
-                        "pkg": pkg,
-                        "t_id": t_obj["id"],
-                        "p": t_obj["p"],
-                        "m": m_choice,
-                        "s": s_obj["n"],
-                        "audio": DRAFT_AUDIO_PATH,
-                        "timings": timings,
-                        "voice_used": v_name,
-                        "date": target_d,
-                        "slot": target_s,
-                        "time": target_t
-                    }
-                    with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
-                        json.dump(draft_data, f, indent=2)
-                    st.session_state["active_video_pkg"] = draft_data
-                    st.session_state.pop("rendered_video_path", None)
-                    st.rerun()
+        with st.spinner("⚡ Synthesizing script & prompts..."):
+            t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
+            s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
+            m_choice = random.choice(t_obj["m"])
+            
+            pkg, engine_source = generate_video_package(k, t_obj, m_choice, s_obj)
+            pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
+            
+            timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH, api_key=k))
+            
+            draft_data = {
+                "pkg": pkg,
+                "t_id": t_obj["id"],
+                "p": t_obj["p"],
+                "m": m_choice,
+                "s": s_obj["n"],
+                "audio": DRAFT_AUDIO_PATH,
+                "timings": timings,
+                "voice_used": v_name,
+                "engine_source": engine_source,
+                "date": target_d,
+                "slot": target_s,
+                "time": target_t
+            }
+            with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f: json.dump(draft_data, f, indent=2)
+            st.session_state["active_video_pkg"] = draft_data
+            st.session_state.pop("rendered_video_path", None)
+            st.rerun()
 
     if "active_video_pkg" in st.session_state:
         p_data = st.session_state["active_video_pkg"]
         pkg = p_data.get("pkg", {})
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
-        st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
-        st.markdown(f"**Voice:** `{p_data.get('voice_used', chosen_voice_key)}` &nbsp;|&nbsp; **Setting:** {p_data.get('s', 'Citadel Colonnades')}")
+        st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Engine:** `{p_data.get('engine_source', 'Active')}` &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
+        st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
         st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
@@ -750,7 +678,7 @@ with tab2:
     num_clips = len(uploaded_clips) if uploaded_clips else 0
     if uploaded_clips:
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
-        st.markdown(f'<div style="color: #34D399; font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color: #34D399; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
     st.markdown("### 🎵 2. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
@@ -767,7 +695,7 @@ with tab2:
     with col_bg1:
         chosen_bgm_mode = st.selectbox("Background Music Source", list(bgm_options.keys()), format_func=lambda x: bgm_options[x])
     with col_bg2:
-        bgm_vol_level = st.slider("Music Bed Loudness", min_value=-36, max_value=-22, value=-28, step=1, help="-28 LUFS is broadcast standard. Sidechain auto-ducks during speech.")
+        bgm_vol_level = st.slider("Music Bed Loudness", min_value=-36, max_value=-22, value=-28, step=1, help="-28 LUFS broadcast standard.")
 
     custom_music_file = None
     if chosen_bgm_mode == "UPLOAD" or len(avail_tracks) == 0:
@@ -780,9 +708,7 @@ with tab2:
 
     res_path, res_name = resolve_background_track(chosen_bgm_mode, current_arch_key)
     if res_path and os.path.exists(res_path):
-        st.markdown(f'<div style="color: #34D399; font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
-    elif chosen_bgm_mode != "NONE":
-        st.markdown(f'<div style="color: #FBBF24; font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">ℹ️ Library empty ({len(avail_tracks)} tracks). Upload an MP3 above or commit tracks to GitHub.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color: #34D399; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # ADAPTIVE LOSSLESS THUMBNAIL CROP ENGINE
@@ -903,7 +829,7 @@ with tab2:
                 ], capture_output=True, text=True)
                 
                 if res.returncode != 0: 
-                    st.error(f"FFmpeg Compilation Error: {res.stderr[:300]}")
+                    st.error(f"FFmpeg Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
                     st.success(f"🎉 Master Reel Rendered with {num_clips} Clips! Subtitles: {arch['label']}")
@@ -915,21 +841,15 @@ with tab2:
         pkg = p_data["pkg"]
         
         # ---------------------------------------------------------
-        # DYNAMIC QUEUE TARGET OVERRIDE (NEVER GET DESYNCED WITH META)
+        # DYNAMIC QUEUE TARGET OVERRIDE
         # ---------------------------------------------------------
         st.divider()
         st.markdown("### 🎯 SCHEDULING QUEUE SLOT")
         
         col_qd1, col_qd2 = st.columns(2)
         default_target_date = datetime.strptime(target_d, "%Y-%m-%d").date()
-        with col_qd1:
-            chosen_date_target = st.date_input("Target Schedule Date", value=default_target_date)
-        with col_qd2:
-            chosen_slot_target = st.selectbox(
-                "Target Schedule Slot",
-                ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"],
-                index=(0 if "SLOT 1" in target_s else 1)
-            )
+        with col_qd1: chosen_date_target = st.date_input("Target Schedule Date", value=default_target_date)
+        with col_qd2: chosen_slot_target = st.selectbox("Target Schedule Slot", ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"], index=(0 if "SLOT 1" in target_s else 1))
             
         s1_t, s2_t = db.get("slot1_time", "05:00"), db.get("slot2_time", "20:00")
         chosen_time_target = s1_t if "SLOT 1" in chosen_slot_target else s2_t
@@ -946,7 +866,7 @@ with tab2:
         st.download_button(f"💾 Download Master Reel ({exp_name})", vb, exp_name, "video/mp4")
 
         # -------------------------------------------------
-        # 🔴 YOUTUBE SHORTS PUBLISHING FLOW (SEQUENTIAL FORM ORDER)
+        # 🔴 YOUTUBE SHORTS PUBLISHING FLOW
         # -------------------------------------------------
         st.divider()
         st.markdown("### 🔴 1. YOUTUBE SHORTS PUBLISHING FLOW")
@@ -958,18 +878,6 @@ with tab2:
         render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
         
         raw_desc = pkg.get("youtube_description", "")
-        if not raw_desc or "Subscribe" not in raw_desc:
-            raw_desc = (
-                f"⚡ {pkg.get('hook_banner', 'DISCIPLINE OVER COMFORT')} 🏛️\n\n"
-                f"{pkg.get('caption_lesson', pkg.get('script', ''))}\n\n"
-                f"🤔 TODAY'S STOIC QUESTION:\n"
-                f"{pkg.get('debate_question', 'When faced with this choice:')}\n"
-                f"1️⃣ {pkg.get('choice_1', 'Stand resolute in silence')}\n"
-                f"2️⃣ {pkg.get('choice_2', 'React immediately')}\n\n"
-                f"Drop 1 or 2 in the comments below! 👇\n\n"
-                f"🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n"
-                f"#stoicism #stoicmindset #mindset #discipline #marcusaurelius #echoesofwisdom #shorts"
-            )
         st.text_area("2. YouTube Description", raw_desc, height=140, key="yt_d_val")
         render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", raw_desc)
         
@@ -984,12 +892,12 @@ with tab2:
         st.text_area("4. YouTube Video Tags", yt_tags, height=65, key="yt_tags_val")
         render_copy("yt_tags", "COPY YOUTUBE TAGS", yt_tags)
         
-        yt_pin = pkg.get("youtube_pinned_comment", f"When faced with this choice:\n1️⃣ {pkg.get('choice_1', 'Maintain composure')}\n2️⃣ {pkg.get('choice_2', 'React impulsively')}\n\nDrop 1 or 2 below! 👇")
+        yt_pin = pkg.get("youtube_pinned_comment", "Drop 1 or 2 below! 👇")
         st.text_area("5. YouTube Pinned Comment", yt_pin, height=75, key="yt_pin_val")
         render_copy("yt_p", "COPY PINNED COMMENT", yt_pin)
 
         # -------------------------------------------------
-        # 🔵 META REELS PUBLISHING FLOW (SINGLE TEXT BOX)
+        # 🔵 META REELS PUBLISHING FLOW
         # -------------------------------------------------
         st.divider()
         st.markdown("### 🔵 2. FACEBOOK & INSTAGRAM REELS FLOW")
