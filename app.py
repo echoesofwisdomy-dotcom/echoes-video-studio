@@ -317,13 +317,18 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. SUBTITLE SYNCHRONIZER (WITH DUAL-ENGINE 403 FALLBACK)
+# 5. SUBTITLE SYNCHRONIZER (MULTI-MALE ENGINE + PITCH-LOCKED BACKUP)
 # ---------------------------------------------------------
 async def synthesize_speech_timed(text, audio_path):
-    """Synthesizes speech via Edge-TTS; automatically falls back to British gTTS if 403 occurs."""
-    voices_to_try = ["en-GB-RyanNeural", "en-US-ChristopherNeural", "en-GB-ThomasNeural"]
+    """Rotates Edge-TTS male voices; falls back to male-pitch-adjusted gTTS if 403 occurs."""
+    male_voices = [
+        "en-GB-RyanNeural",
+        "en-US-ChristopherNeural",
+        "en-US-GuyNeural",
+        "en-US-BrianNeural"
+    ]
     
-    for voice in voices_to_try:
+    for voice in male_voices:
         try:
             comm = edge_tts.Communicate(text, voice=voice, rate="+15%", pitch="-2Hz")
             timings = []
@@ -342,15 +347,26 @@ async def synthesize_speech_timed(text, audio_path):
                         })
             
             if os.path.exists(audio_path) and os.path.getsize(audio_path) > 5000:
-                return timings
+                return timings, voice
         except Exception:
             continue
             
-    # Resilient Fallback: Google TTS (British Accent) when Microsoft blocks cloud IP
+    # Emergency Fallback: Google TTS with masculine pitch transformation
     try:
+        raw_gtts = audio_path + ".raw.mp3"
         tts = gTTS(text=text, lang='en', tld='co.uk', slow=False)
-        tts.save(audio_path)
-        return []
+        tts.save(raw_gtts)
+        
+        # Transform pitch to deep masculine tone via FFmpeg
+        subprocess.run([
+            'ffmpeg', '-y', '-i', raw_gtts,
+            '-af', 'asetrate=24000*0.84,aresample=24000,atempo=1.18',
+            audio_path
+        ], capture_output=True, check=True)
+        
+        if os.path.exists(raw_gtts):
+            os.remove(raw_gtts)
+        return [], "Google British (Male-Tuned)"
     except Exception as ge:
         raise RuntimeError(f"Narration engine failure: {ge}")
 
@@ -390,7 +406,6 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             if txt:
                 events.append((st_t, en_t, txt))
     else:
-        # Acoustic safety fallback: step through word groups with vocal lead-in
         tokens = script_text.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
         vocal_start = 0.35
@@ -431,8 +446,9 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
         with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f:
             d_data = json.load(f)
         if not os.path.exists(DRAFT_AUDIO_PATH) or os.path.getsize(DRAFT_AUDIO_PATH) < 5000:
-            timings = asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH))
+            timings, v_name = asyncio.run(synthesize_speech_timed(d_data["pkg"]["script"], DRAFT_AUDIO_PATH))
             d_data["timings"] = timings
+            d_data["voice_used"] = v_name
         d_data["audio"] = DRAFT_AUDIO_PATH
         st.session_state["active_video_pkg"] = d_data
     except Exception: pass
@@ -534,7 +550,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.4 // WORKFLOW SUITE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v4.5 // DYNAMIC N-CLIPS</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -655,12 +671,11 @@ with tab1:
                     pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
                     
                     try:
-                        timings = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
-                        if not timings:
-                            st.info("ℹ️ Switched to backup British English voice.")
+                        timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH))
+                        st.info(f"🎙️ Narration synthesized using: **{v_name}**")
                     except Exception as tts_err:
                         st.warning(f"Voiceover notice: {str(tts_err)[:80]}")
-                        timings = []
+                        timings, v_name = [], "Emergency Fallback"
                     
                     draft_data = {
                         "pkg": pkg,
@@ -670,6 +685,7 @@ with tab1:
                         "s": s_obj["n"],
                         "audio": DRAFT_AUDIO_PATH,
                         "timings": timings,
+                        "voice_used": v_name,
                         "date": target_d,
                         "slot": target_s,
                         "time": target_t
@@ -686,7 +702,7 @@ with tab1:
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
         st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
-        st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')}")
+        st.markdown(f"**Voice:** `{p_data.get('voice_used', 'en-GB-RyanNeural')}` &nbsp;|&nbsp; **Setting:** {p_data.get('s', 'Citadel Colonnades')}")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
         st.info(f"🎯 **Hook:** {pkg.get('hook_banner')}\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
@@ -705,18 +721,19 @@ with tab1:
             st.session_state.pop("rendered_video_path", None)
             st.rerun()
 
-# --- TAB 2: COMPOSE & RENDER MASTER REEL ---
+# --- TAB 2: COMPOSE & RENDER MASTER REEL (DYNAMIC N-CLIPS) ---
 with tab2:
-    st.markdown("### 📥 1. Upload Your 4 Google Flow Clips")
+    st.markdown("### 📥 1. Upload Video Clips (Dynamic 2 to 10+ Clips)")
     uploaded_clips = st.file_uploader(
-        "Drop all 4 clips (scene1.mp4 to scene4.mp4)",
+        "Drop clips (scene1.mp4, scene2.mp4, ... any number of clips!)",
         type=["mp4", "mov"],
         accept_multiple_files=True
     )
 
+    num_clips = len(uploaded_clips) if uploaded_clips else 0
     if uploaded_clips:
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
-        st.markdown(f'<div style="color: {"#34D399" if len(uploaded_clips) == 4 else "#FBBF24"}; font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {len(uploaded_clips)}/4 — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color: #34D399; font-family: -apple-system, sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
     st.markdown("### 🎵 2. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
@@ -788,10 +805,10 @@ with tab2:
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
         if "active_video_pkg" not in st.session_state:
             st.error("No active draft loaded in Tab 1.")
-        elif not uploaded_clips or len(uploaded_clips) < 4:
-            st.error(f"Please upload all 4 clips above. (Currently loaded: {len(uploaded_clips) if uploaded_clips else 0}/4)")
+        elif not uploaded_clips or num_clips < 2:
+            st.error(f"Please upload at least 2 video clips. (Currently loaded: {num_clips})")
         else:
-            with st.spinner("⚡ Normalizing audio loudness, syncing subtitles & rendering 1080x1920 reel..."):
+            with st.spinner(f"⚡ Scaling {num_clips} clips evenly, normalizing loudness & rendering reel..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
                 a_path = DRAFT_AUDIO_PATH
@@ -801,20 +818,23 @@ with tab2:
                 timings = p_data.get("timings", [])
                 if not timings or len(timings) < 5:
                     try:
-                        timings = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
+                        timings, _ = asyncio.run(synthesize_speech_timed(pkg["script"], a_path))
                         p_data["timings"] = timings
                     except Exception as e:
                         pass
 
                 c_paths = []
-                for idx, c in enumerate(uploaded_clips[:4]):
+                for idx, c in enumerate(uploaded_clips):
                     cp = os.path.join(TMP_DIR, f"clip_{idx}.mp4")
                     with open(cp, "wb") as f: f.write(c.read())
                     c_paths.append(cp)
 
                 probe = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', a_path], capture_output=True, text=True)
                 dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 24.0) + 0.6
-                speed = (dur / 4.0) / 4.0
+                
+                # Dynamic N-Clips Speed Allocation: Divides total duration across all uploaded clips
+                clip_target_dur = dur / float(num_clips)
+                clip_speed = clip_target_dur / 4.0
 
                 ass_p = os.path.join(TMP_DIR, "subtitles.ass")
                 build_ass_subtitles(timings, pkg["script"], ass_p, dur, arch_key)
@@ -824,21 +844,30 @@ with tab2:
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
-                v_filters = [
-                    f"[0:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v0];",
-                    f"[1:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v1];",
-                    f"[2:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v2];",
-                    f"[3:v]trim=0:4,setpts=(PTS-STARTPTS)*{speed:.4f},scale=1512:2688:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v3];",
-                    f"[v0][v1][v2][v3]concat=n=4:v=1:a=0[vb];",
-                    f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]"
-                ]
+                # Dynamic filter graph construction for any N number of clips
+                v_filters = []
+                for i in range(num_clips):
+                    v_filters.append(
+                        f"[{i}:v]trim=0:4,setpts=(PTS-STARTPTS)*{clip_speed:.4f},"
+                        f"scale=1512:2688:force_original_aspect_ratio=increase,"
+                        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v{i}];"
+                    )
                 
-                inputs = ['-i', c_paths[0], '-i', c_paths[1], '-i', c_paths[2], '-i', c_paths[3], '-i', a_path]
+                concat_labels = "".join([f"[v{i}]" for i in range(num_clips)])
+                v_filters.append(f"{concat_labels}concat=n={num_clips}:v=1:a=0[vb];")
+                v_filters.append(f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]")
                 
+                inputs = []
+                for cp in c_paths:
+                    inputs.extend(['-i', cp])
+                inputs.extend(['-i', a_path])  # Audio input index = num_clips
+                audio_idx = num_clips
+
                 logo = "logo.png" if os.path.exists("logo.png") else None
                 if logo:
                     inputs.extend(['-i', logo])
-                    v_filters.append(";[5:v]scale=120:-1,format=rgba[ls];[vsub][ls]overlay=W-w-50:150[vout]")
+                    logo_idx = num_clips + 1
+                    v_filters.append(f";[{logo_idx}:v]scale=120:-1,format=rgba[ls];[vsub][ls]overlay=W-w-50:150[vout]")
                 else: 
                     v_filters.append(";[vsub]copy[vout]")
 
@@ -850,15 +879,15 @@ with tab2:
 
                 if active_bgm_path and os.path.exists(active_bgm_path):
                     inputs.extend(['-i', active_bgm_path])
-                    midx = 6 if logo else 5
+                    bgm_idx = len(inputs) // 2 - 1
                     v_filters.append(
-                        f";[4:a]loudnorm=I=-14:TP=-1.0:LRA=7,asplit=2[vo_out][vo_sc];"
-                        f"[{midx}:a]aloop=loop=-1:size=2e+09,loudnorm=I={bgm_vol_level}:TP=-2.0:LRA=7,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg_clean];"
+                        f";[{audio_idx}:a]loudnorm=I=-14:TP=-1.0:LRA=7,asplit=2[vo_out][vo_sc];"
+                        f"[{bgm_idx}:a]aloop=loop=-1:size=2e+09,loudnorm=I={bgm_vol_level}:TP=-2.0:LRA=7,afade=t=out:st={dur-2.0:.1f}:d=2.0[bg_clean];"
                         f"[bg_clean][vo_sc]sidechaincompress=threshold=0.08:ratio=4:attack=50:release=350[bg_ducked];"
                         f"[vo_out][bg_ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]"
                     )
                 else: 
-                    v_filters.append(";[4:a]loudnorm=I=-14:TP=-1.0:LRA=7[aout]")
+                    v_filters.append(f";[{audio_idx}:a]loudnorm=I=-14:TP=-1.0:LRA=7[aout]")
 
                 res = subprocess.run([
                     'ffmpeg', '-y', *inputs, 
@@ -874,7 +903,7 @@ with tab2:
                     st.error(f"FFmpeg Compilation Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered! Subtitles: {arch['label']} (Dynamic Audio Leveled)")
+                    st.success(f"🎉 Master Reel Rendered with {num_clips} Clips! Subtitles: {arch['label']}")
 
     if "rendered_video_path" in st.session_state and "active_video_pkg" in st.session_state:
         vp = st.session_state["rendered_video_path"]
@@ -984,7 +1013,6 @@ with tab2:
         st.text_area("1. Meta Reel Text (Paste into 'Text • optional')", fb_cap, height=160, key="fb_cap_val")
         render_copy("fb_c", "COPY META REEL TEXT", fb_cap)
 
-        # Meta Tags
         st.text_input("2. Meta Topic Tags", "Stoicism, Philosophy, Personal Growth, Motivation", key="fb_tags_val")
         render_copy("fb_tags", "COPY META TAGS", "Stoicism, Philosophy, Personal Growth, Motivation")
 
