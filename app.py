@@ -24,39 +24,32 @@ st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="c
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-    
     header[data-testid="stHeader"] { background: transparent !important; }
-    
     .stApp { 
         background-color: #080B11 !important; 
         background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important; 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; 
         color: #E2E8F0 !important; 
     }
-    
     .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; max-width: 720px !important; }
-    
     div[data-testid="stExpander"] { 
         background: #0E1626 !important; 
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         border-radius: 12px !important; 
         margin-bottom: 1rem !important; 
     }
-    
     div[data-testid="stExpander"] summary { 
         background: #111B30 !important; 
         color: #38BDF8 !important; 
         font-size: 13px !important; 
         font-weight: 700 !important; 
     }
-    
     label[data-testid="stWidgetLabel"] p { 
         color: #94A3B8 !important; 
         font-size: 12px !important; 
         font-weight: 700 !important; 
         text-transform: uppercase !important; 
     }
-    
     .stTextInput>div>div>input, .stTextArea textarea { 
         background-color: #0A0F1D !important; 
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
@@ -65,7 +58,6 @@ st.markdown("""
         font-size: 14px !important; 
         line-height: 1.6 !important; 
     }
-    
     .stButton>button[kind="primary"] { 
         background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important; 
         color: #FFF !important; 
@@ -75,7 +67,6 @@ st.markdown("""
         text-transform: uppercase !important; 
         width: 100% !important; 
     }
-    
     .stButton>button:not([kind="primary"]) { 
         background: #111B30 !important; 
         color: #E2E8F0 !important; 
@@ -83,7 +74,6 @@ st.markdown("""
         border-radius: 8px !important; 
         font-weight: 600 !important; 
     }
-    
     .stDownloadButton>button { 
         background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; 
         color: white !important; 
@@ -92,7 +82,6 @@ st.markdown("""
         font-weight: 700 !important; 
         width: 100% !important; 
     }
-    
     .badge { 
         font-family: 'JetBrains Mono', monospace; 
         font-size: 11px; 
@@ -238,11 +227,11 @@ def resolve_background_track(choice_key, archetype_key):
 def to_unicode_bold(text):
     res = []
     for char in text:
-        if 'A' <= char <= 'Z': res.append(chr(0x1D5D4 + ord(char) - ord('A')))
-        elif 'a' <= char <= 'z': res.append(chr(0x1D5EE + ord(char) - ord('a')))
-        elif '0' <= char <= '9': res.append(chr(0x1D7EC + ord(char) - ord('0')))
+        if "A" <= char <= "Z": res.append(chr(0x1D5D4 + ord(char) - ord("A")))
+        elif "a" <= char <= "z": res.append(chr(0x1D5EE + ord(char) - ord("a")))
+        elif "0" <= char <= "9": res.append(chr(0x1D7EC + ord(char) - ord("0")))
         else: res.append(char)
-    return ''.join(res)
+    return "".join(res)
 
 # ---------------------------------------------------------
 # 3. 24 THEMES DATABASE & AUTOMATED PLAYLIST MAPPING
@@ -336,10 +325,9 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. BUILT-IN EXCEL TRACKER ENGINE (NO APPS SCRIPT REQUIRED)
+# 5. BUILT-IN EXCEL TRACKER ENGINE
 # ---------------------------------------------------------
 def append_to_excel_tracker(row_data):
-    """Updates the Excel spreadsheet directly on the server."""
     if not OPENPYXL_AVAILABLE:
         return False
     
@@ -459,7 +447,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     if timed_words and len(timed_words) >= 5:
         clean_words = []
         for tw in timed_words:
-            w_txt = re.sub(r'[^\w\s\',.!?-]', '', tw['word']).upper().strip()
+            w_txt = re.sub(r"[^\w\s',.!?-]", "", tw['word']).upper().strip()
             if w_txt: clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
         chunk = []
         for i, tw in enumerate(clean_words):
@@ -485,7 +473,7 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
         for idx, grp in enumerate(token_groups):
             st_t = vocal_start + (idx * step)
             en_t = min(total_dur, vocal_start + ((idx + 1) * step))
-            txt = re.sub(r'[^\w\s\',.!?-]', '', " ".join(grp)).upper().strip()
+            txt = re.sub(r"[^\w\s',.!?-]", "", " ".join(grp)).upper().strip()
             if txt: events.append((st_t, en_t, txt))
 
     def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
@@ -799,9 +787,6 @@ with tab2:
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
         st.markdown(f'<div style="color: #34D399; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
-    # ---------------------------------------------------------
-    # DYNAMIC DIRECTOR AI & CUTCAP FX SUITE
-    # ---------------------------------------------------------
     st.markdown("### 🎬 2. Dynamic Director AI & Visual FX (CutCap Suite)")
     
     col_fx1, col_fx2 = st.columns(2)
@@ -856,9 +841,6 @@ with tab2:
     if res_path and os.path.exists(res_path):
         st.markdown(f'<div style="color: #34D399; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
 
-    # ---------------------------------------------------------
-    # ADAPTIVE LOSSLESS THUMBNAIL CROP & SAFE ZONE ENGINE
-    # ---------------------------------------------------------
     st.markdown("### 🖼️ 4. Thumbnail Safe-Zone Engine (Upper 20%-45% Placement)")
     thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
     if thumb:
@@ -1083,7 +1065,7 @@ with tab2:
         st.markdown("### 🔵 2. FACEBOOK & INSTAGRAM REELS FLOW")
 
         raw_fb_hook = pkg.get("caption_hook", pkg.get("hook_banner", "DISCIPLINE OVER COMFORT"))
-        fb_hook = to_unicode_bold(re.sub(r'[^\w\s-]', '', raw_fb_hook).strip().upper())
+        fb_hook = to_unicode_bold(re.sub(r"[^\w\s-]", "", raw_fb_hook).strip().upper())
         fb_cap = (
             f"⚡ {fb_hook} 🏛️\n\n"
             f"{pkg.get('caption_lesson', pkg.get('script', ''))}\n\n"
@@ -1100,7 +1082,7 @@ with tab2:
         st.text_input("2. Meta Topic Tags", "Stoicism, Philosophy, Personal Growth, Motivation", key="fb_tags_val")
         render_copy("fb_tags", "COPY META TAGS", "Stoicism, Philosophy, Personal Growth, Motivation")
 
-        st.markdown('''
+        st.markdown("""
         <div style="margin: 12px 0 16px 0;">
             <a href="https://business.facebook.com/latest/reels_composer" target="_blank" style="text-decoration: none;">
                 <button style="width: 100%; height: 3.2rem; background: #1877F2; color: white; border: none; border-radius: 8px; font-weight: 700; font-family: -apple-system, sans-serif; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.35);">
@@ -1108,7 +1090,7 @@ with tab2:
                 </button>
             </a>
         </div>
-        ''', unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
             row_payload = {
@@ -1175,4 +1157,26 @@ with tab2:
 
 # --- TAB 3: QUEUE LEDGER & EXCEL TRACKER ---
 with tab3:
-    st.markdown("### 📊
+    st.markdown("### Content Tracker & Export")
+    
+    if os.path.exists(EXCEL_TRACKER_PATH):
+        with open(EXCEL_TRACKER_PATH, "rb") as ef:
+            st.download_button(
+                "Download Updated Content Tracker (.xlsx)",
+                ef.read(),
+                "Echoes_Of_Wisdom_Content_Tracker.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        st.caption("Contains all scheduled rows with metadata, tags, and Drive folder links.")
+    else:
+        st.info("Excel tracker will initialize automatically on your first locked video.")
+
+    st.markdown(f"### Scheduled Queue Ledger ({len(db.get('scheduled_videos', []))})")
+    for item in reversed(db.get("scheduled_videos", [])):
+        st.markdown(f"""
+        <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
+            <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
+            <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
+            <div style="color:#64748B;">📁 {item.get('file')} | 📺 {item.get('playlist', 'Hard Truths')}</div>
+        </div>
+        """, unsafe_allow_html=True)
