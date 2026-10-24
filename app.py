@@ -55,7 +55,7 @@ st.markdown("""
         color: #F8FAFC !important; 
         border-radius: 8px !important; 
         font-size: 14px !important; 
-        line-height: 1.6 !important;
+        line-height: 1.6 !important; 
     }
     
     .stButton>button[kind="primary"] { 
@@ -167,6 +167,28 @@ SUBTITLE_ARCHETYPES = {
     "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
 }
 
+DIRECTOR_STYLES = {
+    "AUTO":        "🎲 Smart Director AI (Dynamic Randomization on Every Render)",
+    "PUNCH_FLASH": "⚡ Action Push & Shutter Flash (High-Retention Hook + 0.12s White Blink)",
+    "PULL_VIGN":   "🌊 Scale Pull-Out & Dark Vignette (Cinematic Reveal + Shadow Falloff)",
+    "WARM_DRIFT":  "🔥 Forge Drift & Soft Dissolve (Warm 35mm Grade + Amber Bleed)",
+    "NORDIC_CUT":  "❄️ Nordic Citadel & Fast Dip (Desaturated Cold Grade + 0.15s Basalt Dip)"
+}
+
+VOICE_PROFILES = {
+    "Gemini-Charon":           "🎙️ Charon (Gemini 3.8 AI - Deep Stoic US Male, 100% Reliable)",
+    "Gemini-Fenrir":           "🎙️ Fenrir (Gemini 3.8 AI - Resonant Authoritative US Male)",
+    "en-US-ChristopherNeural": "🎙️ Christopher (Edge-TTS Natural US Male)",
+    "en-US-GuyNeural":         "🎙️ Guy (Edge-TTS Natural US Male)"
+}
+
+# The 3 Specific Target Playlists
+PLAYLIST_OPTIONS = [
+    "The art of moving in silence (stoic mindset)",
+    "Mastering human nature and fake friends ancient parables",
+    "Hard Truths"
+]
+
 def get_library_tracks():
     if not os.path.exists(MUSIC_DIR): return []
     return sorted([f for f in os.listdir(MUSIC_DIR) if f.lower().endswith((".mp3", ".wav", ".m4a"))])
@@ -194,33 +216,38 @@ def to_unicode_bold(text):
     return ''.join(res)
 
 # ---------------------------------------------------------
-# 3. 24 THEMES DATABASE
+# 3. 24 THEMES DATABASE & AUTOMATED PLAYLIST MAPPING
 # ---------------------------------------------------------
 THEMES_DATABASE = [
-    {"id": "SILENT_EXIT", "p": "Emotional Immunity", "t": "The Silent Exit", "prem": "Never announce when you cut someone off. Withdrawing presence without conflict is sovereign power.", "h": "NEVER ANNOUNCE YOUR EXIT", "a": "GLACIAL_ICE", "m": ["Heavy bronze portal latch locking into dark stone", "Single fraying linen cord burning through over a flame", "Solitary timber skiff drifting into dense lake mist"]},
-    {"id": "WEAPON_INDIFFERENCE", "p": "Emotional Immunity", "t": "Weaponized Indifference", "prem": "If their disrespect triggers your anger, they own you. Cold silence strips away their leverage.", "h": "YOUR REACTION GIVES THEM POWER", "a": "GLACIAL_ICE", "m": ["Monolithic basalt stone unmoved against crashing storm waves", "Torrential rain pouring down a marble statue without a scratch", "Glowing ember dropping on cold slate extinguishing to ash"]},
-    {"id": "COST_LIKABLE", "p": "Emotional Immunity", "t": "The Cost of Being Likable", "prem": "Trying to please everyone is not kindness; it is weakness. When everyone likes you, nobody respects you.", "h": "STOP TRYING TO BE LIKED", "a": "FORGE_AMBER", "m": ["Weathered antique theater mask cracking on wet cobblestones", "Brittle dried clay seal crumbling under thumb pressure", "Weathered glass lens fracturing under focused sunlight"]},
-    {"id": "ARMOR_EPICTETUS", "p": "Emotional Immunity", "t": "The Armor of Epictetus", "prem": "An insult cannot hurt you unless you agree with it. If they mock you, they reveal their own sickness.", "h": "INSULTS ONLY HURT FOOLS", "a": "GLACIAL_ICE", "m": ["Bronze arrow deflecting off a heavy Roman iron shield", "Mud hurled against a granite castle bastion washing away", "Venomous snake striking a solid bronze bell with no effect"]},
-    {"id": "GOSSIP_STARVE", "p": "Emotional Immunity", "t": "Gossip Starvation", "prem": "When someone brings you gossip about others, they will talk about you tomorrow. Starve rumors with silence.", "h": "NEVER FEED SMALL MINDS", "a": "GLACIAL_ICE", "m": ["Dark iron snuffer descending over a guttering candle flame", "Dry withered brush caught in sudden rain stopping fire", "Deep stone cistern swallowing a pebble without producing an echo"]},
-    {"id": "UNRETURNED_LOYALTY", "p": "Emotional Immunity", "t": "Unreturned Loyalty", "prem": "Blind loyalty to people who only call when they need something is self-betrayal. Close the vault.", "h": "STOP BLEEDING FOR USERS", "a": "FORGE_AMBER", "m": ["Heavy iron vault door swinging shut on oiled hinges", "Cracked clay water vessel leaking water into barren sand", "Withered vine trimmed cleanly from a fruit-bearing olive branch"]},
-    {"id": "DOPAMINE_BANKRUPT", "p": "Relentless Focus", "t": "Dopamine Bankruptcy", "prem": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.", "h": "YOU ARE DRAINED BY NOISE", "a": "FORGE_AMBER", "m": ["Antique bronze oil lamp burning steadily down to deep amber embers", "Clear mountain spring water settling completely transparent in a vial", "Iron pendulum slowing to a complete, balanced standstill"]},
-    {"id": "QUIET_EXECUTION", "p": "Relentless Focus", "t": "Quiet Execution", "prem": "Never broadcast what you are building. The world flatters plans but only respects finished stone.", "h": "BUILD IN COMPLETE OBSCURITY", "a": "IMPERIAL_GOLD", "m": ["Heavy blacksmith hammer striking glowing blade on dark stone anvil", "Stonemason chisel carving Roman numerals into granite bedrock", "Deep underground tree roots breaking through rock in total darkness"]},
-    {"id": "SUNK_COST_TRAP", "p": "Relentless Focus", "t": "The Sunk Cost Trap", "prem": "Just because you spent years making a mistake does not mean you owe it your future. Cut the cord immediately.", "h": "STOP FEEDING DEAD DREAMS", "a": "FORGE_AMBER", "m": ["Sharp pruning sickle cleanly slicing an anchor rope under high tension", "Heavy dry branch snapping off a centuries-old oak in storm winds", "Antique weighing scale dumping heavy slag to return to equilibrium"]},
-    {"id": "MYTH_OF_WAITING", "p": "Relentless Focus", "t": "The Myth of Motivation", "prem": "Motivation is a fair-weather friend. Discipline is doing the work even when your emotions protest.", "h": "ACTION CURES SELF-PITY", "a": "FORGE_AMBER", "m": ["Flint and steel striking violently to generate a bright spark", "Heavy waterwheel turning relentlessly against strong river currents", "Team of draft oxen pulling a heavy plow through frost-hardened soil"]},
-    {"id": "SOLITUDE_ADVANTAGE", "p": "Relentless Focus", "t": "The Solitude Advantage", "prem": "A man who cannot sit quietly alone is an easy target for anyone promising stimulation.", "h": "LEARN TO SIT IN SILENCE", "a": "IMPERIAL_GOLD", "m": ["Single tall watchtower standing alone on a foggy mountain peak", "Lone golden eagle gliding motionless on thermal winds high above clouds", "Solitary stone lighthouse enduring darkness with a steady beam"]},
-    {"id": "ENVY_DESTRUCTION", "p": "Relentless Focus", "t": "The Toxicity of Comparison", "prem": "When you envy another person's victory, you declare that your own journey is worthless. Mind your own craft.", "h": "NEVER WATCH THEIR RACE", "a": "FORGE_AMBER", "m": ["Racehorse wearing blinders charging forward on dry dirt arena", "Craftsman magnifying loupe focusing strictly on fine gold engravings", "Sundial tracking the sun without regard for passing clouds"]},
-    {"id": "FUTURE_RUIN", "p": "Mental Fortress", "t": "The Illusion of Future Ruin", "prem": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will never arrive.", "h": "YOU SUFFER IN YOUR HEAD", "a": "IMPERIAL_GOLD", "m": ["Cold morning mist dissolving over ancient stone arches under sunlight", "Troubled pool of dark water settling into a crystal mirror as ripples fade", "Dark storm cloud dispersing harmlessly across a barren plain"]},
-    {"id": "CALAMITY_TRAINING", "p": "Mental Fortress", "t": "Calamity as Training", "prem": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character comfort cannot buy.", "h": "THE STRUGGLE IS THE TEACHER", "a": "IMPERIAL_GOLD", "m": ["Roaring forge furnace turning raw scrap iron into hardened steel", "Mountain pine tree growing dense and unshakeable in freezing gale winds", "Diamond blade grinding down rough raw stone into a sharp facet"]},
-    {"id": "BURDEN_EXPECTATIONS", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
-    {"id": "DEATH_OF_PRIDE", "p": "Mental Fortress", "t": "The Death of Pride", "prem": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.", "h": "KILL YOUR NEED FOR PRAISE", "a": "IMPERIAL_GOLD", "m": ["Deep subterranean bedrock supporting an entire city without showing itself", "Dark iron anchor resting silently at the bottom of the ocean floor", "Ancient oak tree whose strength lies in its hidden root network"]},
-    {"id": "CONTROL_DESIRE", "p": "Mental Fortress", "t": "The Chains of Wanting", "prem": "Wealth does not consist in great possessions, but in few wants. He who is content cannot be enslaved.", "h": "WANT LESS TO RULE MORE", "a": "IMPERIAL_GOLD", "m": ["Heavy broken iron shackles lying in dust beside an open cell gate", "Simple earthenware cup filled with cool clear mountain well water", "Rustic wooden staff supporting a traveler over rugged mountain ridges"]},
-    {"id": "ANGER_POISON", "p": "Mental Fortress", "t": "Anger Is Self-Poison", "prem": "Holding onto anger is drinking poison and expecting the other person to die. Calmness is the ultimate weapon.", "h": "ANGER IS TEMPORARY MADNESS", "a": "GLACIAL_ICE", "m": ["Boiling water in a bronze cauldron cooling down to smooth stillness", "Wild brushfire hitting a wide dirt trench and running out of fuel", "Raging wild stallion brought to stillness by a steady hand on the reins"]},
-    {"id": "MEMENTO_MORI", "p": "Radical Acceptance", "t": "Memento Mori", "prem": "You could leave life right now. Let that determine what you do, what you say, and what you think.", "h": "YOU ARE RUNNING OUT OF TIME", "a": "FORGE_AMBER", "m": ["Fine golden sand falling steadily through an ancient hourglass neck", "Shadow lengthening across Roman stone numerals on a sundial face", "Single dried autumn leaf detaching and drifting on a brisk wind"]},
-    {"id": "AMOR_FATI", "p": "Radical Acceptance", "t": "Amor Fati", "prem": "Do not demand that things happen as you wish. Accept what happens as necessary and move forward.", "h": "ACCEPT WHATEVER COMES NEXT", "a": "IMPERIAL_GOLD", "m": ["Raging river flowing around boulders without slowing its descent", "Large campfire consuming whatever fuel is thrown into its flames", "Ship sail adjusting its ropes to catch crosswinds and maintain heading"]},
-    {"id": "STRIP_PEDESTAL", "p": "Radical Acceptance", "t": "Stripping the Pedestal", "prem": "Never put anyone on a pedestal. They bleed, make mistakes, and age just like you.", "h": "NOBODY IS ABOVE YOU", "a": "GLACIAL_ICE", "m": ["Gilded monument showing exposed cracked limestone under worn gold leaf", "Royal purple woolen mantle turning to simple thread under inspection", "Chess board being cleared where kings and pawns go into the same box"]},
-    {"id": "RIVER_OF_TIME", "p": "Radical Acceptance", "t": "The River of Time", "prem": "The pain you feel right now will pass. The victory you celebrate today will fade. Ground your peace in eternity.", "h": "THIS TOO SHALL PASS", "a": "IMPERIAL_GOLD", "m": ["Fast river water rushing over polished river stones under sunlight", "Ancient Roman stone ruins standing tranquil against centuries of weather", "Constellations revolving slowly in clear dark night skies over mountains"]},
-    {"id": "DEATH_OF_OPINIONS", "p": "Radical Acceptance", "t": "Irrelevance of Opinions", "prem": "Why value yourself over others, but value their opinion of you over your own judgment? Reclaim your inner court.", "h": "TRUST YOUR OWN JUDGMENT", "a": "IMPERIAL_GOLD", "m": ["Balance scale holding single gold bullion balancing heaps of straw", "Solid bronze compass needle pointing true North in storm winds", "Ancient judge stone bench standing empty and resolute under open skies"]},
-    {"id": "FINAL_BOUNDARY", "p": "Radical Acceptance", "t": "The Final Boundary", "prem": "The mind is its own place. No tyrant or insult can break inside unless you leave the gate unlocked.", "h": "GUARD YOUR INNER CITADEL", "a": "GLACIAL_ICE", "m": ["Massive carved stone gateway fortified with heavy bronze bands", "Solitary fortress lantern burning steadily against pitch-black mountain fog", "Deep subterranean spring flowing cold and pure under massive granite arches"]}
+    # Playlist: The art of moving in silence (stoic mindset)
+    {"id": "SILENT_EXIT", "pl": "The art of moving in silence (stoic mindset)", "p": "Emotional Immunity", "t": "The Silent Exit", "prem": "Never announce when you cut someone off. Withdrawing presence without conflict is sovereign power.", "h": "NEVER ANNOUNCE YOUR EXIT", "a": "GLACIAL_ICE", "m": ["Heavy bronze portal latch locking into dark stone", "Single fraying linen cord burning through over a flame", "Solitary timber skiff drifting into dense lake mist"]},
+    {"id": "WEAPON_INDIFFERENCE", "pl": "The art of moving in silence (stoic mindset)", "p": "Emotional Immunity", "t": "Weaponized Indifference", "prem": "If their disrespect triggers your anger, they own you. Cold silence strips away their leverage.", "h": "YOUR REACTION GIVES THEM POWER", "a": "GLACIAL_ICE", "m": ["Monolithic basalt stone unmoved against crashing storm waves", "Torrential rain pouring down a marble statue without a scratch", "Glowing ember dropping on cold slate extinguishing to ash"]},
+    {"id": "QUIET_EXECUTION", "pl": "The art of moving in silence (stoic mindset)", "p": "Relentless Focus", "t": "Quiet Execution", "prem": "Never broadcast what you are building. The world flatters plans but only respects finished stone.", "h": "BUILD IN COMPLETE OBSCURITY", "a": "IMPERIAL_GOLD", "m": ["Heavy blacksmith hammer striking glowing blade on dark stone anvil", "Stonemason chisel carving Roman numerals into granite bedrock", "Deep underground tree roots breaking through rock in total darkness"]},
+    {"id": "SOLITUDE_ADVANTAGE", "pl": "The art of moving in silence (stoic mindset)", "p": "Relentless Focus", "t": "The Solitude Advantage", "prem": "A man who cannot sit quietly alone is an easy target for anyone promising stimulation.", "h": "LEARN TO SIT IN SILENCE", "a": "IMPERIAL_GOLD", "m": ["Single tall watchtower standing alone on a foggy mountain peak", "Lone golden eagle gliding motionless on thermal winds high above clouds", "Solitary stone lighthouse enduring darkness with a steady beam"]},
+    {"id": "DEATH_OF_OPINIONS", "pl": "The art of moving in silence (stoic mindset)", "p": "Radical Acceptance", "t": "Irrelevance of Opinions", "prem": "Why value yourself over others, but value their opinion of you over your own judgment? Reclaim your inner court.", "h": "TRUST YOUR OWN JUDGMENT", "a": "IMPERIAL_GOLD", "m": ["Balance scale holding single gold bullion balancing heaps of straw", "Solid bronze compass needle pointing true North in storm winds", "Ancient judge stone bench standing empty and resolute under open skies"]},
+    {"id": "FINAL_BOUNDARY", "pl": "The art of moving in silence (stoic mindset)", "p": "Radical Acceptance", "t": "The Final Boundary", "prem": "The mind is its own place. No tyrant or insult can break inside unless you leave the gate unlocked.", "h": "GUARD YOUR INNER CITADEL", "a": "GLACIAL_ICE", "m": ["Massive carved stone gateway fortified with heavy bronze bands", "Solitary fortress lantern burning steadily against pitch-black mountain fog", "Deep subterranean spring flowing cold and pure under massive granite arches"]},
+
+    # Playlist: Mastering human nature and fake friends ancient parables
+    {"id": "UNRETURNED_LOYALTY", "pl": "Mastering human nature and fake friends ancient parables", "p": "Emotional Immunity", "t": "Unreturned Loyalty", "prem": "Blind loyalty to people who only call when they need something is self-betrayal. Close the vault.", "h": "STOP BLEEDING FOR USERS", "a": "FORGE_AMBER", "m": ["Heavy iron vault door swinging shut on oiled hinges", "Cracked clay water vessel leaking water into barren sand", "Withered vine trimmed cleanly from a fruit-bearing olive branch"]},
+    {"id": "GOSSIP_STARVE", "pl": "Mastering human nature and fake friends ancient parables", "p": "Emotional Immunity", "t": "Gossip Starvation", "prem": "When someone brings you gossip about others, they will talk about you tomorrow. Starve rumors with silence.", "h": "NEVER FEED SMALL MINDS", "a": "GLACIAL_ICE", "m": ["Dark iron snuffer descending over a guttering candle flame", "Dry withered brush caught in sudden rain stopping fire", "Deep stone cistern swallowing a pebble without producing an echo"]},
+    {"id": "COST_LIKABLE", "pl": "Mastering human nature and fake friends ancient parables", "p": "Emotional Immunity", "t": "The Cost of Being Likable", "prem": "Trying to please everyone is not kindness; it is weakness. When everyone likes you, nobody respects you.", "h": "STOP TRYING TO BE LIKED", "a": "FORGE_AMBER", "m": ["Weathered antique theater mask cracking on wet cobblestones", "Brittle dried clay seal crumbling under thumb pressure", "Weathered glass lens fracturing under focused sunlight"]},
+    {"id": "ARMOR_EPICTETUS", "pl": "Mastering human nature and fake friends ancient parables", "p": "Emotional Immunity", "t": "The Armor of Epictetus", "prem": "An insult cannot hurt you unless you agree with it. If they mock you, they reveal their own sickness.", "h": "INSULTS ONLY HURT FOOLS", "a": "GLACIAL_ICE", "m": ["Bronze arrow deflecting off a heavy Roman iron shield", "Mud hurled against a granite castle bastion washing away", "Venomous snake striking a solid bronze bell with no effect"]},
+    {"id": "ENVY_DESTRUCTION", "pl": "Mastering human nature and fake friends ancient parables", "p": "Relentless Focus", "t": "The Toxicity of Comparison", "prem": "When you envy another person's victory, you declare that your own journey is worthless. Mind your own craft.", "h": "NEVER WATCH THEIR RACE", "a": "FORGE_AMBER", "m": ["Racehorse wearing blinders charging forward on dry dirt arena", "Craftsman magnifying loupe focusing strictly on fine gold engravings", "Sundial tracking the sun without regard for passing clouds"]},
+    {"id": "STRIP_PEDESTAL", "pl": "Mastering human nature and fake friends ancient parables", "p": "Radical Acceptance", "t": "Stripping the Pedestal", "prem": "Never put anyone on a pedestal. They bleed, make mistakes, and age just like you.", "h": "NOBODY IS ABOVE YOU", "a": "GLACIAL_ICE", "m": ["Gilded monument showing exposed cracked limestone under worn gold leaf", "Royal purple woolen mantle turning to simple thread under inspection", "Chess board being cleared where kings and pawns go into the same box"]},
+
+    # Playlist: Hard Truths
+    {"id": "MEMENTO_MORI", "pl": "Hard Truths", "p": "Radical Acceptance", "t": "Memento Mori", "prem": "You could leave life right now. Let that determine what you do, what you say, and what you think.", "h": "YOU ARE RUNNING OUT OF TIME", "a": "FORGE_AMBER", "m": ["Fine golden sand falling steadily through an ancient hourglass neck", "Shadow lengthening across Roman stone numerals on a sundial face", "Single dried autumn leaf detaching and drifting on a brisk wind"]},
+    {"id": "BURDEN_EXPECTATIONS", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
+    {"id": "DOPAMINE_BANKRUPT", "pl": "Hard Truths", "p": "Relentless Focus", "t": "Dopamine Bankruptcy", "prem": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.", "h": "YOU ARE DRAINED BY NOISE", "a": "FORGE_AMBER", "m": ["Antique bronze oil lamp burning steadily down to deep amber embers", "Clear mountain spring water settling completely transparent in a vial", "Iron pendulum slowing to a complete, balanced standstill"]},
+    {"id": "SUNK_COST_TRAP", "pl": "Hard Truths", "p": "Relentless Focus", "t": "The Sunk Cost Trap", "prem": "Just because you spent years making a mistake does not mean you owe it your future. Cut the cord immediately.", "h": "STOP FEEDING DEAD DREAMS", "a": "FORGE_AMBER", "m": ["Sharp pruning sickle cleanly slicing an anchor rope under high tension", "Heavy dry branch snapping off a centuries-old oak in storm winds", "Antique weighing scale dumping heavy slag to return to equilibrium"]},
+    {"id": "MYTH_OF_WAITING", "pl": "Hard Truths", "p": "Relentless Focus", "t": "The Myth of Motivation", "prem": "Motivation is a fair-weather friend. Discipline is doing the work even when your emotions protest.", "h": "ACTION CURES SELF-PITY", "a": "FORGE_AMBER", "m": ["Flint and steel striking violently to generate a bright spark", "Heavy waterwheel turning relentlessly against strong river currents", "Team of draft oxen pulling a heavy plow through frost-hardened soil"]},
+    {"id": "FUTURE_RUIN", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Illusion of Future Ruin", "prem": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will never arrive.", "h": "YOU SUFFER IN YOUR HEAD", "a": "IMPERIAL_GOLD", "m": ["Cold morning mist dissolving over ancient stone arches under sunlight", "Troubled pool of dark water settling into a crystal mirror as ripples fade", "Dark storm cloud dispersing harmlessly across a barren plain"]},
+    {"id": "CALAMITY_TRAINING", "pl": "Hard Truths", "p": "Mental Fortress", "t": "Calamity as Training", "prem": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character comfort cannot buy.", "h": "THE STRUGGLE IS THE TEACHER", "a": "IMPERIAL_GOLD", "m": ["Roaring forge furnace turning raw scrap iron into hardened steel", "Mountain pine tree growing dense and unshakeable in freezing gale winds", "Diamond blade grinding down rough raw stone into a sharp facet"]},
+    {"id": "DEATH_OF_PRIDE", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Death of Pride", "prem": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.", "h": "KILL YOUR NEED FOR PRAISE", "a": "IMPERIAL_GOLD", "m": ["Deep subterranean bedrock supporting an entire city without showing itself", "Dark iron anchor resting silently at the bottom of the ocean floor", "Ancient oak tree whose strength lies in its hidden root network"]},
+    {"id": "CONTROL_DESIRE", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Chains of Wanting", "prem": "Wealth does not consist in great possessions, but in few wants. He who is content cannot be enslaved.", "h": "WANT LESS TO RULE MORE", "a": "IMPERIAL_GOLD", "m": ["Heavy broken iron shackles lying in dust beside an open cell gate", "Simple earthenware cup filled with cool clear mountain well water", "Rustic wooden staff supporting a traveler over rugged mountain ridges"]},
+    {"id": "ANGER_POISON", "pl": "Hard Truths", "p": "Mental Fortress", "t": "Anger Is Self-Poison", "prem": "Holding onto anger is drinking poison and expecting the other person to die. Calmness is the ultimate weapon.", "h": "ANGER IS TEMPORARY MADNESS", "a": "GLACIAL_ICE", "m": ["Boiling water in a bronze cauldron cooling down to smooth stillness", "Wild brushfire hitting a wide dirt trench and running out of fuel", "Raging wild stallion brought to stillness by a steady hand on the reins"]},
+    {"id": "AMOR_FATI", "pl": "Hard Truths", "p": "Radical Acceptance", "t": "Amor Fati", "prem": "Do not demand that things happen as you wish. Accept what happens as necessary and move forward.", "h": "ACCEPT WHATEVER COMES NEXT", "a": "IMPERIAL_GOLD", "m": ["Raging river flowing around boulders without slowing its descent", "Large campfire consuming whatever fuel is thrown into its flames", "Ship sail adjusting its ropes to catch crosswinds and maintain heading"]},
+    {"id": "RIVER_OF_TIME", "pl": "Hard Truths", "p": "Radical Acceptance", "t": "The River of Time", "prem": "The pain you feel right now will pass. The victory you celebrate today will fade. Ground your peace in eternity.", "h": "THIS TOO SHALL PASS", "a": "IMPERIAL_GOLD", "m": ["Fast river water rushing over polished river stones under sunlight", "Ancient Roman stone ruins standing tranquil against centuries of weather", "Constellations revolving slowly in clear dark night skies over mountains"]}
 ]
 
 SETTINGS_MATRIX = [
@@ -242,13 +269,7 @@ def load_db():
         "last_scheduled_date": None, 
         "last_scheduled_slot": None, 
         "slot1_time": "05:00", 
-        "slot2_time": "20:00",
-        "playlists": {
-            "Emotional Immunity": "Emotional Immunity",
-            "Relentless Focus": "Relentless Focus",
-            "Mental Fortress": "Mental Fortress",
-            "Radical Acceptance": "Radical Acceptance"
-        }
+        "slot2_time": "18:00"
     }
     if os.path.exists(DB_PATH):
         try:
@@ -267,7 +288,7 @@ def get_next_slot(base_d=None, base_s=None):
     now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
     ld_str = base_d if base_d else db.get("last_scheduled_date")
     ls = base_s if base_s else db.get("last_scheduled_slot")
-    s1_t, s2_t = db.get("slot1_time", "05:00"), db.get("slot2_time", "20:00")
+    s1_t, s2_t = db.get("slot1_time", "05:00"), db.get("slot2_time", "18:00")
     if ld_str and ls:
         try: ld = datetime.strptime(str(ld_str), "%Y-%m-%d").date()
         except Exception: ld = now_ist.date()
@@ -406,6 +427,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj):
     )
     return {
         "title_concept": t_obj["t"],
+        "playlist": t_obj.get("pl", "Hard Truths"),
         "hook_banner": hook,
         "subtitle_archetype": t_obj["a"],
         "script": script,
@@ -413,7 +435,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj):
         "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] Extreme macro cinematic shot of {macro_c.lower()}, cinematic depth of field, dramatic atmospheric lighting",
         "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist walking slowly through {sett_obj['n'].lower()}, steady deliberate pace, dark ancient woolen robes, natural posture",
         "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist close-up portrait, weathered lined face, calm focused eyes, serene stoic composure",
-        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting",
+        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting, top third space clear for hook text, strictly two arms",
         "youtube_title": f"⚡ {hook.title()} 🏛️ #shorts #stoicism",
         "youtube_description": f"⚡ {hook}\n\n{premise}\n\n🤔 TODAY'S STOIC QUESTION:\nWhen facing uninvited chaos:\n1️⃣ Stand resolute in silence\n2️⃣ Defend your territory verbally\n\nDrop 1 or 2 below! 👇\n\n🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n#stoicism #stoicmindset #discipline #echoesofwisdom #shorts",
         "youtube_tags": "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts",
@@ -432,7 +454,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     
     prompt = (
         f"You are Creative Director for 'Echoes of Wisdom' (9:16 vertical reels).\n"
-        f"PILLAR: {t_obj['p']} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
+        f"PLAYLIST: {t_obj.get('pl', 'Hard Truths')} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
         f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\nFORBIDDEN HOOKS:\n{used_h}\n"
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
         f"4. Google Flow Character Rules:\n"
@@ -442,6 +464,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
+        f'  "playlist": "{t_obj.get("pl", "Hard Truths")}",\n'
         '  "hook_banner": "3-4 WORDS IN CAPS",\n'
         f'  "subtitle_archetype": "{t_obj["a"]}",\n'
         '  "script": "Full 65-70 word script.",\n'
@@ -449,7 +472,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
         f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c})",\n'
         '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action, natural posture, no phantom limbs",\n'
         '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up, serene resolve",\n'
-        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, anatomically correct",\n'
+        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, anatomically correct, text space clear in top third",\n'
         '  "youtube_title": "⚡ Hook Title 🏛️ #shorts #stoicism",\n'
         '  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n🤔 QUESTION:\\n1️⃣ Option 1\\n2️⃣ Option 2\\n\\n🏛️ Subscribe to @EchoesOfWisdomOfficial\\n\\n#stoicism #shorts",\n'
         '  "youtube_tags": "stoicism, echoes of wisdom, stoic philosophy, discipline, mental strength, self improvement, marcus aurelius, daily stoic, shorts",\n'
@@ -490,11 +513,11 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     return build_curated_stoic_package(t_obj, macro_c, sett_obj), "Stoic Vault (Zero-Fail Mode)"
 
 # ---------------------------------------------------------
-# 7. TELEMETRY BAR & SETTINGS
+# 7. TELEMETRY BAR & PUBLISHING SETTINGS
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.5 // CINEMATIC ZOOM & ZERO-FAIL ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.0 // STUDIO DIRECTOR EDITION</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -514,8 +537,8 @@ st.markdown(f"""
 if "status_banner" in st.session_state:
     st.success(st.session_state.pop("status_banner"))
 
-with st.expander("📅 PUBLISHING CADENCE & PLAYLIST SETTINGS"):
-    st.markdown("#### ⏰ Posting Slots")
+with st.expander("📅 PUBLISHING CADENCE & BATCH VAULT SETTINGS"):
+    st.markdown("#### ⏰ Release Cadence (Target IST Slots)")
     c1, c2 = st.columns(2)
     saved_d = datetime.strptime(db["last_scheduled_date"], "%Y-%m-%d").date() if db.get("last_scheduled_date") else datetime.now(timezone(timedelta(hours=5, minutes=30))).date()
     with c1:
@@ -523,30 +546,18 @@ with st.expander("📅 PUBLISHING CADENCE & PLAYLIST SETTINGS"):
         cs = st.selectbox("Last Slot", ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"], index=(0 if "SLOT 1" in str(db.get("last_scheduled_slot","")).upper() else 1))
     with c2:
         ct1 = st.time_input("Slot 1 (IST)", value=dt_time(int(db.get("slot1_time","05:00").split(":")[0]), int(db.get("slot1_time","05:00").split(":")[1])))
-        ct2 = st.time_input("Slot 2 (IST)", value=dt_time(int(db.get("slot2_time","20:00").split(":")[0]), int(db.get("slot2_time","20:00").split(":")[1])))
+        ct2 = st.time_input("Slot 2 (IST)", value=dt_time(int(db.get("slot2_time","18:00").split(":")[0]), int(db.get("slot2_time","18:00").split(":")[1])))
     
-    st.markdown("#### 📺 Exact YouTube Playlist Names")
-    cur_pl = db.get("playlists", {})
-    pl_c1, pl_c2 = st.columns(2)
-    with pl_c1:
-        p_em = st.text_input("Pillar 1: Emotional Immunity", value=cur_pl.get("Emotional Immunity", "Emotional Immunity"))
-        p_rf = st.text_input("Pillar 2: Relentless Focus", value=cur_pl.get("Relentless Focus", "Relentless Focus"))
-    with pl_c2:
-        p_mf = st.text_input("Pillar 3: Mental Fortress", value=cur_pl.get("Mental Fortress", "Mental Fortress"))
-        p_ra = st.text_input("Pillar 4: Radical Acceptance", value=cur_pl.get("Radical Acceptance", "Radical Acceptance"))
+    st.markdown("#### 📺 Active Channel Playlists (Locked)")
+    for pl_name in PLAYLIST_OPTIONS:
+        st.markdown(f"- **{pl_name}**")
 
-    if st.button("💾 Save Settings & Playlists"):
+    if st.button("💾 Save Cadence Settings"):
         db.update({
             "last_scheduled_date": cd.strftime("%Y-%m-%d"), 
             "last_scheduled_slot": cs, 
             "slot1_time": ct1.strftime("%H:%M"), 
-            "slot2_time": ct2.strftime("%H:%M"),
-            "playlists": {
-                "Emotional Immunity": p_em.strip(),
-                "Relentless Focus": p_rf.strip(),
-                "Mental Fortress": p_mf.strip(),
-                "Radical Acceptance": p_ra.strip()
-            }
+            "slot2_time": ct2.strftime("%H:%M")
         })
         save_db(db)
         nd, ns, nt = get_next_slot(db["last_scheduled_date"], db["last_scheduled_slot"])
@@ -594,7 +605,11 @@ tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER RE
 # --- TAB 1: SCRIPT & GOOGLE FLOW PROMPTS ---
 with tab1:
     theme_opts = ["🎲 Smart AI Rotation (Cooldown-Protected)"] + THEMES_DATABASE
-    chosen_theme = st.selectbox("Stoic Core Theme", theme_opts, format_func=lambda x: "🎲 Smart AI Rotation" if isinstance(x, str) else f"{'⏳' if x['id'] in recent_ids else '✨'} {x['t']} ({x['p']})")
+    chosen_theme = st.selectbox(
+        "Stoic Core Theme",
+        theme_opts,
+        format_func=lambda x: "🎲 Smart AI Rotation" if isinstance(x, str) else f"{'⏳' if x['id'] in recent_ids else '✨'} {x['t']} ➔ [{x.get('pl','Hard Truths')[:22]}...]"
+    )
     
     col_v1, col_v2 = st.columns(2)
     with col_v1:
@@ -615,6 +630,7 @@ with tab1:
             
             pkg, engine_source = generate_video_package(k, t_obj, m_choice, s_obj)
             pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
+            pkg["playlist"] = t_obj.get("pl", "Hard Truths")
             
             timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH, api_key=k))
             
@@ -622,6 +638,7 @@ with tab1:
                 "pkg": pkg,
                 "t_id": t_obj["id"],
                 "p": t_obj["p"],
+                "pl": pkg["playlist"],
                 "m": m_choice,
                 "s": s_obj["n"],
                 "audio": DRAFT_AUDIO_PATH,
@@ -642,7 +659,8 @@ with tab1:
         pkg = p_data.get("pkg", {})
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
-        st.markdown(f"**Pillar:** {p_data.get('p', 'Relentless Focus')} &nbsp;|&nbsp; **Engine:** `{p_data.get('engine_source', 'Active')}` &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
+        st.markdown(f"**Playlist:** `{pkg.get('playlist', 'Hard Truths')}`")
+        st.markdown(f"**Engine:** `{p_data.get('engine_source', 'Active')}` &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
         st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
         st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
@@ -669,7 +687,7 @@ with tab1:
             st.session_state.pop("rendered_video_path", None)
             st.rerun()
 
-# --- TAB 2: COMPOSE & RENDER MASTER REEL (DYNAMIC N-CLIPS & CINEMATIC ZOOM) ---
+# --- TAB 2: COMPOSE & RENDER MASTER REEL ---
 with tab2:
     st.markdown("### 📥 1. Upload Video Clips (Dynamic 2 to 10+ Clips)")
     uploaded_clips = st.file_uploader(
@@ -683,14 +701,34 @@ with tab2:
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
         st.markdown(f'<div style="color: #34D399; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
-    # Cinematic Zoom toggle inspired by the CutCap tutorial
-    apply_zoom = st.checkbox(
-        "✨ Apply Cinematic Push-In Zoom on Scene 1 (Hook)",
-        value=True,
-        help="Applies a smooth 1.0x to 1.15x slow push-in zoom on your opening hook clip to capture attention."
-    )
+    # ---------------------------------------------------------
+    # DYNAMIC DIRECTOR AI & CUTCAP FX SUITE
+    # ---------------------------------------------------------
+    st.markdown("### 🎬 2. Dynamic Director AI & Visual FX (CutCap Suite)")
+    
+    col_fx1, col_fx2 = st.columns(2)
+    with col_fx1:
+        chosen_director_fx = st.selectbox(
+            "Director Visual Archetype",
+            list(DIRECTOR_STYLES.keys()),
+            format_func=lambda x: DIRECTOR_STYLES[x],
+            index=0,
+            help="Select 'Auto' to let the engine randomize camera moves, transitions, and film grades for every video."
+        )
+    with col_fx2:
+        flash_intensity = st.slider(
+            "Transition Burst Length",
+            min_value=0.0, max_value=0.25, value=0.12, step=0.02,
+            help="Duration of the shutter flash between scene cuts (0 = Hard Cut, 0.12s = Recommended CutCap Flash)."
+        )
 
-    st.markdown("### 🎵 2. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
+    col_tex1, col_tex2 = st.columns(2)
+    with col_tex1:
+        enable_vignette = st.checkbox("🌑 Focus Vignette (Edge Shading)", value=True, help="Darkens outer margins to pull viewer focus to the subject.")
+    with col_tex2:
+        enable_film_grain = st.checkbox("🎞️ Analog Film Texture", value=True, help="Injects subtle 35mm grain to eliminate the smooth 'plastic AI' look.")
+
+    st.markdown("### 🎵 3. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
     
     avail_tracks = get_library_tracks()
@@ -721,33 +759,35 @@ with tab2:
         st.markdown(f'<div style="color: #34D399; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
 
     # ---------------------------------------------------------
-    # ADAPTIVE LOSSLESS THUMBNAIL CROP ENGINE
+    # ADAPTIVE LOSSLESS THUMBNAIL CROP & SAFE ZONE ENGINE
     # ---------------------------------------------------------
-    st.markdown("### 🖼️ 3. Thumbnail Watermark Elimination")
+    st.markdown("### 🖼️ 4. Thumbnail Safe-Zone Engine (Upper 20%-45% Placement)")
     thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
     if thumb:
         try:
             im = Image.open(thumb).convert("RGB")
             w, h = im.size
-            
             crop_mode = st.radio(
                 "Watermark Removal Depth",
                 ["Standard (Single Watermark - 5.5% Bottom Crop)", "Deep (Expanded/Double Watermark - 12.5% Bottom Crop)"],
                 horizontal=True
             )
             pct = 0.125 if "Deep" in crop_mode else 0.055
-            
             crop_h = h - int(h * pct)
             target_aspect = 9.0 / 16.0
             crop_w = int(crop_h * target_aspect)
             margin_x = max(0, (w - crop_w) // 2)
             
             clean_im = im.crop((margin_x, 0, margin_x + crop_w, crop_h)).resize((1080, 1920), Image.Resampling.LANCZOS)
-            
             buf = io.BytesIO()
             clean_im.save(buf, format="PNG", quality=98)
-            st.image(clean_im, caption=f"✓ Clean 9:16 Master ({crop_mode.split()[0]} Crop Applied)", use_container_width=True)
-            st.download_button("💾 Download Cleaned Master Thumbnail", buf.getvalue(), f"{target_d.replace('-','')}_clean_thumbnail.png", "image/png")
+            st.image(clean_im, caption=f"✓ Clean 9:16 Master ({crop_mode.split()[0]} Crop Applied - Text Safe Zone Upper 20%-45%)", use_container_width=True)
+            
+            # File download formatted for Google Drive Vault
+            cur_pkg = st.session_state.get("active_video_pkg", {}).get("pkg", {})
+            cur_slug = re.sub(r'[^a-zA-Z0-9]+', '_', cur_pkg.get('hook_banner', 'reel')).strip('_').lower()
+            thumb_save_name = f"{target_d.replace('-','')}_{cur_slug}_thumb.png"
+            st.download_button(f"💾 Download Cleaned Thumbnail ({thumb_save_name})", buf.getvalue(), thumb_save_name, "image/png")
         except Exception as e: 
             st.warning(f"Could not crop thumbnail: {e}")
 
@@ -757,7 +797,7 @@ with tab2:
         elif not uploaded_clips or num_clips < 2:
             st.error(f"Please upload at least 2 video clips. (Currently loaded: {num_clips})")
         else:
-            with st.spinner(f"⚡ Scaling {num_clips} clips evenly, normalizing loudness & rendering reel..."):
+            with st.spinner(f"⚡ Applying Dynamic Director FX across {num_clips} clips & rendering reel..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
                 a_path = DRAFT_AUDIO_PATH
@@ -785,24 +825,56 @@ with tab2:
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
-                # Dynamic filter graph with Scene 1 Cinematic Zoom option
+                # -------------------------------------------------
+                # DYNAMIC DIRECTOR FX ENGINE
+                # -------------------------------------------------
+                active_style = chosen_director_fx
+                if active_style == "AUTO":
+                    active_style = random.choice(["PUNCH_FLASH", "PULL_VIGN", "WARM_DRIFT", "NORDIC_CUT"])
+
                 v_filters = []
                 for i in range(num_clips):
-                    if i == 0 and apply_zoom:
-                        # Smooth 1.0x to 1.15x push-in centered on protagonist's face
-                        z_step = 0.15 / max(1, (clip_target_dur * 25))
-                        v_filters.append(
-                            f"[{i}:v]trim=0:4,setpts=(PTS-STARTPTS)*{clip_speed:.4f},"
-                            f"scale=1512:2688:force_original_aspect_ratio=increase,"
-                            f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=25,"
-                            f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25[v{i}];"
-                        )
-                    else:
-                        v_filters.append(
-                            f"[{i}:v]trim=0:4,setpts=(PTS-STARTPTS)*{clip_speed:.4f},"
-                            f"scale=1512:2688:force_original_aspect_ratio=increase,"
-                            f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=25[v{i}];"
-                        )
+                    filters_for_clip = [
+                        f"trim=0:4",
+                        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
+                        f"scale=1512:2688:force_original_aspect_ratio=increase",
+                        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2",
+                        f"fps=25"
+                    ]
+                    
+                    # Scene 1 Camera Dynamics (CutCap Zoom Techniques)
+                    if i == 0:
+                        if active_style == "PUNCH_FLASH":
+                            # Fast dynamic push-in (1.0x to 1.15x)
+                            z_step = 0.15 / max(1, (clip_target_dur * 25))
+                            filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
+                        elif active_style == "PULL_VIGN":
+                            # Cinematic slow pull-out (1.15x to 1.0x)
+                            z_step = 0.15 / max(1, (clip_target_dur * 25))
+                            filters_for_clip.append(f"zoompan=z='if(lte(zoom,1.0),1.0,max(1.15-on*{z_step:.5f},1.0))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
+                        elif active_style == "WARM_DRIFT":
+                            # Warm cinema grading + slow camera drift
+                            filters_for_clip.append("eq=contrast=1.06:brightness=0.02:saturation=1.12")
+                        elif active_style == "NORDIC_CUT":
+                            # Desaturated crisp high-contrast
+                            filters_for_clip.append("eq=contrast=1.12:brightness=-0.02:saturation=0.92")
+
+                    # Transitions on subsequent scenes
+                    if i > 0 and flash_intensity > 0:
+                        if active_style in ["PUNCH_FLASH", "NORDIC_CUT"]:
+                            # CutCap White Shutter Blink Transition
+                            filters_for_clip.append(f"fade=t=in:st=0:d={flash_intensity:.2f}:color=white")
+                        elif active_style == "WARM_DRIFT":
+                            # Soft Amber / Dissolve Fade
+                            filters_for_clip.append(f"fade=t=in:st=0:d={flash_intensity * 1.5:.2f}:color=black")
+
+                    # Global Atmospheric Polish
+                    if enable_vignette:
+                        filters_for_clip.append("vignette=PI/4")
+                    if enable_film_grain:
+                        filters_for_clip.append("noise=alls=10:allf=t+u")
+
+                    v_filters.append(f"[{i}:v]" + ",".join(filters_for_clip) + f"[v{i}];")
                 
                 concat_labels = "".join([f"[v{i}]" for i in range(num_clips)])
                 v_filters.append(f"{concat_labels}concat=n={num_clips}:v=1:a=0[vb];")
@@ -813,11 +885,12 @@ with tab2:
                 inputs.extend(['-i', a_path])
                 audio_idx = num_clips
 
+                # Animated Logo Reveal (Smooth ease fade-in at 0.4s)
                 logo = "logo.png" if os.path.exists("logo.png") else None
                 if logo:
                     inputs.extend(['-i', logo])
                     logo_idx = num_clips + 1
-                    v_filters.append(f";[{logo_idx}:v]scale=120:-1,format=rgba[ls];[vsub][ls]overlay=W-w-50:150[vout]")
+                    v_filters.append(f";[{logo_idx}:v]scale=120:-1,format=rgba,fade=t=in:st=0.4:d=0.8:alpha=1[ls];[vsub][ls]overlay=W-w-50:150:enable='gte(t,0.4)'[vout]")
                 else: 
                     v_filters.append(";[vsub]copy[vout]")
 
@@ -853,7 +926,7 @@ with tab2:
                     st.error(f"FFmpeg Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered with {num_clips} Clips! Subtitles: {arch['label']}")
+                    st.success(f"🎉 Master Reel Rendered! Active Director Style: {DIRECTOR_STYLES.get(active_style, active_style)}")
 
     if "rendered_video_path" in st.session_state and "active_video_pkg" in st.session_state:
         vp = st.session_state["rendered_video_path"]
@@ -862,26 +935,32 @@ with tab2:
         pkg = p_data["pkg"]
         
         # ---------------------------------------------------------
-        # DYNAMIC QUEUE TARGET OVERRIDE
+        # GOOGLE DRIVE VAULT & SCHEDULING MECHANISM
         # ---------------------------------------------------------
         st.divider()
-        st.markdown("### 🎯 SCHEDULING QUEUE SLOT")
+        st.markdown("### 🎯 GOOGLE DRIVE VAULT & QUEUE SLOT")
         
         col_qd1, col_qd2 = st.columns(2)
         default_target_date = datetime.strptime(target_d, "%Y-%m-%d").date()
         with col_qd1: chosen_date_target = st.date_input("Target Schedule Date", value=default_target_date)
         with col_qd2: chosen_slot_target = st.selectbox("Target Schedule Slot", ["SLOT 1 (MORNING)", "SLOT 2 (EVENING)"], index=(0 if "SLOT 1" in target_s else 1))
             
-        s1_t, s2_t = db.get("slot1_time", "05:00"), db.get("slot2_time", "20:00")
+        s1_t, s2_t = db.get("slot1_time", "05:00"), db.get("slot2_time", "18:00")
         chosen_time_target = s1_t if "SLOT 1" in chosen_slot_target else s2_t
         c_d = chosen_date_target.strftime("%Y-%m-%d")
         c_s = chosen_slot_target
         c_t = chosen_time_target
 
-        st.info(f"Targeting: **{c_d} @ {c_t} IST ({c_s})**")
-
+        slot_code = "S1" if "SLOT 1" in c_s else "S2"
+        pl_name = pkg.get("playlist", "Hard Truths")
+        pl_code = "SILENCE" if "silence" in pl_name.lower() else ("PARABLES" if "parables" in pl_name.lower() else "TRUTHS")
         slug = re.sub(r'[^a-zA-Z0-9]+', '_', pkg.get('hook_banner', 'reel')).strip('_').lower()
-        exp_name = f"{c_d.replace('-','')}_{slug}.mp4"
+        
+        # Standardized Google Drive batch file name
+        exp_name = f"{c_d}_{slot_code}_{pl_code}_{slug}.mp4"
+        folder_name = f"{c_d}_{slot_code}_{pl_code}_{slug}"
+
+        st.info(f"Targeting: **{c_d} @ {c_t} IST ({c_s})**\n\nDrive Folder: `{folder_name}`")
 
         with open(vp, "rb") as f: vb = f.read()
         st.download_button(f"💾 Download Master Reel ({exp_name})", vb, exp_name, "video/mp4")
@@ -902,18 +981,15 @@ with tab2:
         st.text_area("2. YouTube Description", raw_desc, height=140, key="yt_d_val")
         render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", raw_desc)
         
-        active_pillar = p_data.get("p", "Relentless Focus")
-        saved_playlists = db.get("playlists", {})
-        matched_playlist = saved_playlists.get(active_pillar, active_pillar)
-        st.text_input(f"3. YouTube Playlist (Pillar: {active_pillar})", matched_playlist, key="yt_pl_val")
-        render_copy("yt_pl", "COPY PLAYLIST NAME", matched_playlist)
+        st.text_input("3. Exact YouTube Playlist Name", pl_name, key="yt_pl_val")
+        render_copy("yt_pl", "COPY PLAYLIST NAME", pl_name)
         
         default_tags = "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, stoic philosophy, life lessons, shorts, stoic mindset"
         yt_tags = pkg.get("youtube_tags", default_tags)
         st.text_area("4. YouTube Video Tags", yt_tags, height=65, key="yt_tags_val")
         render_copy("yt_tags", "COPY YOUTUBE TAGS", yt_tags)
         
-        yt_pin = pkg.get("youtube_pinned_comment", "Drop 1 or 2 below! 👇")
+        yt_pin = pkg.get("youtube_pinned_comment", "When facing uninvited chaos: 1️⃣ Stand resolute in silence, or 2️⃣ Defend your territory verbally? Drop 1 or 2 below! 👇")
         st.text_area("5. YouTube Pinned Comment", yt_pin, height=75, key="yt_pin_val")
         render_copy("yt_p", "COPY PINNED COMMENT", yt_pin)
 
@@ -952,7 +1028,7 @@ with tab2:
         ''', unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
-            db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "theme_id": p_data.get("t_id", "THEME_CUSTOM"), "title": yt_t, "file": exp_name})
+            db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "playlist": pl_name, "theme_id": p_data.get("t_id", "THEME_CUSTOM"), "title": yt_t, "file": exp_name})
             if p_data.get("t_id") and p_data["t_id"] not in db.get("used_theme_ids", []): db.setdefault("used_theme_ids", []).append(p_data["t_id"])
             if pkg.get("hook_banner") not in db.get("used_hooks", []): db.setdefault("used_hooks", []).append(pkg.get("hook_banner"))
             db["last_scheduled_date"], db["last_scheduled_slot"] = c_d, c_s
@@ -975,6 +1051,6 @@ with tab3:
         <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
             <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
             <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
-            <div style="color:#64748B;">📁 {item.get('file')} | 🏷️ {item.get('theme_id')}</div>
+            <div style="color:#64748B;">📁 {item.get('file')} | 📺 {item.get('playlist', 'Hard Truths')}</div>
         </div>
         """, unsafe_allow_html=True)
