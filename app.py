@@ -9,46 +9,55 @@ from google.genai import types
 import edge_tts
 
 # ---------------------------------------------------------
-# 1. PAGE SETUP & STUDIO UI
+# 1. PAGE SETUP & MODERN CLEAN STUDIO UI
 # ---------------------------------------------------------
 st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+    
     header[data-testid="stHeader"] { background: transparent !important; }
+    
     .stApp { 
         background-color: #080B11 !important; 
         background-image: radial-gradient(circle at 50% -20%, #151e33 0%, #080B11 75%) !important; 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; 
         color: #E2E8F0 !important; 
     }
+    
     .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; max-width: 720px !important; }
+    
     div[data-testid="stExpander"] { 
         background: #0E1626 !important; 
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         border-radius: 12px !important; 
         margin-bottom: 1rem !important; 
     }
+    
     div[data-testid="stExpander"] summary { 
         background: #111B30 !important; 
         color: #38BDF8 !important; 
         font-size: 13px !important; 
         font-weight: 700 !important; 
     }
+    
     label[data-testid="stWidgetLabel"] p { 
         color: #94A3B8 !important; 
         font-size: 12px !important; 
         font-weight: 700 !important; 
         text-transform: uppercase !important; 
     }
+    
     .stTextInput>div>div>input, .stTextArea textarea { 
         background-color: #0A0F1D !important; 
         border: 1px solid rgba(56, 189, 248, 0.25) !important; 
         color: #F8FAFC !important; 
         border-radius: 8px !important; 
-        font-size: 14px !important;
+        font-size: 14px !important; 
+        line-height: 1.6 !important;
     }
+    
     .stButton>button[kind="primary"] { 
         background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important; 
         color: #FFF !important; 
@@ -58,6 +67,7 @@ st.markdown("""
         text-transform: uppercase !important; 
         width: 100% !important; 
     }
+    
     .stButton>button:not([kind="primary"]) { 
         background: #111B30 !important; 
         color: #E2E8F0 !important; 
@@ -65,6 +75,7 @@ st.markdown("""
         border-radius: 8px !important; 
         font-weight: 600 !important; 
     }
+    
     .stDownloadButton>button { 
         background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; 
         color: white !important; 
@@ -73,6 +84,7 @@ st.markdown("""
         font-weight: 700 !important; 
         width: 100% !important; 
     }
+    
     .badge { 
         font-family: 'JetBrains Mono', monospace; 
         font-size: 11px; 
@@ -182,7 +194,7 @@ def to_unicode_bold(text):
     return ''.join(res)
 
 # ---------------------------------------------------------
-# 3. THEMES DATABASE
+# 3. 24 THEMES DATABASE
 # ---------------------------------------------------------
 THEMES_DATABASE = [
     {"id": "SILENT_EXIT", "p": "Emotional Immunity", "t": "The Silent Exit", "prem": "Never announce when you cut someone off. Withdrawing presence without conflict is sovereign power.", "h": "NEVER ANNOUNCE YOUR EXIT", "a": "GLACIAL_ICE", "m": ["Heavy bronze portal latch locking into dark stone", "Single fraying linen cord burning through over a flame", "Solitary timber skiff drifting into dense lake mist"]},
@@ -312,11 +324,9 @@ def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon")
     return False, None
 
 async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon", api_key=""):
-    # 1. Gemini AI Audio (Zero cloud IP blocks)
     if api_key:
         ok, v_desc = synthesize_with_gemini_audio(api_key, text, audio_path, voice_name=primary_voice)
         if ok: return [], v_desc
-    # 2. Edge-TTS attempt
     try:
         comm = edge_tts.Communicate(text, voice="en-US-ChristopherNeural", rate="+8%", pitch="+0Hz")
         timings = []
@@ -330,7 +340,6 @@ async def synthesize_speech_timed(text, audio_path, primary_voice="Gemini-Charon
         if os.path.exists(audio_path) and os.path.getsize(audio_path) > 6000:
             return timings, "Christopher (US Male)"
     except Exception: pass
-    # 3. Fail-safe timing bed
     cmd = ['ffmpeg', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', '24.5', '-c:a', 'libmp3lame', audio_path]
     subprocess.run(cmd, capture_output=True)
     return [], "Ambient Timing Bed (Upload Ready)"
@@ -385,21 +394,16 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. ZERO-FAIL STOIC VAULT FALLBACK (100% RELIABILITY)
+# 6. ZERO-FAIL STOIC VAULT FALLBACK
 # ---------------------------------------------------------
 def build_curated_stoic_package(t_obj, macro_c, sett_obj):
     hook = t_obj["h"]
     premise = t_obj["prem"]
     script = (
-        f"{hook.title()}. {premise} Most people waste energy fighting storms they cannot govern, "
-        f"forgetting that the only empire worth ruling lies within their own chest. "
-        f"Ground your peace in absolute stillness, observe the world without surrendering your center, "
-        f"and let discipline dictate your every move. Remember this: {hook.lower()}."
+        f"{hook.title()}. {premise} The untrained mind bleeds over every insult, while the sovereign soul "
+        f"remains untouched. Build an unshakeable inner citadel, execute your duty in silence, and refuse "
+        f"to surrender your stillness to chaotic noise. Stand resolute: {hook.lower()}."
     )
-    tokens = script.split()
-    if len(tokens) < 65:
-        script = f"{hook.title()}. {premise} The untrained mind bleeds over every insult, while the sovereign soul remains untouched. Build an unshakeable inner citadel, execute your duty in silence, and refuse to surrender your stillness to chaotic noise. Stand resolute: {hook.lower()}."
-    
     return {
         "title_concept": t_obj["t"],
         "hook_banner": hook,
@@ -483,15 +487,14 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
                         continue
         except Exception: pass
 
-    # Seamless Vault Trigger: Guaranteed zero-error fallback
     return build_curated_stoic_package(t_obj, macro_c, sett_obj), "Stoic Vault (Zero-Fail Mode)"
 
 # ---------------------------------------------------------
-# 7. TELEMETRY BAR & CADENCE / PLAYLIST SETTINGS
+# 7. TELEMETRY BAR & SETTINGS
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.4 // ZERO-FAIL RESILIENT ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v5.5 // CINEMATIC ZOOM & ZERO-FAIL ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -666,7 +669,7 @@ with tab1:
             st.session_state.pop("rendered_video_path", None)
             st.rerun()
 
-# --- TAB 2: COMPOSE & RENDER MASTER REEL (DYNAMIC N-CLIPS) ---
+# --- TAB 2: COMPOSE & RENDER MASTER REEL (DYNAMIC N-CLIPS & CINEMATIC ZOOM) ---
 with tab2:
     st.markdown("### 📥 1. Upload Video Clips (Dynamic 2 to 10+ Clips)")
     uploaded_clips = st.file_uploader(
@@ -679,6 +682,13 @@ with tab2:
     if uploaded_clips:
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
         st.markdown(f'<div style="color: #34D399; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
+
+    # Cinematic Zoom toggle inspired by the CutCap tutorial
+    apply_zoom = st.checkbox(
+        "✨ Apply Cinematic Push-In Zoom on Scene 1 (Hook)",
+        value=True,
+        help="Applies a smooth 1.0x to 1.15x slow push-in zoom on your opening hook clip to capture attention."
+    )
 
     st.markdown("### 🎵 2. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
@@ -775,13 +785,24 @@ with tab2:
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
+                # Dynamic filter graph with Scene 1 Cinematic Zoom option
                 v_filters = []
                 for i in range(num_clips):
-                    v_filters.append(
-                        f"[{i}:v]trim=0:4,setpts=(PTS-STARTPTS)*{clip_speed:.4f},"
-                        f"scale=1512:2688:force_original_aspect_ratio=increase,"
-                        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[v{i}];"
-                    )
+                    if i == 0 and apply_zoom:
+                        # Smooth 1.0x to 1.15x push-in centered on protagonist's face
+                        z_step = 0.15 / max(1, (clip_target_dur * 25))
+                        v_filters.append(
+                            f"[{i}:v]trim=0:4,setpts=(PTS-STARTPTS)*{clip_speed:.4f},"
+                            f"scale=1512:2688:force_original_aspect_ratio=increase,"
+                            f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=25,"
+                            f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25[v{i}];"
+                        )
+                    else:
+                        v_filters.append(
+                            f"[{i}:v]trim=0:4,setpts=(PTS-STARTPTS)*{clip_speed:.4f},"
+                            f"scale=1512:2688:force_original_aspect_ratio=increase,"
+                            f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=25[v{i}];"
+                        )
                 
                 concat_labels = "".join([f"[v{i}]" for i in range(num_clips)])
                 v_filters.append(f"{concat_labels}concat=n={num_clips}:v=1:a=0[vb];")
