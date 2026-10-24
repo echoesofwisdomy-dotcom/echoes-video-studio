@@ -8,6 +8,14 @@ from google import genai
 from google.genai import types
 import edge_tts
 
+try:
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
+
 # ---------------------------------------------------------
 # 1. PAGE SETUP & MODERN CLEAN STUDIO UI
 # ---------------------------------------------------------
@@ -117,6 +125,8 @@ for d in [DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR]:
 DRAFT_JSON_PATH = os.path.join(DATA_DIR, "active_draft.json")
 DRAFT_AUDIO_PATH = os.path.join(DATA_DIR, "active_audio.mp3")
 API_KEY_FILE = os.path.join(DATA_DIR, "gemini_key.txt")
+GSHEET_URL_FILE = os.path.join(DATA_DIR, "gsheet_webhook.txt")
+EXCEL_TRACKER_PATH = os.path.join(DATA_DIR, "Echoes_Of_Wisdom_Content_Tracker.xlsx")
 
 @st.cache_resource(show_spinner=False)
 def ensure_dejavu_font():
@@ -161,6 +171,26 @@ def save_persistent_api_key(key_val):
             f.write(clean)
     except Exception: pass
 
+def get_persistent_gsheet_url():
+    if st.session_state.get("user_sheet_url"):
+        return st.session_state["user_sheet_url"].strip()
+    if "GSHEET_WEBHOOK_URL" in st.secrets:
+        return str(st.secrets["GSHEET_WEBHOOK_URL"]).strip()
+    if os.path.exists(GSHEET_URL_FILE):
+        try:
+            with open(GSHEET_URL_FILE, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception: pass
+    return ""
+
+def save_persistent_gsheet_url(url_val):
+    clean = url_val.strip()
+    st.session_state["user_sheet_url"] = clean
+    try:
+        with open(GSHEET_URL_FILE, "w", encoding="utf-8") as f:
+            f.write(clean)
+    except Exception: pass
+
 SUBTITLE_ARCHETYPES = {
     "IMPERIAL_GOLD": {"label": "👑 Imperial Gold", "ass_primary": "&H0000E5FF", "banner_hex": "0xFFE500", "prefix": "gold_"},
     "GLACIAL_ICE":   {"label": "❄️ Glacial Ice",   "ass_primary": "&H00FFF500", "banner_hex": "0x00F5FF", "prefix": "ice_"},
@@ -182,7 +212,6 @@ VOICE_PROFILES = {
     "en-US-GuyNeural":         "🎙️ Guy (Edge-TTS Natural US Male)"
 }
 
-# The 3 Specific Target Playlists
 PLAYLIST_OPTIONS = [
     "The art of moving in silence (stoic mindset)",
     "Mastering human nature and fake friends ancient parables",
@@ -307,7 +336,66 @@ def get_next_slot(base_d=None, base_s=None):
 target_d, target_s, target_t = get_next_slot()
 
 # ---------------------------------------------------------
-# 5. RESILIENT VOICE SYNTHESIZER
+# 5. BUILT-IN EXCEL TRACKER ENGINE (NO APPS SCRIPT REQUIRED)
+# ---------------------------------------------------------
+def append_to_excel_tracker(row_data):
+    """Updates the Excel spreadsheet directly on the server."""
+    if not OPENPYXL_AVAILABLE:
+        return False
+    
+    headers = [
+        "Video ID", "Target Date", "Slot (IST)", "YouTube Status", "Meta Status",
+        "Assigned Playlist", "Concept Title", "Hook Banner", "Drive Batch Folder",
+        "Video Link / Path", "Thumbnail Link / Path", "YouTube Title", "YouTube Description",
+        "YouTube Tags", "YouTube Pinned Comment", "Meta Reel Caption (One-Box)",
+        "Meta First Comment", "Director Visual FX", "Notes / Link to Post"
+    ]
+    
+    if os.path.exists(EXCEL_TRACKER_PATH):
+        try:
+            wb = openpyxl.load_workbook(EXCEL_TRACKER_PATH)
+            ws = wb["Content & Schedule Tracker"] if "Content & Schedule Tracker" in wb.sheetnames else wb.active
+        except Exception:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Content & Schedule Tracker"
+            ws.append(headers)
+    else:
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Content & Schedule Tracker"
+        ws.append(headers)
+        
+    last_r = ws.max_row
+    next_id = f"EV-{last_r:03d}"
+    
+    new_entry = [
+        row_data.get("videoId", next_id),
+        row_data.get("targetDate", ""),
+        row_data.get("slot", ""),
+        row_data.get("ytStatus", "Ready in Drive"),
+        row_data.get("metaStatus", "Ready in Drive"),
+        row_data.get("playlist", ""),
+        row_data.get("titleConcept", ""),
+        row_data.get("hookBanner", ""),
+        row_data.get("driveFolder", ""),
+        row_data.get("videoLink", ""),
+        row_data.get("thumbLink", ""),
+        row_data.get("ytTitle", ""),
+        row_data.get("ytDesc", ""),
+        row_data.get("ytTags", ""),
+        row_data.get("ytPinned", ""),
+        row_data.get("metaCaption", ""),
+        row_data.get("metaComment", ""),
+        row_data.get("directorFx", ""),
+        row_data.get("notes", "Staged in Drive")
+    ]
+    ws.append(new_entry)
+    wb.save(EXCEL_TRACKER_PATH)
+    return True
+
+# ---------------------------------------------------------
+# 6. RESILIENT VOICE SYNTHESIZER
 # ---------------------------------------------------------
 def synthesize_with_gemini_audio(api_key, text, audio_path, voice_name="Charon"):
     clean_k = api_key.strip().strip('"').strip("'")
@@ -415,7 +503,7 @@ if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH
     except Exception: pass
 
 # ---------------------------------------------------------
-# 6. ZERO-FAIL STOIC VAULT FALLBACK
+# 7. ZERO-FAIL STOIC VAULT FALLBACK
 # ---------------------------------------------------------
 def build_curated_stoic_package(t_obj, macro_c, sett_obj):
     hook = t_obj["h"]
@@ -513,11 +601,11 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
     return build_curated_stoic_package(t_obj, macro_c, sett_obj), "Stoic Vault (Zero-Fail Mode)"
 
 # ---------------------------------------------------------
-# 7. TELEMETRY BAR & PUBLISHING SETTINGS
+# 8. TELEMETRY BAR & PUBLISHING SETTINGS
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.0 // STUDIO DIRECTOR EDITION</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.1 // DIRECT EXCEL & CLOUD SYNC</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -565,11 +653,21 @@ with st.expander("📅 PUBLISHING CADENCE & BATCH VAULT SETTINGS"):
         st.rerun()
 
 curr_saved_key = get_persistent_api_key()
-with st.expander("🔑 API CREDENTIALS", expanded=(not bool(curr_saved_key))):
+curr_gsheet_url = get_persistent_gsheet_url()
+
+with st.expander("🔑 API CREDENTIALS & GOOGLE SHEETS SYNC", expanded=(not bool(curr_saved_key))):
     uk = st.text_input("Gemini API Key", value=curr_saved_key, type="password", placeholder="AIzaSy...", key="user_key_input")
     if uk:
         save_persistent_api_key(uk)
-        st.caption("✓ API Key active")
+        st.caption("✓ Gemini API Key active")
+        
+    st.divider()
+    st.markdown("#### 📊 Optional: Google Sheets Webhook Sync")
+    st.caption("If you converted your sheet via File ➔ Save as Google Sheets, paste the Web app URL below to auto-sync rows in real time.")
+    gurl = st.text_input("Google Apps Script Web App URL", value=curr_gsheet_url, placeholder="https://script.google.com/macros/s/.../exec", key="user_sheet_url")
+    if gurl:
+        save_persistent_gsheet_url(gurl)
+        st.caption("✓ Google Sheets live sync active")
 
 def render_copy(bid, label, text):
     b64_val = base64.b64encode(text.encode('utf-8')).decode('utf-8')
@@ -598,9 +696,9 @@ def render_copy(bid, label, text):
     """, height=48)
 
 # ---------------------------------------------------------
-# 8. WORKSPACE TABS
+# 9. WORKSPACE TABS
 # ---------------------------------------------------------
-tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER"])
+tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER & TRACKER"])
 
 # --- TAB 1: SCRIPT & GOOGLE FLOW PROMPTS ---
 with tab1:
@@ -659,7 +757,7 @@ with tab1:
         pkg = p_data.get("pkg", {})
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
-        st.markdown(f"**Playlist:** `{pkg.get('playlist', 'Hard Truths')}`")
+        st.markdown(f"**Target Playlist:** `{pkg.get('playlist', 'Hard Truths')}`")
         st.markdown(f"**Engine:** `{p_data.get('engine_source', 'Active')}` &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
         st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
@@ -783,7 +881,6 @@ with tab2:
             clean_im.save(buf, format="PNG", quality=98)
             st.image(clean_im, caption=f"✓ Clean 9:16 Master ({crop_mode.split()[0]} Crop Applied - Text Safe Zone Upper 20%-45%)", use_container_width=True)
             
-            # File download formatted for Google Drive Vault
             cur_pkg = st.session_state.get("active_video_pkg", {}).get("pkg", {})
             cur_slug = re.sub(r'[^a-zA-Z0-9]+', '_', cur_pkg.get('hook_banner', 'reel')).strip('_').lower()
             thumb_save_name = f"{target_d.replace('-','')}_{cur_slug}_thumb.png"
@@ -825,9 +922,6 @@ with tab2:
                 banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
-                # -------------------------------------------------
-                # DYNAMIC DIRECTOR FX ENGINE
-                # -------------------------------------------------
                 active_style = chosen_director_fx
                 if active_style == "AUTO":
                     active_style = random.choice(["PUNCH_FLASH", "PULL_VIGN", "WARM_DRIFT", "NORDIC_CUT"])
@@ -842,33 +936,24 @@ with tab2:
                         f"fps=25"
                     ]
                     
-                    # Scene 1 Camera Dynamics (CutCap Zoom Techniques)
                     if i == 0:
                         if active_style == "PUNCH_FLASH":
-                            # Fast dynamic push-in (1.0x to 1.15x)
                             z_step = 0.15 / max(1, (clip_target_dur * 25))
                             filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
                         elif active_style == "PULL_VIGN":
-                            # Cinematic slow pull-out (1.15x to 1.0x)
                             z_step = 0.15 / max(1, (clip_target_dur * 25))
                             filters_for_clip.append(f"zoompan=z='if(lte(zoom,1.0),1.0,max(1.15-on*{z_step:.5f},1.0))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
                         elif active_style == "WARM_DRIFT":
-                            # Warm cinema grading + slow camera drift
                             filters_for_clip.append("eq=contrast=1.06:brightness=0.02:saturation=1.12")
                         elif active_style == "NORDIC_CUT":
-                            # Desaturated crisp high-contrast
                             filters_for_clip.append("eq=contrast=1.12:brightness=-0.02:saturation=0.92")
 
-                    # Transitions on subsequent scenes
                     if i > 0 and flash_intensity > 0:
                         if active_style in ["PUNCH_FLASH", "NORDIC_CUT"]:
-                            # CutCap White Shutter Blink Transition
                             filters_for_clip.append(f"fade=t=in:st=0:d={flash_intensity:.2f}:color=white")
                         elif active_style == "WARM_DRIFT":
-                            # Soft Amber / Dissolve Fade
                             filters_for_clip.append(f"fade=t=in:st=0:d={flash_intensity * 1.5:.2f}:color=black")
 
-                    # Global Atmospheric Polish
                     if enable_vignette:
                         filters_for_clip.append("vignette=PI/4")
                     if enable_film_grain:
@@ -885,7 +970,6 @@ with tab2:
                 inputs.extend(['-i', a_path])
                 audio_idx = num_clips
 
-                # Animated Logo Reveal (Smooth ease fade-in at 0.4s)
                 logo = "logo.png" if os.path.exists("logo.png") else None
                 if logo:
                     inputs.extend(['-i', logo])
@@ -956,11 +1040,10 @@ with tab2:
         pl_code = "SILENCE" if "silence" in pl_name.lower() else ("PARABLES" if "parables" in pl_name.lower() else "TRUTHS")
         slug = re.sub(r'[^a-zA-Z0-9]+', '_', pkg.get('hook_banner', 'reel')).strip('_').lower()
         
-        # Standardized Google Drive batch file name
         exp_name = f"{c_d}_{slot_code}_{pl_code}_{slug}.mp4"
         folder_name = f"{c_d}_{slot_code}_{pl_code}_{slug}"
 
-        st.info(f"Targeting: **{c_d} @ {c_t} IST ({c_s})**\n\nDrive Folder: `{folder_name}`")
+        st.info(f"Targeting: **{c_d} @ {c_t} IST ({c_s})**\n\nDrive Folder: `EchoesOfWisdom/01_READY_TO_SCHEDULE/{folder_name}`")
 
         with open(vp, "rb") as f: vb = f.read()
         st.download_button(f"💾 Download Master Reel ({exp_name})", vb, exp_name, "video/mp4")
@@ -1028,29 +1111,68 @@ with tab2:
         ''', unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
-            db["scheduled_videos"].append({"date": c_d, "slot": c_s, "time": c_t, "playlist": pl_name, "theme_id": p_data.get("t_id", "THEME_CUSTOM"), "title": yt_t, "file": exp_name})
-            if p_data.get("t_id") and p_data["t_id"] not in db.get("used_theme_ids", []): db.setdefault("used_theme_ids", []).append(p_data["t_id"])
-            if pkg.get("hook_banner") not in db.get("used_hooks", []): db.setdefault("used_hooks", []).append(pkg.get("hook_banner"))
+            row_payload = {
+                "targetDate": c_d,
+                "slot": f"{slot_code} - {'Morning (05:00 IST)' if slot_code == 'S1' else 'Evening (18:00 IST)'}",
+                "ytStatus": "Ready in Drive",
+                "metaStatus": "Ready in Drive",
+                "playlist": pl_name,
+                "titleConcept": pkg.get("title_concept", ""),
+                "hookBanner": pkg.get("hook_banner", ""),
+                "driveFolder": f"EchoesOfWisdom/01_READY_TO_SCHEDULE/{folder_name}",
+                "videoLink": exp_name,
+                "thumbLink": f"{c_d.replace('-','')}_{slug}_thumb.png",
+                "ytTitle": yt_t,
+                "ytDesc": raw_desc,
+                "ytTags": yt_tags,
+                "ytPinned": yt_pin,
+                "metaCaption": fb_cap,
+                "metaComment": "What is your perspective on this? Drop 1 or 2 below! 👇",
+                "directorFx": DIRECTOR_STYLES.get(active_style, active_style),
+                "notes": "Staged in EchoesOfWisdom/01_READY_TO_SCHEDULE"
+            }
+            
+            # 1. Update local database ledger
+            db["scheduled_videos"].append({
+                "date": c_d, 
+                "slot": c_s, 
+                "time": c_t, 
+                "playlist": pl_name, 
+                "theme_id": p_data.get("t_id", "THEME_CUSTOM"), 
+                "title": yt_t, 
+                "file": exp_name
+            })
+            if p_data.get("t_id") and p_data["t_id"] not in db.get("used_theme_ids", []): 
+                db.setdefault("used_theme_ids", []).append(p_data["t_id"])
+            if pkg.get("hook_banner") not in db.get("used_hooks", []): 
+                db.setdefault("used_hooks", []).append(pkg.get("hook_banner"))
             db["last_scheduled_date"], db["last_scheduled_slot"] = c_d, c_s
             save_db(db)
             
+            # 2. Update Excel Tracker file directly on disk
+            excel_updated = append_to_excel_tracker(row_payload)
+            
+            # 3. Optional: Sync to Google Sheets if Webhook is configured
+            webhook_url = get_persistent_gsheet_url()
+            cloud_synced = False
+            if webhook_url:
+                try:
+                    r = requests.post(webhook_url, json=row_payload, timeout=6)
+                    if r.status_code == 200:
+                        cloud_synced = True
+                except Exception:
+                    pass
+
             if os.path.exists(DRAFT_JSON_PATH): os.remove(DRAFT_JSON_PATH)
             if os.path.exists(DRAFT_AUDIO_PATH): os.remove(DRAFT_AUDIO_PATH)
             
             nd, ns, nt = get_next_slot(c_d, c_s)
-            st.session_state["status_banner"] = f"✓ LOCKED: {exp_name} scheduled! Next slot: {nd} @ {nt} IST ({ns})"
+            msg_add = " + Synced to Live Sheet! 📊" if cloud_synced else (" + Added to Local Excel Tracker 📑" if excel_updated else "")
+            st.session_state["status_banner"] = f"✓ LOCKED: {exp_name} scheduled{msg_add}! Next slot: {nd} @ {nt} IST ({ns})"
             st.session_state.pop("rendered_video_path", None)
             st.session_state.pop("active_video_pkg", None)
             st.rerun()
 
-# --- TAB 3: QUEUE LEDGER ---
+# --- TAB 3: QUEUE LEDGER & EXCEL TRACKER ---
 with tab3:
-    st.markdown(f"### 📋 Scheduled Queue ({len(db.get('scheduled_videos', []))})")
-    for item in reversed(db.get("scheduled_videos", [])):
-        st.markdown(f"""
-        <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
-            <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
-            <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
-            <div style="color:#64748B;">📁 {item.get('file')} | 📺 {item.get('playlist', 'Hard Truths')}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("### 📊
