@@ -482,13 +482,18 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     with open(ass_path, "w", encoding="utf-8") as f: f.write(ass_doc)
     return events
 
-# Draft vault loader
+# Draft vault loader & video persistence
 if "active_video_pkg" not in st.session_state and os.path.exists(DRAFT_JSON_PATH):
     try:
         with open(DRAFT_JSON_PATH, "r", encoding="utf-8") as f: d_data = json.load(f)
         d_data["audio"] = DRAFT_AUDIO_PATH
         st.session_state["active_video_pkg"] = d_data
     except Exception: pass
+
+if "rendered_video_path" not in st.session_state:
+    master_p = os.path.join(TMP_DIR, "master_output.mp4")
+    if os.path.exists(master_p) and os.path.getsize(master_p) > 10000:
+        st.session_state["rendered_video_path"] = master_p
 
 # ---------------------------------------------------------
 # 7. ZERO-FAIL STOIC VAULT FALLBACK
@@ -907,6 +912,7 @@ with tab2:
                 active_style = chosen_director_fx
                 if active_style == "AUTO":
                     active_style = random.choice(["PUNCH_FLASH", "PULL_VIGN", "WARM_DRIFT", "NORDIC_CUT"])
+                st.session_state["rendered_director_style"] = active_style
 
                 v_filters = []
                 for i in range(num_clips):
@@ -1093,6 +1099,10 @@ with tab2:
         """, unsafe_allow_html=True)
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
+            director_style_resolved = st.session_state.get("rendered_director_style", chosen_director_fx)
+            if director_style_resolved == "AUTO":
+                director_style_resolved = "PUNCH_FLASH"
+
             row_payload = {
                 "targetDate": c_d,
                 "slot": f"{slot_code} - {'Morning (05:00 IST)' if slot_code == 'S1' else 'Evening (18:00 IST)'}",
@@ -1110,7 +1120,7 @@ with tab2:
                 "ytPinned": yt_pin,
                 "metaCaption": fb_cap,
                 "metaComment": "What is your perspective on this? Drop 1 or 2 below! 👇",
-                "directorFx": DIRECTOR_STYLES.get(active_style, active_style),
+                "directorFx": DIRECTOR_STYLES.get(director_style_resolved, director_style_resolved),
                 "notes": "Staged in EchoesOfWisdom/01_READY_TO_SCHEDULE"
             }
             
@@ -1153,6 +1163,7 @@ with tab2:
             st.session_state["status_banner"] = f"✓ LOCKED: {exp_name} scheduled{msg_add}! Next slot: {nd} @ {nt} IST ({ns})"
             st.session_state.pop("rendered_video_path", None)
             st.session_state.pop("active_video_pkg", None)
+            st.session_state.pop("rendered_director_style", None)
             st.rerun()
 
 # --- TAB 3: QUEUE LEDGER & EXCEL TRACKER ---
