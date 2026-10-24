@@ -4,3 +4,4 @@ edge-tts
 numpy
 Pillow
 requests
+openpyxl
