@@ -113,6 +113,7 @@ for d in [DATA_DIR, TMP_DIR, FONTS_DIR, MUSIC_DIR]:
 
 DRAFT_JSON_PATH = os.path.join(DATA_DIR, "active_draft.json")
 DRAFT_AUDIO_PATH = os.path.join(DATA_DIR, "active_audio.mp3")
+DRAFT_VAULT_PATH = os.path.join(DATA_DIR, "draft_vault.json")
 API_KEY_FILE = os.path.join(DATA_DIR, "gemini_key.txt")
 GSHEET_URL_FILE = os.path.join(DATA_DIR, "gsheet_webhook.txt")
 EXCEL_TRACKER_PATH = os.path.join(DATA_DIR, "Echoes_Of_Wisdom_Content_Tracker.xlsx")
@@ -180,6 +181,28 @@ def save_persistent_gsheet_url(url_val):
             f.write(clean)
     except Exception: pass
 
+# ---------------------------------------------------------
+# DRAFT VAULT ENGINE (Survives App Reboots & Inactivity)
+# ---------------------------------------------------------
+def load_draft_vault():
+    if os.path.exists(DRAFT_VAULT_PATH):
+        try:
+            with open(DRAFT_VAULT_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception: pass
+    return []
+
+def save_to_draft_vault(draft_item):
+    vault = load_draft_vault()
+    hook_banner = draft_item.get("pkg", {}).get("hook_banner", "")
+    vault = [v for v in vault if v.get("pkg", {}).get("hook_banner") != hook_banner]
+    vault.insert(0, draft_item)
+    vault = vault[:25]
+    try:
+        with open(DRAFT_VAULT_PATH, "w", encoding="utf-8") as f:
+            json.dump(vault, f, indent=2)
+    except Exception: pass
+
 SUBTITLE_ARCHETYPES = {
     "IMPERIAL_GOLD": {"label": "👑 Imperial Gold", "ass_primary": "&H0000E5FF", "banner_hex": "0xFFE500", "prefix": "gold_"},
     "GLACIAL_ICE":   {"label": "❄️ Glacial Ice",   "ass_primary": "&H00FFF500", "banner_hex": "0x00F5FF", "prefix": "ice_"},
@@ -187,11 +210,38 @@ SUBTITLE_ARCHETYPES = {
 }
 
 DIRECTOR_STYLES = {
-    "AUTO":        "🎲 Smart Director AI (Dynamic Randomization on Every Render)",
-    "PUNCH_FLASH": "⚡ Action Push & Shutter Flash (High-Retention Hook + 0.12s White Blink)",
-    "PULL_VIGN":   "🌊 Scale Pull-Out & Dark Vignette (Cinematic Reveal + Shadow Falloff)",
-    "WARM_DRIFT":  "🔥 Forge Drift & Soft Dissolve (Warm 35mm Grade + Amber Bleed)",
-    "NORDIC_CUT":  "❄️ Nordic Citadel & Fast Dip (Desaturated Cold Grade + 0.15s Basalt Dip)"
+    "PUNCH_FLASH": {
+        "label": "⚡ Action Push & Shutter Flash",
+        "cam_s1": "CAMERA: Smooth continuous slow optical push-in towards protagonist's eyes (1.0x to 1.15x push).",
+        "cam_s2": "CAMERA: Macro lens with dynamic slow vertical tilt tracking motion.",
+        "cam_s3": "CAMERA: Wide tracking forward dolly shot following deliberate strides.",
+        "cam_s4": "CAMERA: Tight portrait with subtle handheld micro-movement.",
+        "grade": "LIGHTING: High-contrast cinematic rim lighting, atmospheric mist, intense shadow depth."
+    },
+    "PULL_VIGN": {
+        "label": "🌊 Scale Pull-Out & Dark Vignette",
+        "cam_s1": "CAMERA: Slow cinematic pull-back (1.15x to 1.0x) revealing ancient surroundings.",
+        "cam_s2": "CAMERA: Extreme macro close-up with dramatic shallow depth of field (f/1.8).",
+        "cam_s3": "CAMERA: Wide tracking shot revealing monumental scale of ancient stone architecture.",
+        "cam_s4": "CAMERA: Focused close-up portrait, natural optical vignette framing subject.",
+        "grade": "LIGHTING: Dark brooding atmospheric chiaroscuro, natural edge shadow falloff."
+    },
+    "WARM_DRIFT": {
+        "label": "🔥 Forge Drift & Soft Dissolve",
+        "cam_s1": "CAMERA: Subtle slow lateral camera drift across weathered features.",
+        "cam_s2": "CAMERA: Extreme macro shot with glowing embers and warm particle drift.",
+        "cam_s3": "CAMERA: Slow forward tracking dolly shot through atmospheric twilight.",
+        "cam_s4": "CAMERA: Close-up portrait, warm firelight reflections on dark woolen mantle.",
+        "grade": "LIGHTING: Warm 35mm golden hour amber glow, volumetric dust motes, rich warm tones."
+    },
+    "NORDIC_CUT": {
+        "label": "❄️ Nordic Citadel & Fast Dip",
+        "cam_s1": "CAMERA: Centered static symmetrical framing, cold mountain wind blowing mantle.",
+        "cam_s2": "CAMERA: Macro detail of frost-covered stone or ice crystals in stark detail.",
+        "cam_s3": "CAMERA: Medium wide shot traversing rugged basalt cliff ledge.",
+        "cam_s4": "CAMERA: Weathered intense portrait, cold breath vapor visible in twilight air.",
+        "grade": "LIGHTING: Desaturated cold slate palette, stark overcast Nordic sky, crisp contrast."
+    }
 }
 
 VOICE_PROFILES = {
@@ -258,7 +308,7 @@ THEMES_DATABASE = [
     {"id": "BURDEN_EXPECTATIONS", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
     {"id": "DOPAMINE_BANKRUPT", "pl": "Hard Truths", "p": "Relentless Focus", "t": "Dopamine Bankruptcy", "prem": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.", "h": "YOU ARE DRAINED BY NOISE", "a": "FORGE_AMBER", "m": ["Antique bronze oil lamp burning steadily down to deep amber embers", "Clear mountain spring water settling completely transparent in a vial", "Iron pendulum slowing to a complete, balanced standstill"]},
     {"id": "SUNK_COST_TRAP", "pl": "Hard Truths", "p": "Relentless Focus", "t": "The Sunk Cost Trap", "prem": "Just because you spent years making a mistake does not mean you owe it your future. Cut the cord immediately.", "h": "STOP FEEDING DEAD DREAMS", "a": "FORGE_AMBER", "m": ["Sharp pruning sickle cleanly slicing an anchor rope under high tension", "Heavy dry branch snapping off a centuries-old oak in storm winds", "Antique weighing scale dumping heavy slag to return to equilibrium"]},
-    {"id": "MYTH_OF_WAITING", "pl": "Hard Truths", "p": "Relentless Focus", "t": "The Myth of Motivation", "prem": "Motivation is a fair-weather friend. Discipline is doing the work even when your emotions protest.", "h": "ACTION CURES SELF-PITY", "a": "FORGE_AMBER", "m": ["Flint and steel striking violently to generate a bright spark", "Heavy waterwheel turning relentlessly against strong river currents", "Team of draft oxen pulling a heavy plow through frost-hardened soil"]},
+    {"id": "MYTH_OF_WAITING", "pl": "Hard Truths", "p": "Relentless Focus", "t": "The Myth of Motivation", "prem": "Motivation is a fair-weather friend. Discipline is doing the work even when your emotions protest.", "h": "ACTION CURES SELF-PITY", "a": "FORGE_AMBER", "m": ["Heavy waterwheel turning relentlessly against turbulent mountain river currents", "Flint and steel striking violently to generate a bright spark", "Team of draft oxen pulling a heavy plow through frost-hardened soil"]},
     {"id": "FUTURE_RUIN", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Illusion of Future Ruin", "prem": "We suffer far more in imagination than in reality. The catastrophe keeping you awake will never arrive.", "h": "YOU SUFFER IN YOUR HEAD", "a": "IMPERIAL_GOLD", "m": ["Cold morning mist dissolving over ancient stone arches under sunlight", "Troubled pool of dark water settling into a crystal mirror as ripples fade", "Dark storm cloud dispersing harmlessly across a barren plain"]},
     {"id": "CALAMITY_TRAINING", "pl": "Hard Truths", "p": "Mental Fortress", "t": "Calamity as Training", "prem": "Do not curse the obstacle; the obstacle is your teacher. Adversity produces character comfort cannot buy.", "h": "THE STRUGGLE IS THE TEACHER", "a": "IMPERIAL_GOLD", "m": ["Roaring forge furnace turning raw scrap iron into hardened steel", "Mountain pine tree growing dense and unshakeable in freezing gale winds", "Diamond blade grinding down rough raw stone into a sharp facet"]},
     {"id": "DEATH_OF_PRIDE", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Death of Pride", "prem": "Arrogance demands an audience. Real confidence speaks quietly, works without applause, and walks without a strut.", "h": "KILL YOUR NEED FOR PRAISE", "a": "IMPERIAL_GOLD", "m": ["Deep subterranean bedrock supporting an entire city without showing itself", "Dark iron anchor resting silently at the bottom of the ocean floor", "Ancient oak tree whose strength lies in its hidden root network"]},
@@ -496,64 +546,84 @@ if "rendered_video_path" not in st.session_state:
         st.session_state["rendered_video_path"] = master_p
 
 # ---------------------------------------------------------
-# 7. ZERO-FAIL STOIC VAULT FALLBACK
+# 7. ZERO-FAIL STOIC VAULT FALLBACK WITH FLOW CINEMATOGRAPHY
 # ---------------------------------------------------------
-def build_curated_stoic_package(t_obj, macro_c, sett_obj):
+def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     hook = t_obj["h"]
     premise = t_obj["prem"]
+    style_meta = DIRECTOR_STYLES.get(style_key, DIRECTOR_STYLES["PUNCH_FLASH"])
+    
     script = (
-        f"{hook.title()}. {premise} The untrained mind bleeds over every insult, while the sovereign soul "
-        f"remains untouched. Build an unshakeable inner citadel, execute your duty in silence, and refuse "
-        f"to surrender your stillness to chaotic noise. Stand resolute: {hook.lower()}."
+        f"{hook.title()}. {premise} Waiting for motivation is a quiet trap. Fleeting emotions always "
+        f"abandon you when hardship strikes. True discipline asks no permission from comfortable moods; "
+        f"it operates solely through relentless resolve. Honor your duty, execute your labor despite inner protest, "
+        f"and remember that only—"
     )
+    
+    char_desc = "An authentic fictional mature stoic philosopher with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick natural beard, draped in an authentic dark woolen ancient mantle. Strictly two arms only, hands resting calmly inside woolen mantle folds, flawless human anatomy."
+
     return {
         "title_concept": t_obj["t"],
         "playlist": t_obj.get("pl", "Hard Truths"),
         "hook_banner": hook,
         "subtitle_archetype": t_obj["a"],
+        "director_style": style_key,
         "script": script,
-        "scene1_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist standing calm in {sett_obj['n'].lower()}, hands resting inside woolen mantle folds, two arms only, flawless anatomy, serene stoic resolve",
-        "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] Extreme macro cinematic shot of {macro_c.lower()}, cinematic depth of field, dramatic atmospheric lighting",
-        "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist walking slowly through {sett_obj['n'].lower()}, steady deliberate pace, dark ancient woolen robes, natural posture",
-        "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist close-up portrait, weathered lined face, calm focused eyes, serene stoic composure",
-        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting, top third space clear for hook text, strictly two arms",
+        "scene1_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) standing calm in {sett_obj['n'].lower()}. {style_meta['cam_s1']} {style_meta['grade']} Anamorphic 35mm lens, optical bokeh, flawless anatomy, strictly two arms.",
+        "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] Extreme macro cinematic shot of {macro_c.lower()}. {style_meta['cam_s2']} {style_meta['grade']} Extreme detail, shallow depth of field, photorealistic 8k texture.",
+        "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) walking steady deliberate pace through {sett_obj['n'].lower()}. {style_meta['cam_s3']} {style_meta['grade']} Natural fabric physics on woolen mantle.",
+        "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Extreme close-up portrait of protagonist ({char_desc}). {style_meta['cam_s4']} {style_meta['grade']} Weathered skin pores, piercing calm eyes, cold breath mist rising in air.",
+        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting, upper 20%-45% space clear for bold text overlay, flawless anatomy, strictly two arms",
         "youtube_title": f"⚡ {hook.title()} 🏛️ #shorts #stoicism",
         "youtube_description": f"⚡ {hook}\n\n{premise}\n\n🤔 TODAY'S STOIC QUESTION:\nWhen facing uninvited chaos:\n1️⃣ Stand resolute in silence\n2️⃣ Defend your territory verbally\n\nDrop 1 or 2 below! 👇\n\n🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n#stoicism #stoicmindset #discipline #echoesofwisdom #shorts",
         "youtube_tags": "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts",
         "youtube_pinned_comment": "When facing uninvited chaos: 1️⃣ Stand resolute in silence, or 2️⃣ React immediately? Drop 1 or 2 below! 👇",
         "caption_hook": hook,
         "caption_lesson": premise,
-        "debate_question": "When facing uninvited chaos:",
+        "debate_question": "When faced with this choice:",
         "choice_1": "Stand resolute in silence",
         "choice_2": "Defend your territory verbally",
         "meta_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Reels"
     }
 
-def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
+def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
+    style_meta = DIRECTOR_STYLES.get(style_key, DIRECTOR_STYLES["PUNCH_FLASH"])
+    
+    char_constraint = (
+        "Character: An authentic fictional mature stoic philosopher with a weathered lined face, calm focused eyes, "
+        "messy salt-and-pepper hair, thick natural beard, draped in an authentic dark woolen ancient mantle. "
+        "Strictly two arms only, hands resting calmly inside woolen mantle folds, flawless human anatomy."
+    )
     
     prompt = (
-        f"You are Creative Director for 'Echoes of Wisdom' (9:16 vertical reels).\n"
+        f"You are Executive Creative Director for 'Echoes of Wisdom' (9:16 vertical short-form reels).\n"
         f"PLAYLIST: {t_obj.get('pl', 'Hard Truths')} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
-        f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\nFORBIDDEN HOOKS:\n{used_h}\n"
-        f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops to line 1.\n"
-        f"4. Google Flow Character Rules:\n"
-        f"   - Description: 'An original fictional mature man with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick beard, draped in an authentic dark woolen ancient mantle.'\n"
-        f"   - ANATOMY CONSTRAINTS: Strictly two arms and two hands only. Hands resting calmly inside woolen mantle folds. Strictly no extra limbs, no phantom hands.\n"
-        f"5. Prompt Formatting: All video prompts must start with '[4-second vertical 9:16 cinematic video clip]'.\n"
+        f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\n"
+        f"DIRECTOR CINEMATOGRAPHY PROFILE:\n"
+        f"- Scene 1 Camera Directive: {style_meta['cam_s1']}\n"
+        f"- Scene 2 Camera Directive: {style_meta['cam_s2']}\n"
+        f"- Scene 3 Camera Directive: {style_meta['cam_s3']}\n"
+        f"- Scene 4 Camera Directive: {style_meta['cam_s4']}\n"
+        f"- Color & Lighting Directive: {style_meta['grade']}\n"
+        f"FORBIDDEN HOOKS (DO NOT USE):\n{used_h}\n"
+        f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops back to line 1.\n"
+        f"4. Google Flow Character Rules: {char_constraint}\n"
+        f"5. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and explicitly embed the exact camera movements, lens optics, and lighting directives above.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
         f'  "playlist": "{t_obj.get("pl", "Hard Truths")}",\n'
         '  "hook_banner": "3-4 WORDS IN CAPS",\n'
         f'  "subtitle_archetype": "{t_obj["a"]}",\n'
+        f'  "director_style": "{style_key}",\n'
         '  "script": "Full 65-70 word script.",\n'
-        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist in setting, hands resting inside woolen mantle, strictly two arms",\n'
-        f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c})",\n'
-        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action, natural posture, no phantom limbs",\n'
-        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist close up, serene resolve",\n'
-        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, anatomically correct, text space clear in top third",\n'
+        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist with camera movement, optics and lighting embedded",\n'
+        f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c}) with camera movement and lighting",\n'
+        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action with camera movement and lighting",\n'
+        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist extreme close-up with lighting",\n'
+        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, upper 20%-45% safe zone clear",\n'
         '  "youtube_title": "⚡ Hook Title 🏛️ #shorts #stoicism",\n'
         '  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n🤔 QUESTION:\\n1️⃣ Option 1\\n2️⃣ Option 2\\n\\n🏛️ Subscribe to @EchoesOfWisdomOfficial\\n\\n#stoicism #shorts",\n'
         '  "youtube_tags": "stoicism, echoes of wisdom, stoic philosophy, discipline, mental strength, self improvement, marcus aurelius, daily stoic, shorts",\n'
@@ -591,14 +661,14 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj):
                         continue
         except Exception: pass
 
-    return build_curated_stoic_package(t_obj, macro_c, sett_obj), "Stoic Vault (Zero-Fail Mode)"
+    return build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key), "Stoic Vault (Zero-Fail Mode)"
 
 # ---------------------------------------------------------
 # 8. TELEMETRY BAR & PUBLISHING SETTINGS
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.1 // DIRECT EXCEL & CLOUD SYNC</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.2 // FLOW CINEMATOGRAPHY & VAULT RESTORE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -695,6 +765,72 @@ tab1, tab2, tab3 = st.tabs(["⚡ 1. SCRIPT & PROMPTS", "🎬 2. RENDER MASTER RE
 
 # --- TAB 1: SCRIPT & GOOGLE FLOW PROMPTS ---
 with tab1:
+    # --- DRAFT VAULT AUTO-RESTORE WIDGET ---
+    vault_items = load_draft_vault()
+    if vault_items:
+        with st.expander(f"📦 RESTORE PREVIOUS DRAFT ({len(vault_items)} SAVED IN VAULT)", expanded=False):
+            st.caption("Container reset or app went idle? Select any recently generated script below to restore it instantly into Tab 2.")
+            vault_labels = [f"⚡ {v.get('pkg',{}).get('hook_banner', 'Untitled')} — {v.get('t_id','Theme')} ({v.get('date','')})" for v in vault_items]
+            chosen_vault_idx = st.selectbox("Choose Draft to Restore", range(len(vault_items)), format_func=lambda i: vault_labels[i])
+            if st.button("🔄 Restore Selected Draft", key="btn_restore_vault"):
+                restored = vault_items[chosen_vault_idx]
+                with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
+                    json.dump(restored, f, indent=2)
+                st.session_state["active_video_pkg"] = restored
+                st.session_state["rendered_director_style"] = restored.get("pkg", {}).get("director_style", "PUNCH_FLASH")
+                st.success(f"✓ Restored '{restored.get('pkg',{}).get('hook_banner')}' into active memory!")
+                st.rerun()
+
+    # --- QUICK SCRIPT RESTORE (DIRECT PASTE) ---
+    with st.expander("📝 QUICK-PASTE SCRIPT RESTORE (FOR EXISTING CLIPS)", expanded=False):
+        st.caption("Have clips and thumbnail ready but the active draft was wiped? Paste the script and hook here to re-synthesize audio and subtitles in 10 seconds.")
+        col_qp1, col_qp2 = st.columns([2, 1])
+        with col_qp1:
+            qp_hook = st.text_input("Hook Banner", value="ACTION CURES SELF-PITY", placeholder="e.g. ACTION CURES SELF-PITY")
+        with col_qp2:
+            qp_pl = st.selectbox("Playlist", PLAYLIST_OPTIONS, index=2)
+            
+        qp_script = st.text_area(
+            "Full Script (65-70 words)",
+            value="Action cures self-pity. Waiting for motivation is a coward's quiet trap. Fleeting emotions always abandon you the exact moment hardship strikes. True discipline asks no permission from comfortable moods; it operates solely through relentless resolve. Stop negotiating with weakness. Stand firm, honor your duty, and execute your labor despite inner protest. Silence your restless mind and remember that only—",
+            height=100
+        )
+        if st.button("⚡ Restore Script & Generate Audio Bed", type="primary"):
+            k = get_persistent_api_key()
+            with st.spinner("⚡ Synthesizing audio narration bed & calibrating subtitles..."):
+                t_obj_match = next((t for t in THEMES_DATABASE if t["h"].upper() == qp_hook.strip().upper()), THEMES_DATABASE[16])
+                s_obj = SETTINGS_MATRIX[3]
+                pkg = build_curated_stoic_package(t_obj_match, "Heavy waterwheel turning against turbulent mountain river currents", s_obj, "PUNCH_FLASH")
+                pkg["script"] = qp_script.strip()
+                pkg["hook_banner"] = qp_hook.strip().upper()
+                pkg["playlist"] = qp_pl
+                timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH, api_key=k))
+                
+                draft_data = {
+                    "pkg": pkg,
+                    "t_id": t_obj_match["id"],
+                    "p": t_obj_match["p"],
+                    "pl": qp_pl,
+                    "m": "Waterwheel",
+                    "s": s_obj["n"],
+                    "audio": DRAFT_AUDIO_PATH,
+                    "timings": timings,
+                    "voice_used": v_name,
+                    "engine_source": "Quick-Paste Vault Restore",
+                    "date": target_d,
+                    "slot": target_s,
+                    "time": target_t
+                }
+                with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
+                    json.dump(draft_data, f, indent=2)
+                save_to_draft_vault(draft_data)
+                st.session_state["active_video_pkg"] = draft_data
+                st.session_state["rendered_director_style"] = "PUNCH_FLASH"
+                st.success("✓ Script & Audio Bed restored into active memory! Head to Tab 2 to render.")
+                st.rerun()
+
+    st.markdown("---")
+    st.markdown("### 🎲 Synthesize Fresh Stoic Package")
     theme_opts = ["🎲 Smart AI Rotation (Cooldown-Protected)"] + THEMES_DATABASE
     chosen_theme = st.selectbox(
         "Stoic Core Theme",
@@ -702,10 +838,12 @@ with tab1:
         format_func=lambda x: "🎲 Smart AI Rotation" if isinstance(x, str) else f"{'⏳' if x['id'] in recent_ids else '✨'} {x['t']} ➔ [{x.get('pl','Hard Truths')[:22]}...]"
     )
     
-    col_v1, col_v2 = st.columns(2)
+    col_v1, col_v2, col_v3 = st.columns([1, 1, 1])
     with col_v1:
         chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
     with col_v2:
+        chosen_style_key = st.selectbox("Flow Cinematography", list(DIRECTOR_STYLES.keys()), format_func=lambda k: DIRECTOR_STYLES[k]["label"])
+    with col_v3:
         chosen_arch = st.selectbox(
             "Subtitle Color", 
             ["🤖 Match Theme Archetype"] + list(SUBTITLE_ARCHETYPES.keys()), 
@@ -714,14 +852,15 @@ with tab1:
 
     if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
         k = get_persistent_api_key()
-        with st.spinner("⚡ Synthesizing script & prompts..."):
+        with st.spinner("⚡ Synthesizing script, prompts & camera choreography..."):
             t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
             s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
             m_choice = random.choice(t_obj["m"])
             
-            pkg, engine_source = generate_video_package(k, t_obj, m_choice, s_obj)
+            pkg, engine_source = generate_video_package(k, t_obj, m_choice, s_obj, chosen_style_key)
             pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
             pkg["playlist"] = t_obj.get("pl", "Hard Truths")
+            pkg["director_style"] = chosen_style_key
             
             timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH, api_key=k))
             
@@ -741,7 +880,9 @@ with tab1:
                 "time": target_t
             }
             with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f: json.dump(draft_data, f, indent=2)
+            save_to_draft_vault(draft_data)
             st.session_state["active_video_pkg"] = draft_data
+            st.session_state["rendered_director_style"] = chosen_style_key
             st.session_state.pop("rendered_video_path", None)
             st.rerun()
 
@@ -753,6 +894,7 @@ with tab1:
         st.markdown(f"**Target Playlist:** `{pkg.get('playlist', 'Hard Truths')}`")
         st.markdown(f"**Engine:** `{p_data.get('engine_source', 'Active')}` &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
         st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
+        st.markdown(f"**Flow Cinematography:** `{DIRECTOR_STYLES.get(pkg.get('director_style','PUNCH_FLASH'),{}).get('label')}`")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
         st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
@@ -766,9 +908,16 @@ with tab1:
             st.success("Custom narration file loaded into vault!")
             st.rerun()
         
-        st.markdown("### 📋 Copy Google Flow Prompts")
-        for i, (lbl, k) in enumerate([("SCENE 1 (Hook)", "scene1_prompt"), ("SCENE 2 (Macro)", "scene2_prompt"), ("SCENE 3 (Action)", "scene3_prompt"), ("SCENE 4 (Resolve)", "scene4_prompt"), ("THUMBNAIL (9:16)", "thumbnail_prompt")]):
-            st.text_area(lbl, pkg.get(k, ""), height=70)
+        st.markdown("### 📋 Copy Google Flow Prompts (Cinematography Embedded)")
+        st.caption("Each prompt below directly commands Google Flow's camera motion, lens optics, and volumetric lighting so you don't have to fake it with digital crops.")
+        for i, (lbl, k) in enumerate([
+            ("SCENE 1 (Hook - Camera Push-In)", "scene1_prompt"), 
+            ("SCENE 2 (Macro - Dynamic Tilt)", "scene2_prompt"), 
+            ("SCENE 3 (Action - Tracking Dolly)", "scene3_prompt"), 
+            ("SCENE 4 (Resolve - Portrait Focus)", "scene4_prompt"), 
+            ("THUMBNAIL (9:16 - Upper Safe Zone)", "thumbnail_prompt")
+        ]):
+            st.text_area(lbl, pkg.get(k, ""), height=80)
             render_copy(f"pr_{i}", f"COPY {lbl}", pkg.get(k, ""))
 
         if st.button("🗑️ Discard Draft & Start Fresh"):
@@ -792,29 +941,39 @@ with tab2:
         uploaded_clips = sorted(uploaded_clips, key=lambda x: x.name)
         st.markdown(f'<div style="color: #34D399; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
-    st.markdown("### 🎬 2. Dynamic Director AI & Visual FX (CutCap Suite)")
+    # ---------------------------------------------------------
+    # DYNAMIC DIRECTOR FX & FLOW INTEGRATION TOGGLES
+    # ---------------------------------------------------------
+    st.markdown("### 🎬 2. Post-Render Polish & CutCap Transitions")
+    active_style_key = st.session_state.get("rendered_director_style", "PUNCH_FLASH")
     
     col_fx1, col_fx2 = st.columns(2)
     with col_fx1:
         chosen_director_fx = st.selectbox(
             "Director Visual Archetype",
             list(DIRECTOR_STYLES.keys()),
-            format_func=lambda x: DIRECTOR_STYLES[x],
-            index=0,
-            help="Select 'Auto' to let the engine randomize camera moves, transitions, and film grades for every video."
+            format_func=lambda x: DIRECTOR_STYLES[x]["label"],
+            index=list(DIRECTOR_STYLES.keys()).index(active_style_key) if active_style_key in DIRECTOR_STYLES else 0,
+            help="Defines the transition flashes and grading mood for video cuts."
         )
     with col_fx2:
         flash_intensity = st.slider(
-            "Transition Burst Length",
+            "CutCap Transition Flash Length",
             min_value=0.0, max_value=0.25, value=0.12, step=0.02,
-            help="Duration of the shutter flash between scene cuts (0 = Hard Cut, 0.12s = Recommended CutCap Flash)."
+            help="Duration of the white shutter flash between scene cuts (0 = Hard Cut, 0.12s = Recommended CutCap Flash)."
         )
 
-    col_tex1, col_tex2 = st.columns(2)
-    with col_tex1:
-        enable_vignette = st.checkbox("🌑 Focus Vignette (Edge Shading)", value=True, help="Darkens outer margins to pull viewer focus to the subject.")
-    with col_tex2:
-        enable_film_grain = st.checkbox("🎞️ Analog Film Texture", value=True, help="Injects subtle 35mm grain to eliminate the smooth 'plastic AI' look.")
+    col_opt1, col_opt2, col_opt3 = st.columns(3)
+    with col_opt1:
+        apply_digital_zoom = st.checkbox(
+            "🔬 Apply Digital FFmpeg Zoom",
+            value=False,
+            help="Uncheck if your Flow prompts already generated native 3D camera moves. Checking this adds extra digital push-in via FFmpeg."
+        )
+    with col_opt2:
+        enable_vignette = st.checkbox("🌑 Optical Vignette", value=True, help="Darkens outer corners to frame the subject.")
+    with col_opt3:
+        enable_film_grain = st.checkbox("🎞️ 35mm Film Grain", value=True, help="Removes the overly smooth 'plastic AI' look.")
 
     st.markdown("### 🎵 3. Dynamic Background Audio (EBU R128 + Auto-Ducking)")
     current_arch_key = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("subtitle_archetype", "FORGE_AMBER")
@@ -846,6 +1005,9 @@ with tab2:
     if res_path and os.path.exists(res_path):
         st.markdown(f'<div style="color: #34D399; font-size: 12px; font-weight: 600; margin-top: -6px; margin-bottom: 8px;">✓ Active Background Track: {res_name}</div>', unsafe_allow_html=True)
 
+    # ---------------------------------------------------------
+    # ADAPTIVE LOSSLESS THUMBNAIL CROP & SAFE ZONE ENGINE
+    # ---------------------------------------------------------
     st.markdown("### 🖼️ 4. Thumbnail Safe-Zone Engine (Upper 20%-45% Placement)")
     thumb = st.file_uploader("Upload raw Google Flow thumbnail", type=["png", "jpg", "jpeg", "webp"])
     if thumb:
@@ -877,11 +1039,11 @@ with tab2:
 
     if st.button("🎬 Render Master 9:16 Vertical Reel", type="primary"):
         if "active_video_pkg" not in st.session_state:
-            st.error("No active draft loaded in Tab 1.")
+            st.error("No active draft loaded in Tab 1. Use Quick-Paste Restore or pick from Draft Vault in Tab 1!")
         elif not uploaded_clips or num_clips < 2:
             st.error(f"Please upload at least 2 video clips. (Currently loaded: {num_clips})")
         else:
-            with st.spinner(f"⚡ Applying Dynamic Director FX across {num_clips} clips & rendering reel..."):
+            with st.spinner(f"⚡ Applying Director cuts & audio ducking across {num_clips} clips..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
                 a_path = DRAFT_AUDIO_PATH
@@ -910,8 +1072,6 @@ with tab2:
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
                 active_style = chosen_director_fx
-                if active_style == "AUTO":
-                    active_style = random.choice(["PUNCH_FLASH", "PULL_VIGN", "WARM_DRIFT", "NORDIC_CUT"])
                 st.session_state["rendered_director_style"] = active_style
 
                 v_filters = []
@@ -924,18 +1084,12 @@ with tab2:
                         f"fps=25"
                     ]
                     
-                    if i == 0:
-                        if active_style == "PUNCH_FLASH":
-                            z_step = 0.15 / max(1, (clip_target_dur * 25))
-                            filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
-                        elif active_style == "PULL_VIGN":
-                            z_step = 0.15 / max(1, (clip_target_dur * 25))
-                            filters_for_clip.append(f"zoompan=z='if(lte(zoom,1.0),1.0,max(1.15-on*{z_step:.5f},1.0))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
-                        elif active_style == "WARM_DRIFT":
-                            filters_for_clip.append("eq=contrast=1.06:brightness=0.02:saturation=1.12")
-                        elif active_style == "NORDIC_CUT":
-                            filters_for_clip.append("eq=contrast=1.12:brightness=-0.02:saturation=0.92")
+                    # Optional digital zoompan (only if Flow camera motion wasn't used)
+                    if i == 0 and apply_digital_zoom:
+                        z_step = 0.15 / max(1, (clip_target_dur * 25))
+                        filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
 
+                    # CutCap Transitions between scene cuts
                     if i > 0 and flash_intensity > 0:
                         if active_style in ["PUNCH_FLASH", "NORDIC_CUT"]:
                             filters_for_clip.append(f"fade=t=in:st=0:d={flash_intensity:.2f}:color=white")
@@ -998,7 +1152,7 @@ with tab2:
                     st.error(f"FFmpeg Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered! Active Director Style: {DIRECTOR_STYLES.get(active_style, active_style)}")
+                    st.success(f"🎉 Master Reel Rendered! Active Style: {DIRECTOR_STYLES.get(active_style, {}).get('label')}")
 
     if "rendered_video_path" in st.session_state and "active_video_pkg" in st.session_state:
         vp = st.session_state["rendered_video_path"]
@@ -1100,7 +1254,7 @@ with tab2:
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
             director_style_resolved = st.session_state.get("rendered_director_style", chosen_director_fx)
-            if director_style_resolved == "AUTO":
+            if director_style_resolved not in DIRECTOR_STYLES:
                 director_style_resolved = "PUNCH_FLASH"
 
             row_payload = {
@@ -1120,7 +1274,7 @@ with tab2:
                 "ytPinned": yt_pin,
                 "metaCaption": fb_cap,
                 "metaComment": "What is your perspective on this? Drop 1 or 2 below! 👇",
-                "directorFx": DIRECTOR_STYLES.get(director_style_resolved, director_style_resolved),
+                "directorFx": DIRECTOR_STYLES.get(director_style_resolved, {}).get("label", "Action Push & Shutter Flash"),
                 "notes": "Staged in EchoesOfWisdom/01_READY_TO_SCHEDULE"
             }
             
