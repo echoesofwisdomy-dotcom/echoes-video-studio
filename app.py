@@ -209,40 +209,61 @@ SUBTITLE_ARCHETYPES = {
     "FORGE_AMBER":   {"label": "🔥 Forge Amber",   "ass_primary": "&H000099FF", "banner_hex": "0xFF9900", "prefix": "amber_"}
 }
 
-DIRECTOR_STYLES = {
+# ---------------------------------------------------------
+# DYNAMIC CINEMATOGRAPHY & INTRA-SHOT KINETIC MATRIX
+# ---------------------------------------------------------
+CINEMATOGRAPHY_MATRIX = {
     "PUNCH_FLASH": {
-        "label": "⚡ Action Push & Shutter Flash",
-        "cam_s1": "CAMERA: Smooth continuous slow optical push-in towards protagonist's eyes (1.0x to 1.15x push).",
-        "cam_s2": "CAMERA: Macro lens with dynamic slow vertical tilt tracking motion.",
-        "cam_s3": "CAMERA: Wide tracking forward dolly shot following deliberate strides.",
-        "cam_s4": "CAMERA: Tight portrait with subtle handheld micro-movement.",
-        "grade": "LIGHTING: High-contrast cinematic rim lighting, atmospheric mist, intense shadow depth."
+        "label": "⚡ Dynamic Kinetic Arc & Probe (High Retention)",
+        "lens_s1": "24mm ultra-wide cinema prime lens with subtle anamorphic barrel distortion",
+        "cam_s1": "0s-2s: Low-angle Dutch tilt in deep shadow; 2s-4s: rapid forward push-in accelerating smoothly towards protagonist's piercing eyes as a sharp shaft of sunlight strikes his face",
+        "lens_s2": "100mm macro probe lens, extreme shallow depth of field (f/1.8)",
+        "cam_s2": "0s-2s: Microscopic close-up tracking water spray and micro-textures; 2s-4s: sudden dynamic whip-pan revealing foaming water violently churning under high pressure",
+        "lens_s3": "35mm anamorphic cinema lens, natural horizontal streak flare",
+        "cam_s3": "0s-2s: Fast over-the-shoulder tracking dolly following deliberate strides; 2s-4s: camera sweeps around subject in a dramatic 45-degree parallax arc against towering cliff peaks",
+        "lens_s4": "85mm portrait telephoto lens, creamy optical bokeh",
+        "cam_s4": "0s-2s: Slow breathing push-in on weathered skin texture and salt-and-pepper beard; 2s-4s: protagonist raises piercing calm eyes directly into camera lens",
+        "grade": "Cinematic high-contrast chiaroscuro, volumetric dust motes, rich dark shadows, textured 35mm film stock quality"
     },
     "PULL_VIGN": {
-        "label": "🌊 Scale Pull-Out & Dark Vignette",
-        "cam_s1": "CAMERA: Slow cinematic pull-back (1.15x to 1.0x) revealing ancient surroundings.",
-        "cam_s2": "CAMERA: Extreme macro close-up with dramatic shallow depth of field (f/1.8).",
-        "cam_s3": "CAMERA: Wide tracking shot revealing monumental scale of ancient stone architecture.",
-        "cam_s4": "CAMERA: Focused close-up portrait, natural optical vignette framing subject.",
-        "grade": "LIGHTING: Dark brooding atmospheric chiaroscuro, natural edge shadow falloff."
+        "label": "🌊 Atmospheric Parallax & Macro Whip (Epic Scale)",
+        "lens_s1": "35mm prime cinema lens with natural optical vignetting and peripheral falloff",
+        "cam_s1": "0s-2s: Tight framing on protagonist's stoic composure; 2s-4s: continuous smooth pull-back dolly shot revealing the vast scale of ancient towering stone colonnades",
+        "lens_s2": "90mm macro cine lens, hyper-sharp plane of focus",
+        "cam_s2": "0s-2s: Extreme close-up rack focus starting blurred on flying embers; 2s-4s: snaps into tack-sharp focus on the rugged moving mechanism with cinematic speed ramp feel",
+        "lens_s3": "28mm wide-angle documentary lens, deep depth of field",
+        "cam_s3": "0s-2s: Low ground-level pedestal shot tracking protagonist's boots pacing across wet stone; 2s-4s: camera cranes smoothly upward to reveal his full silhouette against stormy horizon",
+        "lens_s4": "85mm prime lens, soft feathered vignette framing",
+        "cam_s4": "0s-2s: Profile angle cloaked in deep cool shadow; 2s-4s: subject turns slowly to face camera, piercing steady gaze, atmospheric fog swirling behind",
+        "grade": "Moody slate-grey palette, deep blacks, muted cinematic earth tones, desaturated epic atmosphere"
     },
     "WARM_DRIFT": {
-        "label": "🔥 Forge Drift & Soft Dissolve",
-        "cam_s1": "CAMERA: Subtle slow lateral camera drift across weathered features.",
-        "cam_s2": "CAMERA: Extreme macro shot with glowing embers and warm particle drift.",
-        "cam_s3": "CAMERA: Slow forward tracking dolly shot through atmospheric twilight.",
-        "cam_s4": "CAMERA: Close-up portrait, warm firelight reflections on dark woolen mantle.",
-        "grade": "LIGHTING: Warm 35mm golden hour amber glow, volumetric dust motes, rich warm tones."
+        "label": "🔥 Forge Ember & Optical Rack Focus (Warm 35mm)",
+        "lens_s1": "50mm high-speed cinema lens, soft vintage warmth and natural perspective",
+        "cam_s1": "0s-2s: Camera drifts slowly laterally past foreground stone pillar; 2s-4s: reveals protagonist standing resolute with golden rim light outlining his woolen mantle",
+        "lens_s2": "100mm macro lens, ultra-high magnification",
+        "cam_s2": "0s-2s: Macro shot of glowing orange ember particles floating in air; 2s-4s: dynamic camera drift downward tracking intense impact and heat waves",
+        "lens_s3": "35mm anamorphic cinema lens, warm flare halation",
+        "cam_s3": "0s-2s: Medium tracking shot pacing beside protagonist; 2s-4s: camera elevates into high-angle perspective showing him walking resolutely through misty stone courtyard",
+        "lens_s4": "85mm portrait lens with warm amber backlighting",
+        "cam_s4": "0s-2s: Tight close-up, warm torchlight flicker dancing across lined forehead and weathered eyes; 2s-4s: steady resolute nod of timeless acceptance",
+        "grade": "3200K warm tungsten glow, rich golden hour highlights, soft ambient haze, 35mm analog warmth"
     },
     "NORDIC_CUT": {
-        "label": "❄️ Nordic Citadel & Fast Dip",
-        "cam_s1": "CAMERA: Centered static symmetrical framing, cold mountain wind blowing mantle.",
-        "cam_s2": "CAMERA: Macro detail of frost-covered stone or ice crystals in stark detail.",
-        "cam_s3": "CAMERA: Medium wide shot traversing rugged basalt cliff ledge.",
-        "cam_s4": "CAMERA: Weathered intense portrait, cold breath vapor visible in twilight air.",
-        "grade": "LIGHTING: Desaturated cold slate palette, stark overcast Nordic sky, crisp contrast."
+        "label": "❄️ Nordic Citadel & Fast Shutter Tilt (Cold Steel)",
+        "lens_s1": "24mm ultra-wide cinema lens, dramatic angular perspective",
+        "cam_s1": "0s-2s: Symmetrical centered locked-off wide shot in gale-force mountain mist; 2s-4s: sudden aggressive snap-zoom forward locking onto protagonist's unflinching eyes",
+        "lens_s2": "100mm probe lens, needle-sharp crystalline detail",
+        "cam_s2": "0s-2s: Extreme macro tracking frost crystals and splashing icy droplets; 2s-4s: fast downward tilt capturing raw mechanical power against freezing torrents",
+        "lens_s3": "50mm prime lens, stark documentary clarity",
+        "cam_s3": "0s-2s: Handheld camera movement following protagonist along narrow rocky precipice; 2s-4s: camera stabilizes as dark woolen cloak billows violently against jagged peaks",
+        "lens_s4": "105mm telephoto portrait lens, intense subject isolation",
+        "cam_s4": "0s-2s: Extreme macro close-up on eye iris reflecting mountain horizon; 2s-4s: pulls back to reveal weathered stoic face exhaling cold visible breath mist",
+        "grade": "5600K cold daylight overcast, desaturated blue-grey grading, stark razor-sharp edges, high visual tension"
     }
 }
+
+DIRECTOR_STYLES = {k: v["label"] for k, v in CINEMATOGRAPHY_MATRIX.items()}
 
 VOICE_PROFILES = {
     "Gemini-Charon":           "🎙️ Charon (Gemini 3.8 AI - Deep Stoic US Male, 100% Reliable)",
@@ -551,16 +572,16 @@ if "rendered_video_path" not in st.session_state:
 def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     hook = t_obj["h"]
     premise = t_obj["prem"]
-    style_meta = DIRECTOR_STYLES.get(style_key, DIRECTOR_STYLES["PUNCH_FLASH"])
+    style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["PUNCH_FLASH"])
     
     script = (
         f"{hook.title()}. {premise} Waiting for motivation is a quiet trap. Fleeting emotions always "
-        f"abandon you when hardship strikes. True discipline asks no permission from comfortable moods; "
-        f"it operates solely through relentless resolve. Honor your duty, execute your labor despite inner protest, "
-        f"and remember that only—"
+        f"abandon you the exact moment hardship strikes. True discipline asks no permission from comfortable moods; "
+        f"it operates solely through relentless resolve. Stop negotiating with weakness. Stand firm, honor your duty, "
+        f"and execute your labor despite inner protest. Silence your restless mind and remember that only—"
     )
     
-    char_desc = "An authentic fictional mature stoic philosopher with a weathered lined face, calm focused eyes, messy salt-and-pepper hair, thick natural beard, draped in an authentic dark woolen ancient mantle. Strictly two arms only, hands resting calmly inside woolen mantle folds, flawless human anatomy."
+    char_desc = "An authentic mature stoic philosopher with a weathered lined face, piercing calm eyes, messy salt-and-pepper hair, thick natural beard, draped in an authentic dark woolen ancient mantle. Strictly two arms only, hands resting calmly inside woolen mantle folds, flawless human anatomy."
 
     return {
         "title_concept": t_obj["t"],
@@ -569,11 +590,11 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
         "subtitle_archetype": t_obj["a"],
         "director_style": style_key,
         "script": script,
-        "scene1_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) standing calm in {sett_obj['n'].lower()}. {style_meta['cam_s1']} {style_meta['grade']} Anamorphic 35mm lens, optical bokeh, flawless anatomy, strictly two arms.",
-        "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] Extreme macro cinematic shot of {macro_c.lower()}. {style_meta['cam_s2']} {style_meta['grade']} Extreme detail, shallow depth of field, photorealistic 8k texture.",
-        "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) walking steady deliberate pace through {sett_obj['n'].lower()}. {style_meta['cam_s3']} {style_meta['grade']} Natural fabric physics on woolen mantle.",
-        "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Extreme close-up portrait of protagonist ({char_desc}). {style_meta['cam_s4']} {style_meta['grade']} Weathered skin pores, piercing calm eyes, cold breath mist rising in air.",
-        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting, upper 20%-45% space clear for bold text overlay, flawless anatomy, strictly two arms",
+        "scene1_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) in {sett_obj['n'].lower()}. {style_meta['cam_s1']}. LENS: {style_meta['lens_s1']}. {style_meta['grade']}. Flawless anatomy, strictly two arms, photorealistic 8k.",
+        "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] {macro_c}. {style_meta['cam_s2']}. LENS: {style_meta['lens_s2']}. {style_meta['grade']}. Photorealistic micro-details, extreme texture resolution.",
+        "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) traversing {sett_obj['n'].lower()}. {style_meta['cam_s3']}. LENS: {style_meta['lens_s3']}. {style_meta['grade']}. Realistic cloth physics, strictly two arms.",
+        "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) intense composure shot. {style_meta['cam_s4']}. LENS: {style_meta['lens_s4']}. {style_meta['grade']}. Piercing stoic resolve, flawless human face, cold breath mist.",
+        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting, upper 20%-45% safe zone completely clear of facial features for bold typography overlay, flawless anatomy, strictly two arms",
         "youtube_title": f"⚡ {hook.title()} 🏛️ #shorts #stoicism",
         "youtube_description": f"⚡ {hook}\n\n{premise}\n\n🤔 TODAY'S STOIC QUESTION:\nWhen facing uninvited chaos:\n1️⃣ Stand resolute in silence\n2️⃣ Defend your territory verbally\n\nDrop 1 or 2 below! 👇\n\n🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n#stoicism #stoicmindset #discipline #echoesofwisdom #shorts",
         "youtube_tags": "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts",
@@ -589,10 +610,10 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
-    style_meta = DIRECTOR_STYLES.get(style_key, DIRECTOR_STYLES["PUNCH_FLASH"])
+    style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["PUNCH_FLASH"])
     
     char_constraint = (
-        "Character: An authentic fictional mature stoic philosopher with a weathered lined face, calm focused eyes, "
+        "Character: An authentic mature stoic philosopher with a weathered lined face, piercing calm eyes, "
         "messy salt-and-pepper hair, thick natural beard, draped in an authentic dark woolen ancient mantle. "
         "Strictly two arms only, hands resting calmly inside woolen mantle folds, flawless human anatomy."
     )
@@ -601,16 +622,16 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         f"You are Executive Creative Director for 'Echoes of Wisdom' (9:16 vertical short-form reels).\n"
         f"PLAYLIST: {t_obj.get('pl', 'Hard Truths')} | THEME: {t_obj['t']}\nPREMISE: {t_obj['prem']}\nDEFAULT HOOK: {t_obj['h']}\n"
         f"MACRO METAPHOR (SCENE 2): {macro_c}\nENVIRONMENT: {sett_obj['d']}\n"
-        f"DIRECTOR CINEMATOGRAPHY PROFILE:\n"
-        f"- Scene 1 Camera Directive: {style_meta['cam_s1']}\n"
-        f"- Scene 2 Camera Directive: {style_meta['cam_s2']}\n"
-        f"- Scene 3 Camera Directive: {style_meta['cam_s3']}\n"
-        f"- Scene 4 Camera Directive: {style_meta['cam_s4']}\n"
-        f"- Color & Lighting Directive: {style_meta['grade']}\n"
+        f"DIRECTOR CINEMATOGRAPHY MATRIX INSTRUCTIONS:\n"
+        f"- Scene 1 Camera & Lens: {style_meta['cam_s1']}. Lens: {style_meta['lens_s1']}.\n"
+        f"- Scene 2 Camera & Lens: {style_meta['cam_s2']}. Lens: {style_meta['lens_s2']}.\n"
+        f"- Scene 3 Camera & Lens: {style_meta['cam_s3']}. Lens: {style_meta['lens_s3']}.\n"
+        f"- Scene 4 Camera & Lens: {style_meta['cam_s4']}. Lens: {style_meta['lens_s4']}.\n"
+        f"- Color & Atmosphere: {style_meta['grade']}\n"
         f"FORBIDDEN HOOKS (DO NOT USE):\n{used_h}\n"
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops back to line 1.\n"
         f"4. Google Flow Character Rules: {char_constraint}\n"
-        f"5. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and explicitly embed the exact camera movements, lens optics, and lighting directives above.\n"
+        f"5. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and explicitly embed the exact intra-shot progression (e.g. 0s-2s and 2s-4s), lens focal length, and lighting atmosphere.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
@@ -619,10 +640,10 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         f'  "subtitle_archetype": "{t_obj["a"]}",\n'
         f'  "director_style": "{style_key}",\n'
         '  "script": "Full 65-70 word script.",\n'
-        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist with camera movement, optics and lighting embedded",\n'
-        f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c}) with camera movement and lighting",\n'
-        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action with camera movement and lighting",\n'
-        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist extreme close-up with lighting",\n'
+        '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist with 0s-2s and 2s-4s camera kinetics, lens and lighting",\n'
+        f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c}) with intra-shot tilt/pan, lens and lighting",\n'
+        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action with tracking parallax, lens and lighting",\n'
+        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist extreme resolve portrait with intra-shot glance and lighting",\n'
         '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, upper 20%-45% safe zone clear",\n'
         '  "youtube_title": "⚡ Hook Title 🏛️ #shorts #stoicism",\n'
         '  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n🤔 QUESTION:\\n1️⃣ Option 1\\n2️⃣ Option 2\\n\\n🏛️ Subscribe to @EchoesOfWisdomOfficial\\n\\n#stoicism #shorts",\n'
@@ -668,7 +689,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.2 // FLOW CINEMATOGRAPHY & VAULT RESTORE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.3 // DYNAMIC FLOW CINEMATOGRAPHY MATRIX</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -842,7 +863,11 @@ with tab1:
     with col_v1:
         chosen_setting = st.selectbox("Cinematic Setting", ["🎲 Random Environment"] + [s["n"] for s in SETTINGS_MATRIX])
     with col_v2:
-        chosen_style_key = st.selectbox("Flow Cinematography", list(DIRECTOR_STYLES.keys()), format_func=lambda k: DIRECTOR_STYLES[k]["label"])
+        chosen_style_key = st.selectbox(
+            "Cinematography Matrix", 
+            ["🎲 Auto-Randomize Style"] + list(CINEMATOGRAPHY_MATRIX.keys()), 
+            format_func=lambda k: "🎲 Auto-Randomize Style" if k.startswith("🎲") else CINEMATOGRAPHY_MATRIX[k]["label"]
+        )
     with col_v3:
         chosen_arch = st.selectbox(
             "Subtitle Color", 
@@ -852,15 +877,18 @@ with tab1:
 
     if st.button("🚀 Synthesize Fresh Stoic Package", type="primary"):
         k = get_persistent_api_key()
-        with st.spinner("⚡ Synthesizing script, prompts & camera choreography..."):
+        with st.spinner("⚡ Synthesizing script, prompts & intra-shot camera choreography..."):
             t_obj = random.choice([t for t in THEMES_DATABASE if t["id"] not in recent_ids] or THEMES_DATABASE) if isinstance(chosen_theme, str) else chosen_theme
             s_obj = random.choice(SETTINGS_MATRIX) if chosen_setting.startswith("🎲") else next(s for s in SETTINGS_MATRIX if s["n"] == chosen_setting)
             m_choice = random.choice(t_obj["m"])
             
-            pkg, engine_source = generate_video_package(k, t_obj, m_choice, s_obj, chosen_style_key)
+            # Select cinematography style
+            resolved_style = random.choice(list(CINEMATOGRAPHY_MATRIX.keys())) if chosen_style_key.startswith("🎲") else chosen_style_key
+            
+            pkg, engine_source = generate_video_package(k, t_obj, m_choice, s_obj, resolved_style)
             pkg["subtitle_archetype"] = chosen_arch if not chosen_arch.startswith("🤖") else t_obj["a"]
             pkg["playlist"] = t_obj.get("pl", "Hard Truths")
-            pkg["director_style"] = chosen_style_key
+            pkg["director_style"] = resolved_style
             
             timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH, api_key=k))
             
@@ -882,19 +910,20 @@ with tab1:
             with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f: json.dump(draft_data, f, indent=2)
             save_to_draft_vault(draft_data)
             st.session_state["active_video_pkg"] = draft_data
-            st.session_state["rendered_director_style"] = chosen_style_key
+            st.session_state["rendered_director_style"] = resolved_style
             st.session_state.pop("rendered_video_path", None)
             st.rerun()
 
     if "active_video_pkg" in st.session_state:
         p_data = st.session_state["active_video_pkg"]
         pkg = p_data.get("pkg", {})
+        active_director_style = pkg.get("director_style", "PUNCH_FLASH")
         st.divider()
         st.subheader(f"📜 Concept: {pkg.get('title_concept', 'Stoic Reel')}")
         st.markdown(f"**Target Playlist:** `{pkg.get('playlist', 'Hard Truths')}`")
         st.markdown(f"**Engine:** `{p_data.get('engine_source', 'Active')}` &nbsp;|&nbsp; **Palette:** {SUBTITLE_ARCHETYPES.get(pkg.get('subtitle_archetype', 'FORGE_AMBER'), SUBTITLE_ARCHETYPES['FORGE_AMBER'])['label']}")
         st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
-        st.markdown(f"**Flow Cinematography:** `{DIRECTOR_STYLES.get(pkg.get('director_style','PUNCH_FLASH'),{}).get('label')}`")
+        st.markdown(f"**Cinematography Style:** `{CINEMATOGRAPHY_MATRIX.get(active_director_style, CINEMATOGRAPHY_MATRIX['PUNCH_FLASH'])['label']}`")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
         st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
@@ -908,13 +937,13 @@ with tab1:
             st.success("Custom narration file loaded into vault!")
             st.rerun()
         
-        st.markdown("### 📋 Copy Google Flow Prompts (Cinematography Embedded)")
-        st.caption("Each prompt below directly commands Google Flow's camera motion, lens optics, and volumetric lighting so you don't have to fake it with digital crops.")
+        st.markdown("### 📋 Copy Google Flow Prompts (Intra-Shot Moves & Lenses Embedded)")
+        st.caption("Each prompt below explicitly programs 0s-2s and 2s-4s camera progression, lens focal length, and atmospheric lighting into Google Flow.")
         for i, (lbl, k) in enumerate([
-            ("SCENE 1 (Hook - Camera Push-In)", "scene1_prompt"), 
-            ("SCENE 2 (Macro - Dynamic Tilt)", "scene2_prompt"), 
-            ("SCENE 3 (Action - Tracking Dolly)", "scene3_prompt"), 
-            ("SCENE 4 (Resolve - Portrait Focus)", "scene4_prompt"), 
+            ("SCENE 1 (Hook - Intra-Shot Push/Tilt)", "scene1_prompt"), 
+            ("SCENE 2 (Macro - Dynamic Probe/Whip)", "scene2_prompt"), 
+            ("SCENE 3 (Action - Tracking Parallax Arc)", "scene3_prompt"), 
+            ("SCENE 4 (Resolve - Portrait Lighting Shift)", "scene4_prompt"), 
             ("THUMBNAIL (9:16 - Upper Safe Zone)", "thumbnail_prompt")
         ]):
             st.text_area(lbl, pkg.get(k, ""), height=80)
@@ -950,10 +979,10 @@ with tab2:
     col_fx1, col_fx2 = st.columns(2)
     with col_fx1:
         chosen_director_fx = st.selectbox(
-            "Director Visual Archetype",
-            list(DIRECTOR_STYLES.keys()),
-            format_func=lambda x: DIRECTOR_STYLES[x]["label"],
-            index=list(DIRECTOR_STYLES.keys()).index(active_style_key) if active_style_key in DIRECTOR_STYLES else 0,
+            "Transition Burst Archetype",
+            list(CINEMATOGRAPHY_MATRIX.keys()),
+            format_func=lambda x: CINEMATOGRAPHY_MATRIX[x]["label"],
+            index=list(CINEMATOGRAPHY_MATRIX.keys()).index(active_style_key) if active_style_key in CINEMATOGRAPHY_MATRIX else 0,
             help="Defines the transition flashes and grading mood for video cuts."
         )
     with col_fx2:
@@ -1152,7 +1181,7 @@ with tab2:
                     st.error(f"FFmpeg Error: {res.stderr[:300]}")
                 else:
                     st.session_state["rendered_video_path"] = out_p
-                    st.success(f"🎉 Master Reel Rendered! Active Style: {DIRECTOR_STYLES.get(active_style, {}).get('label')}")
+                    st.success(f"🎉 Master Reel Rendered! Active Style: {CINEMATOGRAPHY_MATRIX.get(active_style, {}).get('label')}")
 
     if "rendered_video_path" in st.session_state and "active_video_pkg" in st.session_state:
         vp = st.session_state["rendered_video_path"]
@@ -1254,7 +1283,7 @@ with tab2:
 
         if st.button("✅ Lock & Advance Slot", type="primary"):
             director_style_resolved = st.session_state.get("rendered_director_style", chosen_director_fx)
-            if director_style_resolved not in DIRECTOR_STYLES:
+            if director_style_resolved not in CINEMATOGRAPHY_MATRIX:
                 director_style_resolved = "PUNCH_FLASH"
 
             row_payload = {
@@ -1274,7 +1303,7 @@ with tab2:
                 "ytPinned": yt_pin,
                 "metaCaption": fb_cap,
                 "metaComment": "What is your perspective on this? Drop 1 or 2 below! 👇",
-                "directorFx": DIRECTOR_STYLES.get(director_style_resolved, {}).get("label", "Action Push & Shutter Flash"),
+                "directorFx": CINEMATOGRAPHY_MATRIX.get(director_style_resolved, {}).get("label", "Action Push & Shutter Flash"),
                 "notes": "Staged in EchoesOfWisdom/01_READY_TO_SCHEDULE"
             }
             
