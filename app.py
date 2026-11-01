@@ -594,14 +594,19 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
         "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] {macro_c}. {style_meta['cam_s2']}. LENS: {style_meta['lens_s2']}. {style_meta['grade']}. Photorealistic micro-details, extreme texture resolution.",
         "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) traversing {sett_obj['n'].lower()}. {style_meta['cam_s3']}. LENS: {style_meta['lens_s3']}. {style_meta['grade']}. Realistic cloth physics, strictly two arms.",
         "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) intense composure shot. {style_meta['cam_s4']}. LENS: {style_meta['lens_s4']}. {style_meta['grade']}. Piercing stoic resolve, flawless human face, cold breath mist.",
-        "thumbnail_prompt": f"Dramatic 9:16 vertical portrait of weathered stoic philosopher in {sett_obj['n'].lower()}, intense steady gaze, cinematic volumetric lighting, upper 20%-45% safe zone completely clear of facial features for bold typography overlay, flawless anatomy, strictly two arms",
+        "thumbnail_prompt": (
+            f"Dramatic 9:16 vertical cinematic portrait of a mature stoic philosopher with weathered features and salt-and-pepper beard in {sett_obj['n'].lower()}, "
+            f"intense steady gaze, cinematic volumetric lighting. Prominently centered in the upper-third (20% to 35% from the top margin, strictly above character's head) is massive, ultra-bold typography reading exactly: \"{hook}\". "
+            f"The text is rendered in thick distressed sans-serif block lettering, high-contrast {'radiant imperial gold' if t_obj.get('a') == 'IMPERIAL_GOLD' else ('frost glacial cyan' if t_obj.get('a') == 'GLACIAL_ICE' else 'molten forge amber')} color with a dark ambient drop shadow for maximum legibility against atmospheric fog. "
+            f"The typography does not obscure the character's face. Strictly NO text in the lower half of the frame. Flawless human anatomy, strictly two arms."
+        ),
         "youtube_title": f"⚡ {hook.title()} 🏛️ #shorts #stoicism",
         "youtube_description": f"⚡ {hook}\n\n{premise}\n\n🤔 TODAY'S STOIC QUESTION:\nWhen facing uninvited chaos:\n1️⃣ Stand resolute in silence\n2️⃣ Defend your territory verbally\n\nDrop 1 or 2 below! 👇\n\n🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n#stoicism #stoicmindset #discipline #echoesofwisdom #shorts",
         "youtube_tags": "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts",
         "youtube_pinned_comment": "When facing uninvited chaos: 1️⃣ Stand resolute in silence, or 2️⃣ React immediately? Drop 1 or 2 below! 👇",
         "caption_hook": hook,
         "caption_lesson": premise,
-        "debate_question": "When faced with this choice:",
+        "debate_question": "When facing uninvited chaos:",
         "choice_1": "Stand resolute in silence",
         "choice_2": "Defend your territory verbally",
         "meta_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Reels"
@@ -632,6 +637,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops back to line 1.\n"
         f"4. Google Flow Character Rules: {char_constraint}\n"
         f"5. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and explicitly embed the exact intra-shot progression (e.g. 0s-2s and 2s-4s), lens focal length, and lighting atmosphere.\n"
+        f"6. THUMBNAIL TYPOGRAPHY MANDATE: The 'thumbnail_prompt' MUST command bold typography reading exactly: 'typography reading exactly: \"[HOOK_BANNER]\"'. Specify vertical placement strictly in the upper third (20% to 35% from top margin, above character's head), massive distressed sans-serif block lettering, high-contrast {('radiant imperial gold' if t_obj.get('a') == 'IMPERIAL_GOLD' else ('frost glacial cyan' if t_obj.get('a') == 'GLACIAL_ICE' else 'molten forge amber'))} color with subtle dark drop shadow for maximum legibility, completely clear of facial features, and strictly NO text in the bottom half.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
@@ -644,7 +650,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c}) with intra-shot tilt/pan, lens and lighting",\n'
         '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action with tracking parallax, lens and lighting",\n'
         '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist extreme resolve portrait with intra-shot glance and lighting",\n'
-        '  "thumbnail_prompt": "High-contrast 9:16 portrait in setting with bold hook text suggestion, upper 20%-45% safe zone clear",\n'
+        '  "thumbnail_prompt": "High-contrast 9:16 vertical portrait with centered upper-third distressed bold typography reading: \\"[HOOK_BANNER]\\", color with dark drop shadow, clear of face, strictly no bottom text, strictly two arms",\n'
         '  "youtube_title": "⚡ Hook Title 🏛️ #shorts #stoicism",\n'
         '  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n🤔 QUESTION:\\n1️⃣ Option 1\\n2️⃣ Option 2\\n\\n🏛️ Subscribe to @EchoesOfWisdomOfficial\\n\\n#stoicism #shorts",\n'
         '  "youtube_tags": "stoicism, echoes of wisdom, stoic philosophy, discipline, mental strength, self improvement, marcus aurelius, daily stoic, shorts",\n'
@@ -689,7 +695,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.3 // DYNAMIC FLOW CINEMATOGRAPHY MATRIX</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.4 // FLOW INTRA-SHOT KINETICS & TYPOGRAPHY PROMPTS</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -822,9 +828,17 @@ with tab1:
                 t_obj_match = next((t for t in THEMES_DATABASE if t["h"].upper() == qp_hook.strip().upper()), THEMES_DATABASE[16])
                 s_obj = SETTINGS_MATRIX[3]
                 pkg = build_curated_stoic_package(t_obj_match, "Heavy waterwheel turning against turbulent mountain river currents", s_obj, "PUNCH_FLASH")
+                clean_h = qp_hook.strip().upper()
                 pkg["script"] = qp_script.strip()
-                pkg["hook_banner"] = qp_hook.strip().upper()
+                pkg["hook_banner"] = clean_h
                 pkg["playlist"] = qp_pl
+                color_desc = "radiant imperial gold" if t_obj_match.get("a") == "IMPERIAL_GOLD" else ("frost glacial cyan" if t_obj_match.get("a") == "GLACIAL_ICE" else "molten forge amber")
+                pkg["thumbnail_prompt"] = (
+                    f"Dramatic 9:16 vertical cinematic portrait of a mature stoic philosopher with weathered features and salt-and-pepper beard in {s_obj['n'].lower()}, "
+                    f"intense steady gaze, cinematic volumetric lighting. Prominently centered in the upper-third (20% to 35% from the top margin, strictly above character's head) is massive, ultra-bold typography reading exactly: \"{clean_h}\". "
+                    f"The text is rendered in thick distressed sans-serif block lettering, high-contrast {color_desc} color with a dark ambient drop shadow for maximum legibility against the background. "
+                    f"Text does not obscure the face. Strictly NO text in the lower half of the frame. Flawless human anatomy, strictly two arms."
+                )
                 timings, v_name = asyncio.run(synthesize_speech_timed(pkg["script"], DRAFT_AUDIO_PATH, api_key=k))
                 
                 draft_data = {
@@ -944,7 +958,7 @@ with tab1:
             ("SCENE 2 (Macro - Dynamic Probe/Whip)", "scene2_prompt"), 
             ("SCENE 3 (Action - Tracking Parallax Arc)", "scene3_prompt"), 
             ("SCENE 4 (Resolve - Portrait Lighting Shift)", "scene4_prompt"), 
-            ("THUMBNAIL (9:16 - Upper Safe Zone)", "thumbnail_prompt")
+            ("THUMBNAIL (9:16 - Embedded Typography)", "thumbnail_prompt")
         ]):
             st.text_area(lbl, pkg.get(k, ""), height=80)
             render_copy(f"pr_{i}", f"COPY {lbl}", pkg.get(k, ""))
