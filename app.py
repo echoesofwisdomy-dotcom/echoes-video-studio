@@ -1158,21 +1158,19 @@ with tab2:
                 st.session_state["rendered_director_style"] = active_style
 
                 v_filters = []
-for i in range(num_clips):
-    filters_for_clip = [
-        f"trim=0:4",
-        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-        # Overscale to 1120x1980
-        f"scale=1120:1980:force_original_aspect_ratio=increase",
-        # Shift crop by -10px and -15px to push the watermark outside the 1080x1920 frame
-        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
-        f"fps=25"
-    ]
+                for i in range(num_clips):
+                    filters_for_clip = [
+                        f"trim=0:4",
+                        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
+                        f"scale=1120:1980:force_original_aspect_ratio=increase",
+                        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
+                        f"fps=25"
+                    ]
                     
                     # Optional digital zoompan (only if Flow camera motion wasn't used)
                     if i == 0 and apply_digital_zoom:
                         z_step = 0.15 / max(1, (clip_target_dur * 25))
-                        filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(iw/zoom/2)':d=1:s=1080x1920:fps=25")
+                        filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
 
                     # CutCap Transitions between scene cuts
                     if i > 0 and flash_intensity > 0:
@@ -1406,27 +1404,26 @@ for i in range(num_clips):
             st.rerun()
 
 # --- TAB 3: QUEUE LEDGER & EXCEL TRACKER ---
-with tab3:
-    st.markdown("### Content Tracker & Export")
-    
-    if os.path.exists(EXCEL_TRACKER_PATH):
-        with open(EXCEL_TRACKER_PATH, "rb") as ef:
-            st.download_button(
-                "Download Updated Content Tracker (.xlsx)",
-                ef.read(),
-                "Echoes_Of_Wisdom_Content_Tracker.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        st.caption("Contains all scheduled rows with metadata, tags, and Drive folder links.")
-    else:
-        st.info("Excel tracker will initialize automatically on your first locked video.")
+tab3.markdown("### Content Tracker & Export")
 
-    st.markdown(f"### Scheduled Queue Ledger ({len(db.get('scheduled_videos', []))})")
-    for item in reversed(db.get("scheduled_videos", [])):
-        st.markdown(f"""
-        <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
-            <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
-            <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
-            <div style="color:#64748B;">📁 {item.get('file')} | 📺 {item.get('playlist', 'Hard Truths')}</div>
-        </div>
-        """, unsafe_allow_html=True)
+if os.path.exists(EXCEL_TRACKER_PATH):
+    with open(EXCEL_TRACKER_PATH, "rb") as ef:
+        tab3.download_button(
+            "Download Updated Content Tracker (.xlsx)",
+            ef.read(),
+            "Echoes_Of_Wisdom_Content_Tracker.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    tab3.caption("Contains all scheduled rows with metadata, tags, and Drive folder links.")
+else:
+    tab3.info("Excel tracker will initialize automatically on your first locked video.")
+
+tab3.markdown(f"### Scheduled Queue Ledger ({len(db.get('scheduled_videos', []))})")
+for item in reversed(db.get("scheduled_videos", [])):
+    tab3.markdown(f"""
+    <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
+        <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
+        <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
+        <div style="color:#64748B;">📁 {item.get('file')} | 📺 {item.get('playlist', 'Hard Truths')}</div>
+    </div>
+    """, unsafe_allow_html=True)
