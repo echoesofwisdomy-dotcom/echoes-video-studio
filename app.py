@@ -1148,14 +1148,16 @@ with tab2:
                 st.session_state["rendered_director_style"] = active_style
 
                 v_filters = []
-                for i in range(num_clips):
-                    filters_for_clip = [
-                        f"trim=0:4",
-                        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-                        f"scale=1080:1920:force_original_aspect_ratio=increase",
-                        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2",
-                        f"fps=25"
-                    ]
+for i in range(num_clips):
+    filters_for_clip = [
+        f"trim=0:4",
+        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
+        # Step 1: Slightly overscale the video to 1120x1980 so the edges extend past the frame
+        f"scale=1120:1980:force_original_aspect_ratio=increase",
+        # Step 2: Crop back down to 1080x1920, shifted slightly up & left (-10px) to clip out the watermark
+        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
+        f"fps=25"
+    ]
                     
                     # Optional digital zoompan (only if Flow camera motion wasn't used)
                     if i == 0 and apply_digital_zoom:
