@@ -602,7 +602,14 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
         f"and execute your labor despite inner protest. Silence your restless mind and remember that only—"
     )
     
-    char_desc = "An authentic mature stoic philosopher with a weathered lined face, piercing calm eyes, messy salt-and-pepper hair, thick natural beard, draped in an authentic dark woolen ancient mantle. Strictly two arms only, hands resting calmly inside woolen mantle folds, flawless human anatomy."
+    CHARACTER_ARCHETYPES = [
+        "An authentic mature Roman centurion with a stern weathered face, short military crop, subtle facial scar, wearing polished dark iron shoulder plates over a crimson tunic. Strictly two arms only, flawless human anatomy.",
+        "An ancient Eastern scholar with calm penetrating eyes, fine traditional silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
+        "A hooded desert ascetic with sun-bronzed skin, piercing eyes, wrapped in rugged linen travel cloakes against windblown dust. Strictly two arms only, flawless human anatomy.",
+        "A focused medieval blacksmith with soot-dusted cheeks, intense focused gaze, rolled leather sleeves showing muscular forearms. Strictly two arms only, flawless human anatomy.",
+        "An authentic mature stoic philosopher with a weathered lined face, calm meditative eyes, messy salt-and-pepper hair and beard, draped in a dark woolen mantle. Strictly two arms only, flawless human anatomy."
+    ]
+    char_desc = random.choice(CHARACTER_ARCHETYPES)
 
     return {
         "title_concept": t_obj["t"],
@@ -639,11 +646,14 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
     style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["PUNCH_FLASH"])
     
-    char_constraint = (
-        "Character: An authentic mature stoic philosopher with a weathered lined face, piercing calm eyes, "
-        "messy salt-and-pepper hair, thick natural beard, draped in an authentic dark woolen ancient mantle. "
-        "Strictly two arms only, hands resting calmly inside woolen mantle folds, flawless human anatomy."
-    )
+    CHARACTER_ARCHETYPES = [
+        "An authentic mature Roman centurion with a stern weathered face, short military crop, subtle facial scar, wearing polished dark iron shoulder plates over a crimson tunic. Strictly two arms only, flawless human anatomy.",
+        "An ancient Eastern scholar with calm penetrating eyes, fine traditional silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
+        "A hooded desert ascetic with sun-bronzed skin, piercing eyes, wrapped in rugged linen travel cloakes against windblown dust. Strictly two arms only, flawless human anatomy.",
+        "A focused medieval blacksmith with soot-dusted cheeks, intense focused gaze, rolled leather sleeves showing muscular forearms. Strictly two arms only, flawless human anatomy.",
+        "An authentic mature stoic philosopher with a weathered lined face, calm meditative eyes, messy salt-and-pepper hair and beard, draped in a dark woolen mantle. Strictly two arms only, flawless human anatomy."
+    ]
+    char_desc = random.choice(CHARACTER_ARCHETYPES)
     
     prompt = (
         f"You are Executive Creative Director for 'Echoes of Wisdom' (9:16 vertical short-form reels).\n"
@@ -657,7 +667,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         f"- Color & Atmosphere: {style_meta['grade']}\n"
         f"FORBIDDEN HOOKS (DO NOT USE):\n{used_h}\n"
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops back to line 1.\n"
-        f"4. Google Flow Character Rules: {char_constraint}\n"
+        f"4. Google Flow Character Rules: {char_desc}\n"
         f"5. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and explicitly embed the exact intra-shot progression (e.g. 0s-2s and 2s-4s), lens focal length, and lighting atmosphere.\n"
         f"6. THUMBNAIL TYPOGRAPHY MANDATE: The 'thumbnail_prompt' MUST command bold typography reading exactly: 'typography reading exactly: \"[HOOK_BANNER]\"'. Specify vertical placement strictly in the upper third (20% to 35% from top margin, above character's head), massive distressed sans-serif block lettering, high-contrast {('radiant imperial gold' if t_obj.get('a') == 'IMPERIAL_GOLD' else ('frost glacial cyan' if t_obj.get('a') == 'GLACIAL_ICE' else 'molten forge amber'))} color with subtle dark drop shadow for maximum legibility, completely clear of facial features, and strictly NO text in the bottom half.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
@@ -717,7 +727,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v7.0 // VIRAL RETENTION & KINETIC ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v7.2 // DYNAMIC VISUAL DIVERSITY & ANTI-REPETITION SUITE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1148,21 +1158,20 @@ with tab2:
                 st.session_state["rendered_director_style"] = active_style
 
                 v_filters = []
-for i in range(num_clips):
-    filters_for_clip = [
-        f"trim=0:4",
-        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-        # Step 1: Slightly overscale the video to 1120x1980 so the edges extend past the frame
-        f"scale=1120:1980:force_original_aspect_ratio=increase",
-        # Step 2: Crop back down to 1080x1920, shifted slightly up & left (-10px) to clip out the watermark
-        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
-        f"fps=25"
-    ]
+                for i in range(num_clips):
+                    filters_for_clip = [
+                        f"trim=0:4",
+                        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
+                        # Overscale & Shift Crop to automatically cut out Google Flow watermark
+                        f"scale=1120:1980:force_original_aspect_ratio=increase",
+                        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
+                        f"fps=25"
+                    ]
                     
                     # Optional digital zoompan (only if Flow camera motion wasn't used)
                     if i == 0 and apply_digital_zoom:
                         z_step = 0.15 / max(1, (clip_target_dur * 25))
-                        filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=25")
+                        filters_for_clip.append(f"zoompan=z='min(zoom+{z_step:.5f},1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(iw/zoom/2)':d=1:s=1080x1920:fps=25")
 
                     # CutCap Transitions between scene cuts
                     if i > 0 and flash_intensity > 0:
