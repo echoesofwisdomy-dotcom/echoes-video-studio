@@ -347,7 +347,7 @@ THEMES_DATABASE = [
 
     # Playlist: Hard Truths
     {"id": "MEMENTO_MORI", "pl": "Hard Truths", "p": "Radical Acceptance", "t": "Memento Mori", "prem": "You could leave life right now. Let that determine what you do, what you say, and what you think.", "h": "YOU ARE RUNNING OUT OF TIME", "a": "FORGE_AMBER", "m": ["Fine golden sand falling steadily through an ancient hourglass neck", "Shadow lengthening across Roman stone numerals on a sundial face", "Single dried autumn leaf detaching and drifting on a brisk wind"]},
-    {"id": "BURDEN_EXPECTATIONS", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self-deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
+    {"id": "BURDEN_EXPECTATIONS", "pl": "Hard Truths", "p": "Mental Fortress", "t": "The Myth of Fairness", "prem": "The universe owes you nothing. Expecting life to treat you gently because you are good is self- deception.", "h": "THE WORLD OWES YOU NOTHING", "a": "GLACIAL_ICE", "m": ["Jagged granite headland taking crashing ocean waves without yielding", "Desert sandstorm sweeping across an ancient stone obelisk", "Heavy bronze coin falling indifferently on stone whether heads or tails"]},
     {"id": "DOPAMINE_BANKRUPT", "pl": "Hard Truths", "p": "Relentless Focus", "t": "Dopamine Bankruptcy", "prem": "You are not tired from hard work; you are drained from chasing worthless noise. Guard your stillness fiercely.", "h": "YOU ARE DRAINED BY NOISE", "a": "FORGE_AMBER", "m": ["Antique bronze oil lamp burning steadily down to deep amber embers", "Clear mountain spring water settling completely transparent in a vial", "Iron pendulum slowing to a complete, balanced standstill"]},
     {"id": "SUNK_COST_TRAP", "pl": "Hard Truths", "p": "Relentless Focus", "t": "The Sunk Cost Trap", "prem": "Just because you spent years making a mistake does not mean you owe it your future. Cut the cord immediately.", "h": "STOP FEEDING DEAD DREAMS", "a": "FORGE_AMBER", "m": ["Sharp pruning sickle cleanly slicing an anchor rope under high tension", "Heavy dry branch snapping off a centuries-old oak in storm winds", "Antique weighing scale dumping heavy slag to return to equilibrium"]},
     {"id": "MYTH_OF_WAITING", "pl": "Hard Truths", "p": "Relentless Focus", "t": "The Myth of Motivation", "prem": "Motivation is a fair-weather friend. Discipline is doing the work even when your emotions protest.", "h": "ACTION CURES SELF-PITY", "a": "FORGE_AMBER", "m": ["Heavy waterwheel turning relentlessly against turbulent mountain river currents", "Flint and steel striking violently to generate a bright spark", "Team of draft oxen pulling a heavy plow through frost-hardened soil"]},
@@ -365,14 +365,18 @@ DIVERSE_ARCHETYPES = [
     "An ancient Eastern scholar with calm penetrating eyes, fine traditional silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
     "A hooded desert ascetic with sun-bronzed skin, piercing eyes, wrapped in rugged linen travel cloaks against windblown dust. Strictly two arms only, flawless human anatomy.",
     "A focused medieval blacksmith with soot-dusted cheeks, intense focused gaze, rolled leather sleeves showing muscular forearms. Strictly two arms only, flawless human anatomy.",
-    "A Greek Spartan strategist with sharp weathered jawline, intense focused gaze, wrapped in a heavy crimson woolen mantle over bronze greaves. Strictly two arms only, flawless human anatomy."
+    "A Greek Spartan strategist with sharp weathered jawline, intense focused gaze, wrapped in a heavy crimson woolen mantle over bronze greaves. Strictly two arms only, flawless human anatomy.",
+    "A Renaissance alchemist in a candlelit vaulted library, lined pensive face, draped in deep burgundy velvet robes. Strictly two arms only, flawless human anatomy.",
+    "An authentic mature stoic philosopher with a weathered lined face, calm meditative eyes, messy salt-and-pepper hair and beard, draped in a dark woolen mantle. Strictly two arms only, flawless human anatomy."
 ]
 
 SETTINGS_MATRIX = [
     {"n": "The Ancient Citadel Colonnades", "d": "Within towering monolithic ancient stone colonnades and rain-slicked courtyards with bronze braziers casting dramatic shadows."},
     {"n": "The Windswept Coastal Cliffs", "d": "Atop high windswept coastal cliffs overlooking turbulent dark ocean waves crashing against jagged basalt rocks in atmospheric fog."},
     {"n": "The Secluded Stone Workshop", "d": "Inside a secluded ancient stone workshop with drafting parchment, beeswax candles, deep shadows, and glowing forge embers."},
-    {"n": "The Rugged Mountain Summit", "d": "Traversing a barren rocky mountain pass under cold dramatic grey skies and swirling morning mist beside weathered stone shrines."}
+    {"n": "The Rugged Mountain Summit", "d": "Traversing a barren rocky mountain pass under cold dramatic grey skies and swirling morning mist beside weathered stone shrines."},
+    {"n": "The Subterranean Torchlit Vault", "d": "Inside an ancient subterranean granite archive illuminated by burning torchlight and flickering oil lamps."},
+    {"n": "The Sunken Roman Temple", "d": "Among half-submerged Corinthian columns and calm reflection pools beneath overcast slate-grey skies."}
 ]
 
 # ---------------------------------------------------------
@@ -616,6 +620,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
         "title_concept": t_obj["t"],
         "playlist": t_obj.get("pl", "Hard Truths"),
         "hook_banner": hook,
+        "video_overlay_text": hook,
         "subtitle_archetype": t_obj["a"],
         "director_style": style_key,
         "script": script,
@@ -644,7 +649,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
     clean_handle = get_persistent_handle()
-    used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-35:]]) or "None."
+    used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-40:]]) or "None."
     style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["PUNCH_FLASH"])
     
     char_desc = random.choice(DIVERSE_ARCHETYPES)
@@ -662,13 +667,15 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         f"FORBIDDEN HOOKS (DO NOT USE):\n{used_h}\n"
         f"RULES:\n1. Exactly 65-70 words.\n2. Line 1 hook: 3-4 words direct challenge.\n3. Last line seamlessly loops back to line 1.\n"
         f"4. Google Flow Character Rules: {char_desc}\n"
-        f"5. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and explicitly embed the exact intra-shot progression (e.g. 0s-2s and 2s-4s), lens focal length, and lighting atmosphere.\n"
-        f"6. THUMBNAIL TYPOGRAPHY MANDATE: The 'thumbnail_prompt' MUST command bold typography reading exactly: 'typography reading exactly: \"[HOOK_BANNER]\"'. Specify vertical placement strictly in the upper third (20% to 35% from top margin, above character's head), massive distressed sans-serif block lettering, high-contrast {('radiant imperial gold' if t_obj.get('a') == 'IMPERIAL_GOLD' else ('frost glacial cyan' if t_obj.get('a') == 'GLACIAL_ICE' else 'molten forge amber'))} color with subtle dark drop shadow for maximum legibility, completely clear of facial features, and strictly NO text in the bottom half.\n"
+        f"5. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and explicitly embed the exact intra-shot progression (0s-2s and 2s-4s), lens focal length, and lighting atmosphere.\n"
+        f"6. DYNAMIC OVERLAY VARIATION: Provide a 'video_overlay_text' (2-4 uppercase words) that is distinct from the primary 'hook_banner', giving viewers an immediate secondary hook without feeling repetitive.\n"
+        f"7. THUMBNAIL TYPOGRAPHY MANDATE: The 'thumbnail_prompt' MUST command bold typography reading exactly: 'typography reading exactly: \"[HOOK_BANNER]\"'. Specify vertical placement strictly in the upper third (20% to 35% from top margin, above character's head), massive distressed sans-serif block lettering, high-contrast {('radiant imperial gold' if t_obj.get('a') == 'IMPERIAL_GOLD' else ('frost glacial cyan' if t_obj.get('a') == 'GLACIAL_ICE' else 'molten forge amber'))} color with subtle dark drop shadow for maximum legibility, completely clear of facial features, and strictly NO text in the bottom half.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
         "{\n"
         '  "title_concept": "Short Concept Title",\n'
         f'  "playlist": "{t_obj.get("pl", "Hard Truths")}",\n'
         '  "hook_banner": "3-4 WORDS IN CAPS",\n'
+        '  "video_overlay_text": "2-4 WORDS FOR VIDEO BADGE",\n'
         f'  "subtitle_archetype": "{t_obj["a"]}",\n'
         f'  "director_style": "{style_key}",\n'
         '  "script": "Full 65-70 word script.",\n'
@@ -721,7 +728,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v7.3 // WATERMARK INPAINT & VISUAL DIVERSITY SUITE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v7.4 // DYNAMIC AESTHETIC & PURE OPTICAL CROP SUITE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -865,6 +872,7 @@ with tab1:
                 clean_h = qp_hook.strip().upper()
                 pkg["script"] = qp_script.strip()
                 pkg["hook_banner"] = clean_h
+                pkg["video_overlay_text"] = clean_h
                 pkg["playlist"] = qp_pl
                 color_desc = "radiant imperial gold" if t_obj_match.get("a") == "IMPERIAL_GOLD" else ("frost glacial cyan" if t_obj_match.get("a") == "GLACIAL_ICE" else "molten forge amber")
                 pkg["thumbnail_prompt"] = (
@@ -973,7 +981,7 @@ with tab1:
         st.markdown(f"**Setting:** {p_data.get('s', 'Citadel Colonnades')} &nbsp;|&nbsp; **Voice Bed:** `{p_data.get('voice_used', 'Christopher')}`")
         st.markdown(f"**Cinematography Style:** `{CINEMATOGRAPHY_MATRIX.get(active_director_style, CINEMATOGRAPHY_MATRIX['PUNCH_FLASH'])['label']}`")
         st.markdown(f"**Scene 2 Metaphor:** {p_data.get('m', 'Flint and steel')}")
-        st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
+        st.info(f"🎯 **Hook:** `{pkg.get('hook_banner')}` &nbsp;|&nbsp; **Video Badge:** `{pkg.get('video_overlay_text', pkg.get('hook_banner'))}`\n\n🗣️ **Script:**\n\n*{pkg.get('script')}*")
         
         if os.path.exists(DRAFT_AUDIO_PATH):
             st.audio(DRAFT_AUDIO_PATH)
@@ -1019,9 +1027,9 @@ with tab2:
         st.markdown(f'<div style="color: #34D399; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📁 Files loaded: {num_clips} clips ready — {", ".join([c.name for c in uploaded_clips])}</div>', unsafe_allow_html=True)
 
     # ---------------------------------------------------------
-    # DYNAMIC DIRECTOR FX & FLOW INTEGRATION TOGGLES
+    # DYNAMIC DIRECTOR FX & OVERLAY STYLING TOGGLES
     # ---------------------------------------------------------
-    st.markdown("### 🎬 2. Post-Render Polish & CutCap Transitions")
+    st.markdown("### 🎬 2. Post-Render Polish & Visual Overlay Styling")
     active_style_key = st.session_state.get("rendered_director_style", "PUNCH_FLASH")
     
     col_fx1, col_fx2 = st.columns(2)
@@ -1038,6 +1046,21 @@ with tab2:
             "CutCap Transition Flash Length",
             min_value=0.0, max_value=0.25, value=0.12, step=0.02,
             help="Duration of the white shutter flash between scene cuts (0 = Hard Cut, 0.12s = Recommended CutCap Flash)."
+        )
+
+    col_ov1, col_ov2 = st.columns(2)
+    with col_ov1:
+        overlay_style = st.selectbox(
+            "On-Screen Hook Banner Style",
+            ["Glass Box (Classic)", "Floating Shadow (No Box)", "Minimalist Top Pill", "Subtle Border Frame"],
+            index=0,
+            help="Select how the opening hook badge is displayed on screen."
+        )
+    with col_ov2:
+        custom_overlay_txt = st.text_input(
+            "Custom Video Badge Text (Optional)",
+            value=st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("video_overlay_text", ""),
+            placeholder="Leave empty to use concept hook"
         )
 
     col_opt1, col_opt2, col_opt3 = st.columns(3)
@@ -1120,7 +1143,7 @@ with tab2:
         elif not uploaded_clips or num_clips < 2:
             st.error(f"Please upload at least 2 video clips. (Currently loaded: {num_clips})")
         else:
-            with st.spinner(f"⚡ Applying Director cuts, watermark inpaint & audio ducking across {num_clips} clips..."):
+            with st.spinner(f"⚡ Applying Director cuts, optical crop & audio ducking across {num_clips} clips..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
                 a_path = DRAFT_AUDIO_PATH
@@ -1145,21 +1168,31 @@ with tab2:
                 clean_ass_path = ass_p.replace("'", "\\'").replace(":", "\\:")
                 clean_fonts_dir = FONTS_DIR.replace("'", "\\'").replace(":", "\\:")
 
-                banner = pkg.get("hook_banner", "ACTION CURES SELF-PITY").replace("'", "\\'").replace(":", "\\:")
+                active_overlay_text = custom_overlay_txt.strip() if custom_overlay_txt.strip() else pkg.get("video_overlay_text", pkg.get("hook_banner", "ACTION CURES SELF-PITY"))
+                banner = active_overlay_text.replace("'", "\\'").replace(":", "\\:")
                 out_p = os.path.join(TMP_DIR, "master_output.mp4")
                 
                 active_style = chosen_director_fx
                 st.session_state["rendered_director_style"] = active_style
+
+                # Construct dynamic overlay drawtext parameter based on chosen style
+                if "Floating Shadow" in overlay_style:
+                    dt_filter = f"drawtext=text='{banner}':fontsize=42:fontcolor={arch['banner_hex']}:box=0:shadowx=3:shadowy=4:shadowcolor=black@0.9:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)'"
+                elif "Minimalist Top Pill" in overlay_style:
+                    dt_filter = f"drawtext=text='{banner}':fontsize=36:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.7:boxborderw=10:x=(w-text_w)/2:y=140:enable='between(t,0,3.5)'"
+                elif "Subtle Border Frame" in overlay_style:
+                    dt_filter = f"drawtext=text='{banner}':fontsize=40:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.65:boxborderw=14:borderw=1:bordercolor={arch['banner_hex']}@0.5:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)'"
+                else: # Glass Box (Classic)
+                    dt_filter = f"drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)'"
 
                 v_filters = []
                 for i in range(num_clips):
                     filters_for_clip = [
                         f"trim=0:4",
                         f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-                        f"scale=1080:1920:force_original_aspect_ratio=increase",
-                        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2",
-                        # FFmpeg inpaint erases Google Flow star watermark directly
-                        f"delogo=x=875:y=1715:w=130:h=130:show=0",
+                        # Pure optical scale & top-crop removing bottom 254px (completely clears watermark)
+                        f"scale=1224:2174:force_original_aspect_ratio=increase",
+                        f"crop=1080:1920:(in_w-1080)/2:0",
                         f"fps=25"
                     ]
                     
@@ -1184,7 +1217,7 @@ with tab2:
                 
                 concat_labels = "".join([f"[v{i}]" for i in range(num_clips)])
                 v_filters.append(f"{concat_labels}concat=n={num_clips}:v=1:a=0[vb];")
-                v_filters.append(f"[vb]drawtext=text='{banner}':fontsize=44:fontcolor={arch['banner_hex']}:box=1:boxcolor=black@0.85:boxborderw=18:x=(w-text_w)/2:y=180:enable='between(t,0,3.5)',ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]")
+                v_filters.append(f"[vb]{dt_filter},ass='{clean_ass_path}':fontsdir='{clean_fonts_dir}'[vsub]")
                 
                 inputs = []
                 for cp in c_paths: inputs.extend(['-i', cp])
