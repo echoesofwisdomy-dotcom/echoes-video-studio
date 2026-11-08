@@ -116,6 +116,7 @@ DRAFT_AUDIO_PATH = os.path.join(DATA_DIR, "active_audio.mp3")
 DRAFT_VAULT_PATH = os.path.join(DATA_DIR, "draft_vault.json")
 API_KEY_FILE = os.path.join(DATA_DIR, "gemini_key.txt")
 GSHEET_URL_FILE = os.path.join(DATA_DIR, "gsheet_webhook.txt")
+CHANNEL_HANDLE_FILE = os.path.join(DATA_DIR, "channel_handle.txt")
 EXCEL_TRACKER_PATH = os.path.join(DATA_DIR, "Echoes_Of_Wisdom_Content_Tracker.xlsx")
 
 @st.cache_resource(show_spinner=False)
@@ -178,6 +179,26 @@ def save_persistent_gsheet_url(url_val):
     st.session_state["user_sheet_url"] = clean
     try:
         with open(GSHEET_URL_FILE, "w", encoding="utf-8") as f:
+            f.write(clean)
+    except Exception: pass
+
+def get_persistent_handle():
+    if "CHANNEL_HANDLE" in st.secrets:
+        return str(st.secrets["CHANNEL_HANDLE"]).strip()
+    if os.path.exists(CHANNEL_HANDLE_FILE):
+        try:
+            with open(CHANNEL_HANDLE_FILE, "r", encoding="utf-8") as f:
+                val = f.read().strip()
+                if val: return val
+        except Exception: pass
+    return st.session_state.get("user_channel_handle", "@AJ-Echoes-of-Wisdom").strip()
+
+def save_persistent_handle(handle_val):
+    clean = handle_val.strip()
+    if clean and not clean.startswith("@"): clean = "@" + clean
+    st.session_state["user_channel_handle"] = clean
+    try:
+        with open(CHANNEL_HANDLE_FILE, "w", encoding="utf-8") as f:
             f.write(clean)
     except Exception: pass
 
@@ -601,12 +622,12 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
             f"The typography does not obscure the character's face. Strictly NO text in the lower half of the frame. Flawless human anatomy, strictly two arms."
         ),
         "youtube_title": f"⚡ {hook.title()} 🏛️ #shorts #stoicism",
-        "youtube_description": f"⚡ {hook}\n\n{premise}\n\n🤔 TODAY'S STOIC QUESTION:\nWhen facing uninvited chaos:\n1️⃣ Stand resolute in silence\n2️⃣ Defend your territory verbally\n\nDrop 1 or 2 below! 👇\n\n🏛️ Subscribe to @EchoesOfWisdomOfficial for timeless clarity.\n\n#stoicism #stoicmindset #discipline #echoesofwisdom #shorts",
+        "youtube_description": f"⚡ {hook}\n\n{premise}\n\n🤔 TODAY'S STOIC QUESTION:\nWhen facing uninvited chaos:\n1️⃣ Stand resolute in silence\n2️⃣ Defend your territory verbally\n\nDrop 1 or 2 below! 👇\n\n🏛️ Subscribe to {get_persistent_handle()} for timeless clarity.\n\n#stoicism #stoicmindset #discipline #echoesofwisdom #shorts",
         "youtube_tags": "stoicism, echoes of wisdom, stoic quotes, daily stoic, discipline, self improvement, marcus aurelius, mental strength, shorts",
         "youtube_pinned_comment": "When facing uninvited chaos: 1️⃣ Stand resolute in silence, or 2️⃣ React immediately? Drop 1 or 2 below! 👇",
         "caption_hook": hook,
         "caption_lesson": premise,
-        "debate_question": "When facing uninvited chaos:",
+        "debate_question": "When faced with this choice:",
         "choice_1": "Stand resolute in silence",
         "choice_2": "Defend your territory verbally",
         "meta_hashtags": "#StoicMindset #EchoesOfWisdom #Discipline #Reels"
@@ -614,6 +635,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
 
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
+    clean_handle = get_persistent_handle()
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
     style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["PUNCH_FLASH"])
     
@@ -652,7 +674,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist extreme resolve portrait with intra-shot glance and lighting",\n'
         '  "thumbnail_prompt": "High-contrast 9:16 vertical portrait with centered upper-third distressed bold typography reading: \\"[HOOK_BANNER]\\", color with dark drop shadow, clear of face, strictly no bottom text, strictly two arms",\n'
         '  "youtube_title": "⚡ Hook Title 🏛️ #shorts #stoicism",\n'
-        '  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n🤔 QUESTION:\\n1️⃣ Option 1\\n2️⃣ Option 2\\n\\n🏛️ Subscribe to @EchoesOfWisdomOfficial\\n\\n#stoicism #shorts",\n'
+        f'  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n🤔 QUESTION:\\n1️⃣ Option 1\\n2️⃣ Option 2\\n\\n🏛️ Subscribe to {clean_handle}\\n\\n#stoicism #shorts",\n'
         '  "youtube_tags": "stoicism, echoes of wisdom, stoic philosophy, discipline, mental strength, self improvement, marcus aurelius, daily stoic, shorts",\n'
         '  "youtube_pinned_comment": "Binary debate question with 1️⃣/2️⃣ options",\n'
         '  "caption_hook": "PUNCHY 4-6 WORD HOOK",\n'
@@ -695,7 +717,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v6.4 // FLOW INTRA-SHOT KINETICS & TYPOGRAPHY PROMPTS</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v7.0 // VIRAL RETENTION & KINETIC ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -744,13 +766,21 @@ with st.expander("📅 PUBLISHING CADENCE & BATCH VAULT SETTINGS"):
 
 curr_saved_key = get_persistent_api_key()
 curr_gsheet_url = get_persistent_gsheet_url()
+curr_handle = get_persistent_handle()
 
-with st.expander("🔑 API CREDENTIALS & GOOGLE SHEETS SYNC", expanded=(not bool(curr_saved_key))):
+with st.expander("🔑 API CREDENTIALS, BRAND HANDLE & SYNC", expanded=(not bool(curr_saved_key))):
     uk = st.text_input("Gemini API Key", value=curr_saved_key, type="password", placeholder="AIzaSy...", key="user_key_input")
     if uk:
         save_persistent_api_key(uk)
         st.caption("✓ Gemini API Key active")
-        
+
+    st.divider()
+    st.markdown("#### 🏛️ YouTube & Meta Channel Handle")
+    u_h = st.text_input("Channel / Brand Handle", value=curr_handle, placeholder="@AJ-Echoes-of-Wisdom", key="user_handle_input")
+    if u_h != curr_handle:
+        save_persistent_handle(u_h)
+        st.caption(f"✓ Channel handle set to {u_h}")
+
     st.divider()
     st.markdown("#### 📊 Optional: Google Sheets Webhook Sync")
     st.caption("If you converted your sheet via File ➔ Save as Google Sheets, paste the Web app URL below to auto-sync rows in real time.")
@@ -1122,7 +1152,7 @@ with tab2:
                     filters_for_clip = [
                         f"trim=0:4",
                         f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-                        f"scale=1512:2688:force_original_aspect_ratio=increase",
+                        f"scale=1080:1920:force_original_aspect_ratio=increase",
                         f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2",
                         f"fps=25"
                     ]
@@ -1142,7 +1172,7 @@ with tab2:
                     if enable_vignette:
                         filters_for_clip.append("vignette=PI/4")
                     if enable_film_grain:
-                        filters_for_clip.append("noise=alls=10:allf=t+u")
+                        filters_for_clip.append("noise=alls=4:allf=t+u")
 
                     v_filters.append(f"[{i}:v]" + ",".join(filters_for_clip) + f"[v{i}];")
                 
@@ -1186,7 +1216,7 @@ with tab2:
                     '-filter_complex', "".join(v_filters), 
                     '-map', '[vout]', '-map', '[aout]', 
                     '-t', str(dur), 
-                    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', 
+                    '-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '2', '-crf', '22', 
                     '-c:a', 'aac', '-b:a', '192k', 
                     '-pix_fmt', 'yuv420p', out_p
                 ], capture_output=True, text=True)
@@ -1245,7 +1275,7 @@ with tab2:
         st.text_input("1. YouTube Title (100 char limit)", yt_t, key="yt_t_val")
         render_copy("yt_t", "COPY YOUTUBE TITLE", yt_t)
         
-        raw_desc = pkg.get("youtube_description", "")
+        raw_desc = pkg.get("youtube_description", "").replace("@EchoesOfWisdomOfficial", get_persistent_handle())
         st.text_area("2. YouTube Description", raw_desc, height=140, key="yt_d_val")
         render_copy("yt_d", "COPY YOUTUBE DESCRIPTION", raw_desc)
         
@@ -1276,7 +1306,7 @@ with tab2:
             f"1️⃣ {pkg.get('choice_1', 'Maintain silent composure')}\n"
             f"2️⃣ {pkg.get('choice_2', 'Defend your honor verbally')}\n\n"
             f"Drop 1 or 2 below. 👇\n\n"
-            f"• Follow @EchoesOfWisdomOfficial for timeless clarity.\n\n"
+            f"• Follow {get_persistent_handle()} for timeless clarity.\n\n"
             f"{pkg.get('meta_hashtags', '#StoicMindset #EchoesOfWisdom #Discipline #Reels')}"
         )
         st.text_area("1. Meta Reel Text", fb_cap, height=160, key="fb_cap_val")
