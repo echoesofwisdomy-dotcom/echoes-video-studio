@@ -1162,8 +1162,9 @@ with tab2:
                     filters_for_clip = [
                         f"trim=0:4",
                         f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-                        f"scale=1120:1980:force_original_aspect_ratio=increase",
-                        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
+                        # 1. Scale up slightly to push edges out
+                        # 2. Crop from the absolute top-left (0,0), permanently removing the bottom-right watermark
+                        f"crop=1080:1920:0:0",
                         f"fps=25"
                     ]
                     
