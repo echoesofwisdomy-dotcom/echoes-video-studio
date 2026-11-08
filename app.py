@@ -326,7 +326,7 @@ def to_unicode_bold(text):
     return "".join(res)
 
 # ---------------------------------------------------------
-# 3. 24 THEMES DATABASE & AUTOMATED PLAYLIST MAPPING
+# 3. 24 THEMES DATABASE & DIVERSE ARCHETYPES
 # ---------------------------------------------------------
 THEMES_DATABASE = [
     # Playlist: The art of moving in silence (stoic mindset)
@@ -358,6 +358,14 @@ THEMES_DATABASE = [
     {"id": "ANGER_POISON", "pl": "Hard Truths", "p": "Mental Fortress", "t": "Anger Is Self-Poison", "prem": "Holding onto anger is drinking poison and expecting the other person to die. Calmness is the ultimate weapon.", "h": "ANGER IS TEMPORARY MADNESS", "a": "GLACIAL_ICE", "m": ["Boiling water in a bronze cauldron cooling down to smooth stillness", "Wild brushfire hitting a wide dirt trench and running out of fuel", "Raging wild stallion brought to stillness by a steady hand on the reins"]},
     {"id": "AMOR_FATI", "pl": "Hard Truths", "p": "Radical Acceptance", "t": "Amor Fati", "prem": "Do not demand that things happen as you wish. Accept what happens as necessary and move forward.", "h": "ACCEPT WHATEVER COMES NEXT", "a": "IMPERIAL_GOLD", "m": ["Raging river flowing around boulders without slowing its descent", "Large campfire consuming whatever fuel is thrown into its flames", "Ship sail adjusting its ropes to catch crosswinds and maintain heading"]},
     {"id": "RIVER_OF_TIME", "pl": "Hard Truths", "p": "Radical Acceptance", "t": "The River of Time", "prem": "The pain you feel right now will pass. The victory you celebrate today will fade. Ground your peace in eternity.", "h": "THIS TOO SHALL PASS", "a": "IMPERIAL_GOLD", "m": ["Fast river water rushing over polished river stones under sunlight", "Ancient Roman stone ruins standing tranquil against centuries of weather", "Constellations revolving slowly in clear dark night skies over mountains"]}
+]
+
+DIVERSE_ARCHETYPES = [
+    "An authentic mature Roman centurion with a stern weathered face, short military crop, subtle facial scar, wearing polished dark iron shoulder plates over a crimson tunic. Strictly two arms only, flawless human anatomy.",
+    "An ancient Eastern scholar with calm penetrating eyes, fine traditional silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
+    "A hooded desert ascetic with sun-bronzed skin, piercing eyes, wrapped in rugged linen travel cloaks against windblown dust. Strictly two arms only, flawless human anatomy.",
+    "A focused medieval blacksmith with soot-dusted cheeks, intense focused gaze, rolled leather sleeves showing muscular forearms. Strictly two arms only, flawless human anatomy.",
+    "A Greek Spartan strategist with sharp weathered jawline, intense focused gaze, wrapped in a heavy crimson woolen mantle over bronze greaves. Strictly two arms only, flawless human anatomy."
 ]
 
 SETTINGS_MATRIX = [
@@ -602,14 +610,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
         f"and execute your labor despite inner protest. Silence your restless mind and remember that only—"
     )
     
-    CHARACTER_ARCHETYPES = [
-        "An authentic mature Roman centurion with a stern weathered face, short military crop, subtle facial scar, wearing polished dark iron shoulder plates over a crimson tunic. Strictly two arms only, flawless human anatomy.",
-        "An ancient Eastern scholar with calm penetrating eyes, fine traditional silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
-        "A hooded desert ascetic with sun-bronzed skin, piercing eyes, wrapped in rugged linen travel cloakes against windblown dust. Strictly two arms only, flawless human anatomy.",
-        "A focused medieval blacksmith with soot-dusted cheeks, intense focused gaze, rolled leather sleeves showing muscular forearms. Strictly two arms only, flawless human anatomy.",
-        "An authentic mature stoic philosopher with a weathered lined face, calm meditative eyes, messy salt-and-pepper hair and beard, draped in a dark woolen mantle. Strictly two arms only, flawless human anatomy."
-    ]
-    char_desc = random.choice(CHARACTER_ARCHETYPES)
+    char_desc = random.choice(DIVERSE_ARCHETYPES)
 
     return {
         "title_concept": t_obj["t"],
@@ -623,7 +624,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
         "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) traversing {sett_obj['n'].lower()}. {style_meta['cam_s3']}. LENS: {style_meta['lens_s3']}. {style_meta['grade']}. Realistic cloth physics, strictly two arms.",
         "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) intense composure shot. {style_meta['cam_s4']}. LENS: {style_meta['lens_s4']}. {style_meta['grade']}. Piercing stoic resolve, flawless human face, cold breath mist.",
         "thumbnail_prompt": (
-            f"Dramatic 9:16 vertical cinematic portrait of a mature stoic philosopher with weathered features and salt-and-pepper beard in {sett_obj['n'].lower()}, "
+            f"Dramatic 9:16 vertical cinematic portrait of {char_desc} in {sett_obj['n'].lower()}, "
             f"intense steady gaze, cinematic volumetric lighting. Prominently centered in the upper-third (20% to 35% from the top margin, strictly above character's head) is massive, ultra-bold typography reading exactly: \"{hook}\". "
             f"The text is rendered in thick distressed sans-serif block lettering, high-contrast {'radiant imperial gold' if t_obj.get('a') == 'IMPERIAL_GOLD' else ('frost glacial cyan' if t_obj.get('a') == 'GLACIAL_ICE' else 'molten forge amber')} color with a dark ambient drop shadow for maximum legibility against atmospheric fog. "
             f"The typography does not obscure the character's face. Strictly NO text in the lower half of the frame. Flawless human anatomy, strictly two arms."
@@ -643,17 +644,10 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
     clean_handle = get_persistent_handle()
-    used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-30:]]) or "None."
+    used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-35:]]) or "None."
     style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["PUNCH_FLASH"])
     
-    CHARACTER_ARCHETYPES = [
-        "An authentic mature Roman centurion with a stern weathered face, short military crop, subtle facial scar, wearing polished dark iron shoulder plates over a crimson tunic. Strictly two arms only, flawless human anatomy.",
-        "An ancient Eastern scholar with calm penetrating eyes, fine traditional silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
-        "A hooded desert ascetic with sun-bronzed skin, piercing eyes, wrapped in rugged linen travel cloakes against windblown dust. Strictly two arms only, flawless human anatomy.",
-        "A focused medieval blacksmith with soot-dusted cheeks, intense focused gaze, rolled leather sleeves showing muscular forearms. Strictly two arms only, flawless human anatomy.",
-        "An authentic mature stoic philosopher with a weathered lined face, calm meditative eyes, messy salt-and-pepper hair and beard, draped in a dark woolen mantle. Strictly two arms only, flawless human anatomy."
-    ]
-    char_desc = random.choice(CHARACTER_ARCHETYPES)
+    char_desc = random.choice(DIVERSE_ARCHETYPES)
     
     prompt = (
         f"You are Executive Creative Director for 'Echoes of Wisdom' (9:16 vertical short-form reels).\n"
@@ -727,7 +721,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v7.2 // DYNAMIC VISUAL DIVERSITY & ANTI-REPETITION SUITE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v7.3 // WATERMARK INPAINT & VISUAL DIVERSITY SUITE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -874,7 +868,7 @@ with tab1:
                 pkg["playlist"] = qp_pl
                 color_desc = "radiant imperial gold" if t_obj_match.get("a") == "IMPERIAL_GOLD" else ("frost glacial cyan" if t_obj_match.get("a") == "GLACIAL_ICE" else "molten forge amber")
                 pkg["thumbnail_prompt"] = (
-                    f"Dramatic 9:16 vertical cinematic portrait of a mature stoic philosopher with weathered features and salt-and-pepper beard in {s_obj['n'].lower()}, "
+                    f"Dramatic 9:16 vertical cinematic portrait of a mature stoic warrior in {s_obj['n'].lower()}, "
                     f"intense steady gaze, cinematic volumetric lighting. Prominently centered in the upper-third (20% to 35% from the top margin, strictly above character's head) is massive, ultra-bold typography reading exactly: \"{clean_h}\". "
                     f"The text is rendered in thick distressed sans-serif block lettering, high-contrast {color_desc} color with a dark ambient drop shadow for maximum legibility against the background. "
                     f"Text does not obscure the face. Strictly NO text in the lower half of the frame. Flawless human anatomy, strictly two arms."
@@ -1126,7 +1120,7 @@ with tab2:
         elif not uploaded_clips or num_clips < 2:
             st.error(f"Please upload at least 2 video clips. (Currently loaded: {num_clips})")
         else:
-            with st.spinner(f"⚡ Applying Director cuts & audio ducking across {num_clips} clips..."):
+            with st.spinner(f"⚡ Applying Director cuts, watermark inpaint & audio ducking across {num_clips} clips..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
                 a_path = DRAFT_AUDIO_PATH
@@ -1162,9 +1156,10 @@ with tab2:
                     filters_for_clip = [
                         f"trim=0:4",
                         f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-                        # 1. Scale up slightly to push edges out
-                        # 2. Crop from the absolute top-left (0,0), permanently removing the bottom-right watermark
-                        f"crop=1080:1920:0:0",
+                        f"scale=1080:1920:force_original_aspect_ratio=increase",
+                        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2",
+                        # FFmpeg inpaint erases Google Flow star watermark directly
+                        f"delogo=x=875:y=1715:w=130:h=130:show=0",
                         f"fps=25"
                     ]
                     
@@ -1405,26 +1400,27 @@ with tab2:
             st.rerun()
 
 # --- TAB 3: QUEUE LEDGER & EXCEL TRACKER ---
-tab3.markdown("### Content Tracker & Export")
+with tab3:
+    st.markdown("### Content Tracker & Export")
+    
+    if os.path.exists(EXCEL_TRACKER_PATH):
+        with open(EXCEL_TRACKER_PATH, "rb") as ef:
+            st.download_button(
+                "Download Updated Content Tracker (.xlsx)",
+                ef.read(),
+                "Echoes_Of_Wisdom_Content_Tracker.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        st.caption("Contains all scheduled rows with metadata, tags, and Drive folder links.")
+    else:
+        st.info("Excel tracker will initialize automatically on your first locked video.")
 
-if os.path.exists(EXCEL_TRACKER_PATH):
-    with open(EXCEL_TRACKER_PATH, "rb") as ef:
-        tab3.download_button(
-            "Download Updated Content Tracker (.xlsx)",
-            ef.read(),
-            "Echoes_Of_Wisdom_Content_Tracker.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    tab3.caption("Contains all scheduled rows with metadata, tags, and Drive folder links.")
-else:
-    tab3.info("Excel tracker will initialize automatically on your first locked video.")
-
-tab3.markdown(f"### Scheduled Queue Ledger ({len(db.get('scheduled_videos', []))})")
-for item in reversed(db.get("scheduled_videos", [])):
-    tab3.markdown(f"""
-    <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
-        <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
-        <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
-        <div style="color:#64748B;">📁 {item.get('file')} | 📺 {item.get('playlist', 'Hard Truths')}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"### Scheduled Queue Ledger ({len(db.get('scheduled_videos', []))})")
+    for item in reversed(db.get("scheduled_videos", [])):
+        st.markdown(f"""
+        <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
+            <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
+            <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
+            <div style="color:#64748B;">📁 {item.get('file')} | 📺 {item.get('playlist', 'Hard Truths')}</div>
+        </div>
+        """, unsafe_allow_html=True)
