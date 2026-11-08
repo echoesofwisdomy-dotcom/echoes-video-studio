@@ -1158,15 +1158,16 @@ with tab2:
                 st.session_state["rendered_director_style"] = active_style
 
                 v_filters = []
-                for i in range(num_clips):
-                    filters_for_clip = [
-                        f"trim=0:4",
-                        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
-                        # Overscale & Shift Crop to automatically cut out Google Flow watermark
-                        f"scale=1120:1980:force_original_aspect_ratio=increase",
-                        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
-                        f"fps=25"
-                    ]
+for i in range(num_clips):
+    filters_for_clip = [
+        f"trim=0:4",
+        f"setpts=(PTS-STARTPTS)*{clip_speed:.4f}",
+        # Overscale to 1120x1980
+        f"scale=1120:1980:force_original_aspect_ratio=increase",
+        # Shift crop by -10px and -15px to push the watermark outside the 1080x1920 frame
+        f"crop=1080:1920:(in_w-1080)/2-10:(in_h-1920)/2-15",
+        f"fps=25"
+    ]
                     
                     # Optional digital zoompan (only if Flow camera motion wasn't used)
                     if i == 0 and apply_digital_zoom:
