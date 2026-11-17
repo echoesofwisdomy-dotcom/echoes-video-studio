@@ -117,6 +117,7 @@ DRAFT_VAULT_PATH = os.path.join(DATA_DIR, "draft_vault.json")
 API_KEY_FILE = os.path.join(DATA_DIR, "gemini_key.txt")
 GSHEET_URL_FILE = os.path.join(DATA_DIR, "gsheet_webhook.txt")
 CHANNEL_HANDLE_FILE = os.path.join(DATA_DIR, "channel_handle.txt")
+META_HANDLE_FILE = os.path.join(DATA_DIR, "meta_handle.txt")
 GUIDE_URL_FILE = os.path.join(DATA_DIR, "guide_url.txt")
 EXCEL_TRACKER_PATH = os.path.join(DATA_DIR, "Echoes_Of_Wisdom_Content_Tracker.xlsx")
 
@@ -183,23 +184,43 @@ def save_persistent_gsheet_url(url_val):
             f.write(clean)
     except Exception: pass
 
-def get_persistent_handle():
-    if "CHANNEL_HANDLE" in st.secrets:
-        return str(st.secrets["CHANNEL_HANDLE"]).strip()
+def get_persistent_yt_handle():
+    if "YT_CHANNEL_HANDLE" in st.secrets:
+        return str(st.secrets["YT_CHANNEL_HANDLE"]).strip()
     if os.path.exists(CHANNEL_HANDLE_FILE):
         try:
             with open(CHANNEL_HANDLE_FILE, "r", encoding="utf-8") as f:
                 val = f.read().strip()
                 if val: return val
         except Exception: pass
-    return st.session_state.get("user_channel_handle", "@AJ-Echoes-of-Wisdom").strip()
+    return st.session_state.get("user_yt_handle", "@AJ-Echoes-of-Wisdom").strip()
 
-def save_persistent_handle(handle_val):
+def save_persistent_yt_handle(handle_val):
     clean = handle_val.strip()
     if clean and not clean.startswith("@"): clean = "@" + clean
-    st.session_state["user_channel_handle"] = clean
+    st.session_state["user_yt_handle"] = clean
     try:
         with open(CHANNEL_HANDLE_FILE, "w", encoding="utf-8") as f:
+            f.write(clean)
+    except Exception: pass
+
+def get_persistent_meta_handle():
+    if "META_CHANNEL_HANDLE" in st.secrets:
+        return str(st.secrets["META_CHANNEL_HANDLE"]).strip()
+    if os.path.exists(META_HANDLE_FILE):
+        try:
+            with open(META_HANDLE_FILE, "r", encoding="utf-8") as f:
+                val = f.read().strip()
+                if val: return val
+        except Exception: pass
+    return st.session_state.get("user_meta_handle", "@EchoesOfWisdomOfficial").strip()
+
+def save_persistent_meta_handle(handle_val):
+    clean = handle_val.strip()
+    if clean and not clean.startswith("@"): clean = "@" + clean
+    st.session_state["user_meta_handle"] = clean
+    try:
+        with open(META_HANDLE_FILE, "w", encoding="utf-8") as f:
             f.write(clean)
     except Exception: pass
 
@@ -249,11 +270,11 @@ CINEMATOGRAPHY_MATRIX = {
         "lens_s1": "24mm ultra-wide cinema prime lens with subtle anamorphic barrel distortion",
         "cam_s1": "0s-2s: Low-angle Dutch tilt in deep shadow; 2s-4s: rapid forward push-in accelerating smoothly towards protagonist's piercing eyes as a sharp shaft of sunlight strikes his face",
         "lens_s2": "100mm macro probe lens, extreme shallow depth of field (f/1.8)",
-        "cam_s2": "0s-2s: Microscopic close-up tracking water spray and micro-textures; 2s-4s: sudden dynamic whip-pan revealing foaming water violently churning under high pressure",
+        "cam_s2": "0s-2s: Microscopic close-up tracking fine surface textures and golden light glints; 2s-4s: smooth dynamic whip-pan revealing the entire object in dramatic chiaroscuro motion",
         "lens_s3": "35mm anamorphic cinema lens, natural horizontal streak flare",
         "cam_s3": "0s-2s: Fast over-the-shoulder tracking dolly following deliberate strides; 2s-4s: camera sweeps around subject in a dramatic 45-degree parallax arc against towering cliff peaks",
         "lens_s4": "85mm portrait telephoto lens, creamy optical bokeh",
-        "cam_s4": "0s-2s: Slow breathing push-in on weathered skin texture and salt-and-pepper beard; 2s-4s: protagonist raises piercing calm eyes directly into camera lens",
+        "cam_s4": "0s-2s: Slow breathing push-in on weathered skin texture; 2s-4s: protagonist raises piercing calm eyes directly into camera lens",
         "grade": "Cinematic high-contrast chiaroscuro, volumetric dust motes, rich dark shadows, textured 35mm film stock quality"
     },
     "PULL_VIGN": {
@@ -285,7 +306,7 @@ CINEMATOGRAPHY_MATRIX = {
         "lens_s1": "24mm ultra-wide cinema lens, dramatic angular perspective",
         "cam_s1": "0s-2s: Symmetrical centered locked-off wide shot in gale-force mountain mist; 2s-4s: sudden aggressive snap-zoom forward locking onto protagonist's unflinching eyes",
         "lens_s2": "100mm probe lens, needle-sharp crystalline detail",
-        "cam_s2": "0s-2s: Extreme macro tracking frost crystals and splashing icy droplets; 2s-4s: fast downward tilt capturing raw mechanical power against freezing torrents",
+        "cam_s2": "0s-2s: Extreme macro tracking frost crystals and glistening surface edges; 2s-4s: fast downward tilt capturing raw mechanical power in freezing mist",
         "lens_s3": "50mm prime lens, stark documentary clarity",
         "cam_s3": "0s-2s: Handheld camera movement following protagonist along narrow rocky precipice; 2s-4s: camera stabilizes as dark woolen cloak billows violently against jagged peaks",
         "lens_s4": "105mm telephoto portrait lens, intense subject isolation",
@@ -600,13 +621,13 @@ THEMES_DATABASE = [
 ]
 
 DIVERSE_ARCHETYPES = [
-    "An authentic mature Roman centurion with a stern weathered face, short military crop, subtle facial scar, wearing polished dark iron shoulder plates over a crimson tunic. Strictly two arms only, flawless human anatomy.",
-    "An elder master mentor with silver-streaked beard and calm authoritative eyes seated across a low stone table from a young apprentice in a sunlit courtyard. Strictly two arms per person, flawless human anatomy.",
-    "A disciplined medieval merchant in dark wool and leather cloak inspecting a heavy iron-bound ledger chest by warm lantern light. Strictly two arms only, flawless human anatomy.",
-    "A weathered seasoned craftsman in his fifties with strong forearms and calm eyes walking along a misty alpine granite ridge at sunrise. Strictly two arms only, flawless human anatomy.",
-    "An ancient Eastern scholar with calm penetrating eyes, fine traditional silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
-    "A hooded desert ascetic with sun-bronzed skin, piercing eyes, wrapped in rugged linen travel cloaks against windblown dust. Strictly two arms only, flawless human anatomy.",
-    "A focused medieval blacksmith with soot-dusted cheeks, intense focused gaze, rolled leather sleeves showing muscular forearms at an anvil. Strictly two arms only, flawless human anatomy."
+    "An authentic mature Roman centurion, age 45, short military crop, clean-shaven with subtle facial scar, wearing polished dark iron shoulder plates over a crimson tunic. Strictly two arms only, flawless human anatomy.",
+    "An elder master mentor, age 60, silver-streaked beard and calm authoritative eyes, seated across a low stone table from a young apprentice in a sunlit courtyard. Strictly two arms per person, flawless human anatomy.",
+    "A disciplined medieval merchant, age 45, neatly trimmed short beard, short dark hair, wearing a heavy dark wool and leather cloak, inspecting an iron-bound ledger chest by warm lantern light. Strictly two arms only, flawless human anatomy.",
+    "A weathered seasoned craftsman, age 52, silver-gray short beard, strong forearms, calm eyes, walking along a misty alpine granite ridge at sunrise in a dark wool tunic. Strictly two arms only, flawless human anatomy.",
+    "An ancient Eastern scholar, age 50, calm penetrating eyes, fine dark silk robes, hair tied in a clean topknot, holding a bamboo writing brush. Strictly two arms only, flawless human anatomy.",
+    "A hooded desert ascetic, age 48, sun-bronzed skin, short dark beard, piercing eyes, wrapped in rugged linen travel cloaks against windblown dust. Strictly two arms only, flawless human anatomy.",
+    "A focused medieval blacksmith, age 42, soot-dusted cheeks, short dark hair, clean-shaven, rolled leather sleeves showing muscular forearms at an anvil. Strictly two arms only, flawless human anatomy."
 ]
 
 SETTINGS_MATRIX = [
@@ -802,8 +823,11 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
     if timed_words and len(timed_words) >= 5:
         clean_words = []
         for tw in timed_words:
-            w_txt = re.sub(r"[^\w\s',.!?-]", "", tw['word']).upper().strip()
-            if w_txt: clean_words.append({'word': w_txt, 'start': tw['start'], 'end': tw['end']})
+            raw_w = tw['word'].replace("—", " ").replace("–", " ").replace("-", " ")
+            w_txt = re.sub(r"[^\w\s',.!?]", "", raw_w).upper().strip()
+            if w_txt:
+                for sub_w in w_txt.split():
+                    clean_words.append({'word': sub_w, 'start': tw['start'], 'end': tw['end']})
         chunk = []
         for i, tw in enumerate(clean_words):
             chunk.append(tw)
@@ -821,14 +845,16 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
             txt = " ".join([c['word'] for c in chunk]).strip()
             if txt: events.append((st_t, en_t, txt))
     else:
-        tokens = script_text.split()
+        clean_script = script_text.replace("—", " ").replace("–", " ").replace("-", " ")
+        tokens = clean_script.split()
         token_groups = [tokens[i:i + 3] for i in range(0, len(tokens), 3)]
         vocal_start = 0.35
         step = max(0.45, (total_dur - vocal_start - 0.35) / max(1, len(token_groups)))
         for idx, grp in enumerate(token_groups):
             st_t = vocal_start + (idx * step)
             en_t = min(total_dur, vocal_start + ((idx + 1) * step))
-            txt = re.sub(r"[^\w\s',.!?-]", "", " ".join(grp)).upper().strip()
+            raw_grp = " ".join(grp)
+            txt = re.sub(r"[^\w\s',.!?]", "", raw_grp).upper().strip()
             if txt: events.append((st_t, en_t, txt))
 
     def fmt(s): return f"{int(s//3600)}:{int((s%3600)//60):02d}:{s%60:05.2f}"
@@ -890,7 +916,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
         "scene1_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) in {sett_obj['n'].lower()}. {style_meta['cam_s1']}. LENS: {style_meta['lens_s1']}. {style_meta['grade']}. Flawless anatomy, strictly two arms, photorealistic 8k.",
         "scene2_prompt": f"[4-second vertical 9:16 cinematic video clip] {macro_c}. {style_meta['cam_s2']}. LENS: {style_meta['lens_s2']}. {style_meta['grade']}. Photorealistic micro-details, extreme texture resolution.",
         "scene3_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) traversing {sett_obj['n'].lower()}. {style_meta['cam_s3']}. LENS: {style_meta['lens_s3']}. {style_meta['grade']}. Realistic cloth physics, strictly two arms.",
-        "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) intense composure shot. {style_meta['cam_s4']}. LENS: {style_meta['lens_s4']}. {style_meta['grade']}. Piercing stoic resolve, flawless human face, cold breath mist.",
+        "scene4_prompt": f"[4-second vertical 9:16 cinematic video clip] Protagonist ({char_desc}) intense composure shot. {style_meta['cam_s4']}. LENS: {style_meta['lens_s4']}. {style_meta['grade']}. Piercing stoic resolve, flawless human face, identical character appearance to Scene 1.",
         "thumbnail_prompt": (
             f"Dramatic 9:16 vertical cinematic portrait of {char_desc} in {sett_obj['n'].lower()}, "
             f"intense steady gaze, cinematic volumetric lighting. Prominently centered in the upper-third (20% to 35% from the top margin, strictly above character's head) is massive, ultra-bold typography reading exactly: \"{hook}\". "
@@ -898,7 +924,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
             f"The typography does not obscure the character's face. Strictly NO text in the lower half of the frame. Flawless human anatomy, strictly two arms."
         ),
         "youtube_title": f"⚡ {hook.title()} 🏛️ #shorts #stoicism",
-        "youtube_description": f"⚡ {hook}\n\n{premise}\n\n💭 {q_open}\n\n🏛️ Subscribe to {get_persistent_handle()} for timeless clarity.\n\n#stoicism #lifelessons #discipline #echoesofwisdom #shorts",
+        "youtube_description": f"⚡ {hook}\n\n{premise}\n\n💭 {q_open}\n\n🏛️ Subscribe to {get_persistent_yt_handle()} for timeless clarity.\n\n#stoicism #lifelessons #discipline #echoesofwisdom #shorts",
         "youtube_tags": "stoicism, echoes of wisdom, life lessons, stoic mindset, discipline, self improvement, marcus aurelius, mental strength, mens wisdom, shorts",
         "youtube_pinned_comment": f"💭 {q_open}",
         "caption_hook": hook,
@@ -909,7 +935,7 @@ def build_curated_stoic_package(t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH
 
 def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUNCH_FLASH"):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
-    clean_handle = get_persistent_handle()
+    clean_yt_handle = get_persistent_yt_handle()
     used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-40:]]) or "None."
     style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["PUNCH_FLASH"])
     pl_name = t_obj.get("pl", "The art of moving in silence (stoic mindset)")
@@ -932,7 +958,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         f"2. SECOND-4 PATTERN INTERRUPT: Sentence 1 is a 3-5 word hook. Sentence 2 MUST deliver an immediate psychological twist or vivid real-world contrast right at the 4-second mark so viewers do not swipe away at the first cut.\n"
         f"3. SEAMLESS LOOP: The final clause must flow grammatically back into Sentence 1.\n"
         f"4. ZERO ENGAGEMENT BAIT: Strictly NEVER use 'Drop 1 or 2', '1️⃣ vs 2️⃣', 'Comment YES', or numeric polls. 'reflection_question' and 'youtube_pinned_comment' MUST be authentic, open-ended questions inviting a real sentence from mature men.\n"
-        f"5. Google Flow Character Rules: {char_desc}\n"
+        f"5. Google Flow Character & Visual Continuity Rule: {char_desc} CRITICAL: Maintain the EXACT same character age, facial hair, hairstyle, and clothing across Scenes 1, 3, and 4 so the person never morphs into a different age or face.\n"
         f"6. Prompt Formatting: All 4 video prompts MUST start with '[4-second vertical 9:16 cinematic video clip]' and embed 0s-2s and 2s-4s camera kinetics, lens focal length, and lighting.\n"
         f"7. DYNAMIC OVERLAY VARIATION: 'video_overlay_text' (2-3 uppercase words) must be a thematic category pill distinct from 'hook_banner'.\n"
         f"8. THUMBNAIL TYPOGRAPHY MANDATE: 'thumbnail_prompt' MUST command bold typography reading exactly: 'typography reading exactly: \"[HOOK_BANNER]\"' in the upper third (20%-35% from top, above character's head), distressed sans-serif block lettering, high-contrast {('radiant imperial gold' if t_obj.get('a') == 'IMPERIAL_GOLD' else ('frost glacial cyan' if t_obj.get('a') == 'GLACIAL_ICE' else 'molten forge amber'))} color with dark drop shadow, clear of face, NO bottom text.\n"
@@ -947,11 +973,11 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
         '  "script": "Tight 45-52 word script with second-4 twist and seamless loop.",\n'
         '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 1 protagonist with 0s-2s and 2s-4s camera kinetics, lens and lighting",\n'
         f'  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 2 macro ({macro_c}) with intra-shot tilt/pan, lens and lighting",\n'
-        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 protagonist action with tracking parallax, lens and lighting",\n'
-        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 protagonist extreme resolve portrait with intra-shot glance and lighting",\n'
+        '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 3 same protagonist action with tracking parallax, lens and lighting",\n'
+        '  "scene4_prompt": "[4-second vertical 9:16 cinematic video clip] Scene 4 same protagonist extreme resolve portrait with intra-shot glance and lighting",\n'
         '  "thumbnail_prompt": "High-contrast 9:16 vertical portrait with centered upper-third distressed bold typography reading: \\"[HOOK_BANNER]\\", color with dark drop shadow, clear of face, strictly no bottom text, strictly two arms",\n'
         '  "youtube_title": "⚡ Hook Title 🏛️ #shorts #stoicism",\n'
-        f'  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n💭 Open reflection question?\\n\\n🏛️ Subscribe to {clean_handle}\\n\\n#stoicism #lifelessons #shorts",\n'
+        f'  "youtube_description": "⚡ HOOK\\n\\nLesson text...\\n\\n💭 Open reflection question?\\n\\n🏛️ Subscribe to {clean_yt_handle}\\n\\n#stoicism #lifelessons #shorts",\n'
         '  "youtube_tags": "stoicism, echoes of wisdom, life lessons, stoic mindset, discipline, self improvement, marcus aurelius, mental strength, mens wisdom, shorts",\n'
         '  "youtube_pinned_comment": "💭 Open-ended reflection question for viewers?",\n'
         '  "caption_hook": "PUNCHY 4-6 WORD HOOK",\n'
@@ -1004,7 +1030,7 @@ def generate_video_package(raw_api_key, t_obj, macro_c, sett_obj, style_key="PUN
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v8.0 // 18-20s RETENTION & MEN 35-65+ ENGINE</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v8.1 // 18-20s RETENTION, CONTINUITY & DUAL-HANDLE ENGINE</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1053,20 +1079,26 @@ with st.expander("📅 PUBLISHING CADENCE & BATCH VAULT SETTINGS"):
 
 curr_saved_key = get_persistent_api_key()
 curr_gsheet_url = get_persistent_gsheet_url()
-curr_handle = get_persistent_handle()
+curr_yt_handle = get_persistent_yt_handle()
+curr_meta_handle = get_persistent_meta_handle()
 
-with st.expander("🔑 API CREDENTIALS, BRAND HANDLE & SYNC", expanded=(not bool(curr_saved_key))):
+with st.expander("🔑 API CREDENTIALS, PLATFORM HANDLES & SYNC", expanded=(not bool(curr_saved_key))):
     uk = st.text_input("Gemini API Key", value=curr_saved_key, type="password", placeholder="AIzaSy...", key="user_key_input")
     if uk:
         save_persistent_api_key(uk)
         st.caption("✓ Gemini API Key active")
 
     st.divider()
-    st.markdown("#### 🏛️ YouTube & Meta Channel Handle")
-    u_h = st.text_input("Channel / Brand Handle", value=curr_handle, placeholder="@AJ-Echoes-of-Wisdom", key="user_handle_input")
-    if u_h != curr_handle:
-        save_persistent_handle(u_h)
-        st.caption(f"✓ Channel handle set to {u_h}")
+    st.markdown("#### 🏛️ Platform-Specific Brand Handles (Rule Locked)")
+    col_h1, col_h2 = st.columns(2)
+    with col_h1:
+        u_yt = st.text_input("YouTube Shorts Handle", value=curr_yt_handle, placeholder="@AJ-Echoes-of-Wisdom", key="user_yt_handle_input")
+        if u_yt != curr_yt_handle:
+            save_persistent_yt_handle(u_yt)
+    with col_h2:
+        u_meta = st.text_input("Facebook & Instagram Handle", value=curr_meta_handle, placeholder="@EchoesOfWisdomOfficial", key="user_meta_handle_input")
+        if u_meta != curr_meta_handle:
+            save_persistent_meta_handle(u_meta)
 
     st.divider()
     st.markdown("#### 📊 Optional: Google Sheets Webhook Sync")
@@ -1585,7 +1617,7 @@ with tab2:
         st.download_button(f"💾 Download Master Reel ({exp_name})", vb, exp_name, "video/mp4")
 
         # -------------------------------------------------
-        # 🔴 YOUTUBE SHORTS PUBLISHING FLOW (NON-BAIT)
+        # 🔴 YOUTUBE SHORTS PUBLISHING FLOW (@AJ-Echoes-of-Wisdom)
         # -------------------------------------------------
         st.divider()
         st.markdown("### 🔴 1. YOUTUBE SHORTS PUBLISHING FLOW")
@@ -1601,7 +1633,7 @@ with tab2:
             f"⚡ {pkg.get('hook_banner', '').upper()}\n\n"
             f"{pkg.get('caption_lesson', '')}\n\n"
             f"💭 {q_ref}\n\n"
-            f"🏛️ Subscribe to {get_persistent_handle()} for timeless clarity.\n\n"
+            f"🏛️ Subscribe to {get_persistent_yt_handle()} for timeless clarity.\n\n"
             f"#stoicism #lifelessons #discipline #echoesofwisdom #shorts"
         )
         st.text_area("2. YouTube Description", raw_desc, height=135, key="yt_d_val")
@@ -1620,7 +1652,7 @@ with tab2:
         render_copy("yt_p", "COPY PINNED COMMENT", yt_pin)
 
         # -------------------------------------------------
-        # 🔵 META REELS PUBLISHING FLOW (NON-BAIT, HIGH SHARE)
+        # 🔵 META REELS PUBLISHING FLOW (@EchoesOfWisdomOfficial)
         # -------------------------------------------------
         st.divider()
         st.markdown("### 🔵 2. FACEBOOK & INSTAGRAM REELS FLOW (ZERO ENGAGEMENT BAIT)")
@@ -1632,7 +1664,7 @@ with tab2:
             f"{pkg.get('caption_lesson', '')}\n\n"
             f"💭 {q_ref}\n\n"
             f"Save this reminder for difficult days, or share it with someone building their future.\n\n"
-            f"• Follow {get_persistent_handle()} for timeless clarity.\n\n"
+            f"• Follow {get_persistent_meta_handle()} for timeless clarity.\n\n"
             f"{pkg.get('meta_hashtags', '#Stoicism #LifeLessons #Mindset #Wisdom #PersonalGrowth')}"
         )
         st.text_area("1. Meta Reel Caption (Non-Bait)", fb_cap, height=175, key="fb_cap_val")
