@@ -661,7 +661,7 @@ def generate_varied_package(raw_api_key, day_entry, custom_char=None, custom_set
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v9.2 // CREDIT-SAFE PERSISTENT CLIPS, SCRIPT, AUDIO & FULL EXPORTS</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v9.4 // EMOJIS & HASHTAGS IN METADATA, PERSISTENT ASSETS & FULL EXPORTS</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -866,7 +866,6 @@ with tab2:
     st.markdown("### 📥 1. Upload or Reuse Saved Video Clips (Credit-Safe Vault)")
     uploaded_clips = st.file_uploader("Drop 2 to 10+ clips (auto-saved to disk so you never lose credits)", type=["mp4", "mov"], accept_multiple_files=True)
     if uploaded_clips:
-        # Clear old saved clips only when user explicitly uploads a new batch
         for old_f in os.listdir(SAVED_CLIPS_DIR):
             try: os.remove(os.path.join(SAVED_CLIPS_DIR, old_f))
             except Exception: pass
@@ -876,7 +875,6 @@ with tab2:
                 f.write(c.read())
 
     persisted_clip_paths = get_persisted_clips()
-    # Also check TMP_DIR fallback if user already rendered before upgrading
     if not persisted_clip_paths and os.path.exists(TMP_DIR):
         tmp_found = sorted([os.path.join(TMP_DIR, f) for f in os.listdir(TMP_DIR) if f.startswith("clip_") and f.endswith(".mp4")])
         if tmp_found:
@@ -973,7 +971,6 @@ with tab2:
                     st.session_state["rendered_video_path"] = out_p
                     st.success("✓ Master 9:16 Reel Rendered!")
 
-    # Thumbnail Cropper & Downloader (always accessible in Tab 2)
     st.divider()
     st.markdown("### 🖼️ 2. Thumbnail Cropper & Download")
     cur_pkg_for_thumb = st.session_state.get("active_video_pkg", {}).get("pkg", {})
@@ -1008,7 +1005,6 @@ with tab2:
         except Exception as e:
             st.warning(f"Could not process thumbnail: {e}")
 
-    # Rendered Video Preview, Download & Metadata (shown whenever rendered_video_path exists OR active_video_pkg is loaded)
     has_rendered = "rendered_video_path" in st.session_state and os.path.exists(st.session_state["rendered_video_path"])
     has_pkg = "active_video_pkg" in st.session_state
 
@@ -1029,53 +1025,148 @@ with tab2:
         pl_name = pkg.get("playlist", "The art of moving in silence (stoic mindset)")
         q_ref = pkg.get("reflection_question", "")
         raw_hook = pkg.get("hook_banner", "DAILY INSIGHT").title()
-        yt_title = pkg.get("youtube_title", f"⚡ {raw_hook} #shorts #mindset")
+        yt_hashtags_str = "#mindset #lifelessons #selfgrowth #discipline #wisdom #shorts"
+        fb_hashtags_str = "#Mindset #LifeLessons #PersonalGrowth #SelfRespect #Discipline #Wisdom"
+        yt_title = pkg.get("youtube_title", f"⚡ {raw_hook} 🎯 #shorts #mindset")
+        if "#shorts" not in yt_title.lower():
+            yt_title = f"{yt_title} #shorts #mindset"
 
         st.divider()
-        st.markdown("### 📝 4. Complete Metadata & Copy Suite")
+        st.markdown("### 📝 4. Complete Metadata, Emojis & Hashtags Suite")
 
-        st.text_input("YouTube Title", yt_title, key="v91_yt_title")
-        render_copy("v91_ytt", "COPY YOUTUBE TITLE", yt_title)
+        st.text_input("YouTube Title (With Emojis & Hashtags)", yt_title, key="v94_yt_title")
+        render_copy("v94_ytt", "COPY YOUTUBE TITLE", yt_title)
 
-        yt_desc = f"{pkg.get('script','')}\n\n💭 {q_ref}\n\nSubscribe to {get_persistent_yt_handle()} for daily life lessons.\n\n#mindset #lifelessons #selfgrowth #shorts"
-        st.text_area("YouTube Description (@AJ-Echoes-of-Wisdom)", yt_desc, height=115, key="v91_yt_desc")
-        render_copy("v91_ytd", "COPY YOUTUBE DESCRIPTION", yt_desc)
+        yt_desc = (
+            f"⚡ {raw_hook} 🏛️\n\n"
+            f"🎙️ {pkg.get('script','')}\n\n"
+            f"💬 {q_ref}\n\n"
+            f"🔔 Subscribe to {get_persistent_yt_handle()} for daily life lessons & reflection.\n\n"
+            f"{yt_hashtags_str}"
+        )
+        st.text_area("YouTube Description (@AJ-Echoes-of-Wisdom)", yt_desc, height=145, key="v94_yt_desc")
+        render_copy("v94_ytd", "COPY YOUTUBE DESCRIPTION", yt_desc)
 
-        st.text_input("YouTube Playlist", pl_name, key="v91_yt_pl")
-        render_copy("v91_ytp", "COPY YOUTUBE PLAYLIST", pl_name)
+        st.text_input("YouTube Playlist", pl_name, key="v94_yt_pl")
+        render_copy("v94_ytp", "COPY YOUTUBE PLAYLIST", pl_name)
 
-        yt_tags = pkg.get("youtube_tags", "life lessons, personal growth, mindset, emotional control, discipline, shorts")
-        st.text_input("YouTube Tags", yt_tags, key="v91_yt_tags")
-        render_copy("v91_yttg", "COPY YOUTUBE TAGS", yt_tags)
+        yt_tags = pkg.get("youtube_tags", "life lessons, personal growth, mindset, emotional control, discipline, daily reflection, shorts")
+        st.text_input("YouTube Tags", yt_tags, key="v94_yt_tags")
+        render_copy("v94_yttg", "COPY YOUTUBE TAGS", yt_tags)
 
-        yt_pin = f"💭 {q_ref}"
-        st.text_input("YouTube Pinned Comment", yt_pin, key="v91_yt_pin")
-        render_copy("v91_ytpn", "COPY PINNED COMMENT", yt_pin)
+        yt_pin = f"💬 {q_ref} 👇"
+        st.text_input("YouTube Pinned Comment", yt_pin, key="v94_yt_pin")
+        render_copy("v94_ytpn", "COPY PINNED COMMENT", yt_pin)
 
-        meta_cap = f"{pkg.get('caption_hook','')}\n\n{pkg.get('caption_lesson','')}\n\n💭 {q_ref}\n\n• Follow {get_persistent_meta_handle()}\n\n{pkg.get('meta_hashtags','')}"
-        st.text_area("Meta Caption (@EchoesOfWisdomOfficial)", meta_cap, height=130, key="v91_fb_cap")
-        render_copy("v91_fbc", "COPY META CAPTION", meta_cap)
+        meta_cap = (
+            f"⚡ {raw_hook} 🏛️\n\n"
+            f"{pkg.get('caption_lesson','')}\n\n"
+            f"💬 {q_ref}\n\n"
+            f"🔖 Save this reminder for tough days or share it with someone who needs it.\n"
+            f"✨ Follow {get_persistent_meta_handle()} for daily clarity.\n\n"
+            f"{fb_hashtags_str}"
+        )
+        st.text_area("Meta Caption (@EchoesOfWisdomOfficial)", meta_cap, height=160, key="v94_fb_cap")
+        render_copy("v94_fbc", "COPY META CAPTION", meta_cap)
+
+        st.text_input("Meta Hashtags Only", fb_hashtags_str, key="v94_fb_tags_only")
+        render_copy("v94_fbtags", "COPY META HASHTAGS", fb_hashtags_str)
 
         meta_first = (
-            f"🏛️ Want a structured daily system to build composure and clarity?\n\n"
-            f"Explore The 30-Day Stoic Emotional Mastery Guide here:\n"
+            f"🏛️ Want a structured daily system to build composure and clarity? ✨\n\n"
+            f"📘 Explore The 30-Day Stoic Emotional Mastery Guide here:\n"
             f"{get_persistent_guide_url()}\n"
-            f"(Use code FIRST50 at checkout)"
+            f"🎟️ Use code FIRST50 at checkout"
         )
-        st.text_area("Meta First Comment", meta_first, height=95, key="v91_fb_first")
-        render_copy("v91_fbf", "COPY META FIRST COMMENT", meta_first)
+        st.text_area("Meta First Comment", meta_first, height=110, key="v94_fb_first")
+        render_copy("v94_fbf", "COPY META FIRST COMMENT", meta_first)
+
+        st.markdown("""
+        <div style="margin: 12px 0 14px 0;">
+            <a href="https://business.facebook.com/latest/reels_composer" target="_blank" style="text-decoration: none;">
+                <button style="width: 100%; height: 3.2rem; background: #1877F2; color: white; border: none; border-radius: 8px; font-weight: 700; font-family: -apple-system, sans-serif; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.35);">
+                    🌐 OPEN META REELS COMPOSER (9:16 NATIVE)
+                </button>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
         if st.button("✅ Lock Day & Advance", type="primary", key="v91_lock_btn"):
             p_data = st.session_state["active_video_pkg"]
-            db["scheduled_videos"].append({"date": target_d, "slot": target_s, "time": target_t, "theme_id": p_data.get("t_id"), "title": yt_title})
+            slot_c = "S1" if "SLOT 1" in target_s else "S2"
+            pl_c = "SILENCE" if "silence" in pl_name.lower() else ("PARABLES" if "parables" in pl_name.lower() else ("FINANCE" if "financial" in pl_name.lower() else ("LEGACY" if "father" in pl_name.lower() else "AGING")))
+            vid_file_name = f"{target_d}_{slot_c}_{pl_c}_{cur_slug_thumb}.mp4"
+            thumb_file_name = f"{target_d.replace('-','')}_{cur_slug_thumb}_thumb.png"
+
+            row_payload = {
+                "targetDate": target_d,
+                "slot": f"{slot_c} - {'Morning (05:00 IST)' if slot_c == 'S1' else 'Evening (18:00 IST)'}",
+                "ytStatus": "Ready in Drive",
+                "metaStatus": "Ready in Drive",
+                "playlist": pl_name,
+                "titleConcept": pkg.get("title_concept", ""),
+                "hookBanner": pkg.get("hook_banner", ""),
+                "driveFolder": f"EchoesOfWisdom/01_READY_TO_SCHEDULE/{target_d}_{slot_c}_{pl_c}_{cur_slug_thumb}",
+                "videoLink": vid_file_name,
+                "thumbLink": thumb_file_name,
+                "ytTitle": yt_title,
+                "ytDesc": yt_desc,
+                "ytTags": yt_tags,
+                "ytPinned": yt_pin,
+                "metaCaption": meta_cap,
+                "metaComment": meta_first,
+                "directorFx": CINEMATOGRAPHY_MATRIX.get(chosen_director_fx, {}).get("label", "Modern Everyday Window Realism"),
+                "notes": "Staged in EchoesOfWisdom/01_READY_TO_SCHEDULE (30-Day Non-Repeating)"
+            }
+
+            db["scheduled_videos"].append({
+                "date": target_d,
+                "slot": target_s,
+                "time": target_t,
+                "playlist": pl_name,
+                "theme_id": p_data.get("t_id"),
+                "title": yt_title,
+                "file": vid_file_name
+            })
             if p_data.get("t_id") and p_data["t_id"] not in db.get("used_theme_ids", []):
                 db.setdefault("used_theme_ids", []).append(p_data["t_id"])
+            if pkg.get("hook_banner") and pkg.get("hook_banner") not in db.get("used_hooks", []):
+                db.setdefault("used_hooks", []).append(pkg.get("hook_banner"))
             db["last_scheduled_date"], db["last_scheduled_slot"] = target_d, target_s
             save_db(db)
-            st.session_state["status_banner"] = f"✓ Locked {p_data.get('t_id')}!"
+
+            excel_ok = append_to_excel_tracker(row_payload)
+            webhook_url = get_persistent_gsheet_url()
+            cloud_ok = False
+            if webhook_url:
+                try:
+                    r = requests.post(webhook_url, json=row_payload, timeout=6)
+                    if r.status_code == 200:
+                        cloud_ok = True
+                except Exception:
+                    pass
+
+            nd, ns, nt = get_next_slot(target_d, target_s)
+            extra_msg = " + Synced to Live Sheet! 📊" if cloud_ok else (" + Added to Excel Tracker 📑" if excel_ok else "")
+            st.session_state["status_banner"] = f"✓ Locked {p_data.get('t_id')}{extra_msg}! Next slot: {nd} @ {nt} IST ({ns})"
             st.rerun()
 
 with tab3:
-    st.markdown(f"### Scheduled Days ({len(db.get('used_theme_ids', []))}/30 Used)")
+    st.markdown("### 📊 Content Tracker & Excel Export")
+    if os.path.exists(EXCEL_TRACKER_PATH):
+        with open(EXCEL_TRACKER_PATH, "rb") as ef:
+            st.download_button(
+                "💾 Download Content Tracker (.xlsx)",
+                ef.read(),
+                "Echoes_Of_Wisdom_Content_Tracker.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    st.markdown(f"### 📋 Scheduled Days ({len(db.get('used_theme_ids', []))}/30 Used)")
     for item in reversed(db.get("scheduled_videos", [])):
-        st.write(f"- **{item.get('date')}** ({item.get('theme_id')}): {item.get('title')}")
+        st.markdown(f"""
+        <div style="background:#0A0F1D;border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-family:monospace;font-size:11px;">
+            <span style="color:#38BDF8;font-weight:700;">{item.get('date')}</span> @ <span style="color:#FBBF24;">{item.get('time')} IST ({item.get('slot')})</span>
+            <div style="color:#F8FAFC;font-weight:600;">{item.get('title')}</div>
+            <div style="color:#64748B;">📁 {item.get('file', '')} | 📺 {item.get('playlist', '')}</div>
+        </div>
+        """, unsafe_allow_html=True)
