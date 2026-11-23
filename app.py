@@ -286,7 +286,6 @@ PLAYLIST_OPTIONS = [
     "Aging Well: Habits for Mind and Body"
 ]
 
-# 30 distinct daily entries (Days 1-30) — no two days repeat the same format/angle/hook/lesson
 THIRTY_DAY_CURRICULUM = [
     {"day": 1,  "fmt": "CONFESSIONAL_WINDOW",   "pl": "Financial Sovereignty and Relentless Discipline",     "style": "MODERN_LIFE_REAL","arch": "EMERALD_BONE",  "badge": "QUIET RESERVE",    "hook_title": "THE SILENT BILL PAYER",          "script": "At thirty, I spent to look successful. By forty-five, I realized nobody pays your bills out of sympathy. Quiet savings buy the one luxury people rarely talk about: the freedom to say no without panic. Every calm decision compounds over time, so remember that you...",          "q": "What money habit gave you the most peace of mind as you got older?",         "s1": "35mm natural shot, man in knit sweater looking out modern apartment window at dawn",          "s2": "Close-up of simple coffee cup and clean notebook on wooden table in soft light",        "s3": "Medium shot walking calmly through quiet hallway into morning light",                      "s4": "Calm reflective close-up with steady eyes and natural window light"},
     {"day": 2,  "fmt": "TWO_ARROWS_PARABLE",    "pl": "The art of moving in silence (stoic mindset)",         "style": "PUNCH_FLASH",     "arch": "IMPERIAL_GOLD", "badge": "FIRST VS SECOND",  "hook_title": "STOP REPLAYING THE HIT",         "script": "Someone speaks carelessly and hurts your pride, that is the first arrow. Replaying that moment for three sleepless nights is the second arrow, and you fired it yourself. Let the first hit pass without feeding it. Guard your peace tonight, because real strength means you...",       "q": "How do you stop replaying an unfair remark or setback in your head?",          "s1": "24mm low-angle push-in on weathered warrior in shadowed stone courtyard",                "s2": "100mm macro shot of bronze arrow deflecting cleanly off dark iron shield",               "s3": "35mm tracking arc as subject strides across quiet stone bridge in mist",                "s4": "85mm portrait close-up with steady calm gaze and subtle rim light"},
@@ -296,7 +295,7 @@ THIRTY_DAY_CURRICULUM = [
     {"day": 6,  "fmt": "NORDIC_COLD_DISCIPLINE","pl": "Aging Well: Habits for Mind and Body",                "style": "NORDIC_CUT",      "arch": "GLACIAL_ICE",   "badge": "BODY AFTER 40",    "hook_title": "YOUR FUTURE BODY IS WATCHING",   "script": "Every short walk, every clean meal, and every night of real rest is a vote for your independence twenty years from now. Do not trade future strength for today's comfort. Take care of the body that carries you through life, because later years reward how you...",               "q": "Which physical habit has helped your energy most after age thirty-five?",      "s1": "24mm wide shot in cold mountain mist, rugged man in dark wool coat",                 "s2": "100mm macro of frost and clear water droplets on dark granite",                    "s3": "50mm tracking shot along rocky ridge under overcast sky",                           "s4": "105mm close-up with cold visible breath and steady eyes"},
     {"day": 7,  "fmt": "FORGE_EMEMBER_TRUTH",   "pl": "Mastering human nature and fake friends ancient parables","style": "WARM_DRIFT",    "arch": "FORGE_AMBER",   "badge": "ACTION OVER TALK", "hook_title": "WATCH WHAT THEY DO",             "script": "Words are cheap when the stakes are low. Pay attention to who stays steady when pressure hits and nothing is gained by pretending. Character is revealed by action under strain, not speeches in calm weather. Keep your eyes open, and remember that you...",                   "q": "What action reveals someone's true character faster than their words?",         "s1": "50mm warm lateral drift past stone pillar revealing resolute man",                 "s2": "100mm macro of glowing orange embers rising in dark workshop",                     "s3": "35mm medium tracking shot through warm lantern-lit courtyard",                   "s4": "85mm close-up with warm amber firelight and firm nod"},
     {"day": 8,  "fmt": "EPIC_COLONNADE_SCALE",  "pl": "The art of moving in silence (stoic mindset)",         "style": "PULL_VIGN",       "arch": "IMPERIAL_GOLD", "badge": "INNER CALM",       "hook_title": "CALM INSIDE THE STORM",          "script": "You cannot control every gust of wind around you, yet you decide what enters your mind. When others panic or react loudly, steady breathing keeps your judgment sharp. Stay grounded in what you can influence today, and never forget that you...",                        "q": "What helps you stay calm when people around you start panicking?",             "s1": "35mm smooth pull-back dolly revealing vast ancient stone colonnade",                 "s2": "90mm rack-focus macro of heavy stone pillar and drifting dust",                   "s3": "28mm low pedestal crane shot across wet stone floor",                             "s4": "85mm profile-to-front close-up in cool atmospheric mist"},
-    {"day": 9,  "fmt": "MODERN_DESK_REALISM",   "pl": "Financial Sovereignty and Relentless Discipline",     "style": "MODERN_LIFE_REAL","arch": "EMERALD_BONE",  "badge": "REAL PROGRESS",    "hook_title": "THE UNSEEN GRIND",               "script": "Nobody posts the quiet mornings when progress feels slow and invisible. That is the exact season where real discipline is formed. Keep showing up even when the scoreboard has not moved yet. Results catch up to consistency, and you...",                               "q": "What is one quiet goal you are working toward right now?",                    "s1": "35mm modern interior shot near window with warm morning light",                    "s2": "50mm close-up of pen, notebook, and desk lamp in quiet room",                    "s3": "28mm dolly shot of man sitting focused at clean desk",                     "s4": "85mm close-up with calm, determined expression"},
+    {"day": 9,  "fmt": "MODERN_DESK_REALISM",   "pl": "Financial Sovereignty and Relentless Discipline",     "style": "MODERN_LIFE_REAL","arch": "EMERALD_BONE",  "badge": "REAL PROGRESS",    "hook_title": "THE UNSEEN GRIND",               "script": "Nobody posts the quiet mornings when progress feels slow and invisible. That is the exact season where real discipline is formed. Keep showing up even when the scoreboard has not moved yet. Results catch up to consistency, and you...",                               "q": "What is one quiet goal you are working toward right now?",                    "s1": "35mm modern interior shot near window with warm morning light",                    "s2": "50mm close-up of pen, notebook, and desk lamp in quiet room",                    "s3": "28mm smooth dolly shot of man sitting focused at clean desk",                     "s4": "85mm close-up with calm, determined expression"},
     {"day": 10, "fmt": "MENTOR_SON_DIALOGUE",   "pl": "Father to Son: Ancient Legacy Lessons",               "style": "WARM_DRIFT",      "arch": "ROYAL_VIOLET",  "badge": "HONEST WORD",      "hook_title": "KEEP YOUR WORD SMALL",           "script": "Do not promise what you are not ready to finish. A man whose word carries weight never has to shout to be heard. Under-promise, work steadily, and let your follow-through speak for itself. Trust takes years to build, so make sure you...",                         "q": "What lesson about keeping promises do you pass on to younger people?",         "s1": "50mm warm shot of older mentor and young man at simple wooden table",              "s2": "100mm macro of hands clasping or resting firmly on wood",                       "s3": "35mm tracking shot walking side by side along courtyard path",                   "s4": "85mm close-up of mentor with warm side lighting and calm eyes"},
     {"day": 11, "fmt": "RESENTMENT_WEIGHT",     "pl": "Aging Well: Habits for Mind and Body",                "style": "PULL_VIGN",       "arch": "CRIMSON_IVORY", "badge": "LIGHTEN THE LOAD", "hook_title": "PUT DOWN OLD GRUDGES",           "script": "Holding onto old anger costs you far more than it costs the person who caused it. Years pass quickly, and carrying heavy baggage only drains your clarity today. Let go of what no longer serves your peace, because a lighter mind helps you...",                          "q": "What is one old grudge or worry you are glad you left behind?",               "s1": "35mm pull-back shot of lone figure standing on quiet cliff overlook",              "s2": "90mm macro of heavy iron chain or stone resting on ground",                      "s3": "28mm crane shot as figure turns toward open horizon",                           "s4": "85mm close-up with soft evening light and peaceful expression"},
     {"day": 12, "fmt": "GOSSIP_ROOM_RULE",      "pl": "Mastering human nature and fake friends ancient parables","style": "OVERHEAD_NOIR",  "arch": "GLACIAL_ICE",   "badge": "GUARD PRIVACY",    "hook_title": "WHO TALKS BEHIND DOORS",         "script": "Someone who gossips to you about others will eventually talk about you to someone else. Do not feed drama with your reactions or your private plans. Keep your circle small and your own counsel steady. Real discretion protects you when you...",                        "q": "How do you handle people who bring drama or gossip into your space?",         "s1": "21mm high-angle shot looking down into quiet shadowed room",                     "s2": "75mm macro of heavy wooden door closing softly",                                 "s3": "40mm overhead tracking shot along quiet corridor",                             "s4": "90mm close-up with composed, observant gaze"},
@@ -662,7 +661,7 @@ def generate_varied_package(raw_api_key, day_entry, custom_char=None, custom_set
 # ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
-    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v9.0 // 30-DAY NON-REPEATING FORMATS & NATURAL HUMAN AUDIO</span>
+    🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v9.2 // CREDIT-SAFE PERSISTENT CLIPS, SCRIPT, AUDIO & FULL EXPORTS</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -671,7 +670,7 @@ st.markdown(f"""
 <div style="margin-bottom: 14px;">
     <span class="badge badge-green">● 30 UNIQUE DAILY FORMATS</span>
     <span class="badge badge-purple">🎙️ NATURAL PACING AUDIO</span>
-    <span class="badge badge-blue">✨ ZERO HOOK LOCK-IN</span>
+    <span class="badge badge-blue">✨ FULL METADATA & EXPORTS</span>
     <span class="badge badge-amber">📅 {target_d} @ {target_t} IST ({target_s})</span>
 </div>
 """, unsafe_allow_html=True)
@@ -736,9 +735,30 @@ def render_copy(bid, label, text):
 # ---------------------------------------------------------
 # 9. TABS
 # ---------------------------------------------------------
-tab1, tab2, tab3 = st.tabs(["⚡ 1. 30-DAY SCRIPT & PROMPTS", "🎬 2. RENDER MASTER REEL", "📋 3. QUEUE LEDGER & TRACKER"])
+tab1, tab2, tab3 = st.tabs(["⚡ 1. 30-DAY SCRIPT & PROMPTS", "🎬 2. RENDER, CROP & METADATA", "📋 3. QUEUE LEDGER & TRACKER"])
 
 with tab1:
+    if "active_video_pkg" in st.session_state:
+        with st.expander("✏️ EDIT CURRENT ACTIVE SCRIPT & VOICEOVER (KEEP EXISTING CLIPS)", expanded=False):
+            cur_p = st.session_state["active_video_pkg"]
+            cur_pkg = cur_p.get("pkg", {})
+            ed_hook = st.text_input("Current Hook / Title", value=cur_pkg.get("hook_banner", ""), key="ed_cur_hook")
+            ed_scr = st.text_area("Current Spoken Script", value=cur_pkg.get("script", ""), height=95, key="ed_cur_scr")
+            ed_q = st.text_input("Current Reflection Question", value=cur_pkg.get("reflection_question", ""), key="ed_cur_q")
+            if st.button("💾 Update Script & Re-Sync Audio (Keep Clips)", key="btn_upd_cur_scr"):
+                cur_pkg["hook_banner"] = ed_hook.strip().upper()
+                cur_pkg["script"] = ed_scr.strip()
+                cur_pkg["reflection_question"] = ed_q.strip()
+                cur_p["pkg"] = cur_pkg
+                timings, v_name = asyncio.run(synthesize_speech_timed(cur_pkg["script"], DRAFT_AUDIO_PATH, api_key=get_persistent_api_key(), use_gemini_tts=False))
+                cur_p["timings"] = timings
+                cur_p["voice_used"] = v_name
+                with open(DRAFT_JSON_PATH, "w", encoding="utf-8") as f:
+                    json.dump(cur_p, f, indent=2)
+                st.session_state["active_video_pkg"] = cur_p
+                st.success("✓ Script & audio updated while keeping your saved video clips!")
+                st.rerun()
+
     st.markdown("### 📅 30-Day Non-Repeating Format Selector")
     day_mode = st.radio(
         "Selection Mode",
@@ -834,10 +854,45 @@ with tab1:
             st.text_area(lbl, pkg.get(k_name, ""), height=72)
             render_copy(f"d30_{i}", f"COPY {lbl}", pkg.get(k_name, ""))
 
+SAVED_CLIPS_DIR = os.path.join(DATA_DIR, "saved_clips")
+os.makedirs(SAVED_CLIPS_DIR, exist_ok=True)
+
+def get_persisted_clips():
+    if not os.path.exists(SAVED_CLIPS_DIR):
+        return []
+    return sorted([os.path.join(SAVED_CLIPS_DIR, f) for f in os.listdir(SAVED_CLIPS_DIR) if f.lower().endswith((".mp4", ".mov"))])
+
 with tab2:
-    st.markdown("### 📥 1. Upload Video Clips")
-    uploaded_clips = st.file_uploader("Drop 2 to 10+ clips", type=["mp4", "mov"], accept_multiple_files=True)
-    num_clips = len(uploaded_clips) if uploaded_clips else 0
+    st.markdown("### 📥 1. Upload or Reuse Saved Video Clips (Credit-Safe Vault)")
+    uploaded_clips = st.file_uploader("Drop 2 to 10+ clips (auto-saved to disk so you never lose credits)", type=["mp4", "mov"], accept_multiple_files=True)
+    if uploaded_clips:
+        # Clear old saved clips only when user explicitly uploads a new batch
+        for old_f in os.listdir(SAVED_CLIPS_DIR):
+            try: os.remove(os.path.join(SAVED_CLIPS_DIR, old_f))
+            except Exception: pass
+        for idx, c in enumerate(sorted(uploaded_clips, key=lambda x: x.name)):
+            dest_p = os.path.join(SAVED_CLIPS_DIR, f"clip_{idx:02d}_{c.name}")
+            with open(dest_p, "wb") as f:
+                f.write(c.read())
+
+    persisted_clip_paths = get_persisted_clips()
+    # Also check TMP_DIR fallback if user already rendered before upgrading
+    if not persisted_clip_paths and os.path.exists(TMP_DIR):
+        tmp_found = sorted([os.path.join(TMP_DIR, f) for f in os.listdir(TMP_DIR) if f.startswith("clip_") and f.endswith(".mp4")])
+        if tmp_found:
+            persisted_clip_paths = tmp_found
+
+    num_clips = len(persisted_clip_paths)
+    if num_clips > 0:
+        col_cl1, col_cl2 = st.columns([3, 1])
+        with col_cl1:
+            st.success(f"✓ {num_clips} saved video clip(s) locked in vault: {', '.join([os.path.basename(p) for p in persisted_clip_paths])}")
+        with col_cl2:
+            if st.button("🗑️ Clear Saved Clips", key="btn_clear_saved_clips"):
+                for p in persisted_clip_paths:
+                    try: os.remove(p)
+                    except Exception: pass
+                st.rerun()
 
     active_style_key = st.session_state.get("rendered_director_style", "MODERN_LIFE_REAL")
     chosen_director_fx = st.selectbox(
@@ -854,20 +909,16 @@ with tab2:
 
     if st.button("🎬 Render Master 9:16 Reel", type="primary"):
         if "active_video_pkg" not in st.session_state:
-            st.error("Generate a day package in Tab 1 first.")
-        elif not uploaded_clips or num_clips < 2:
+            st.error("Generate or restore a script package in Tab 1 first.")
+        elif num_clips < 2:
             st.error("Upload at least 2 video clips.")
         else:
-            with st.spinner("⚡ Rendering master 9:16 reel..."):
+            with st.spinner("⚡ Rendering master 9:16 reel from your saved clips..."):
                 p_data = st.session_state["active_video_pkg"]
                 pkg = p_data["pkg"]
                 arch_key = pkg.get("subtitle_archetype", "IMPERIAL_GOLD")
                 arch = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
-                c_paths = []
-                for idx, c in enumerate(sorted(uploaded_clips, key=lambda x: x.name)):
-                    cp = os.path.join(TMP_DIR, f"clip_{idx}.mp4")
-                    with open(cp, "wb") as f: f.write(c.read())
-                    c_paths.append(cp)
+                c_paths = list(persisted_clip_paths)
 
                 probe = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', DRAFT_AUDIO_PATH], capture_output=True, text=True)
                 dur = (float(probe.stdout.strip()) if probe.stdout.strip() else 18.5) + 0.4
@@ -922,23 +973,101 @@ with tab2:
                     st.session_state["rendered_video_path"] = out_p
                     st.success("✓ Master 9:16 Reel Rendered!")
 
-    if "rendered_video_path" in st.session_state and "active_video_pkg" in st.session_state:
+    # Thumbnail Cropper & Downloader (always accessible in Tab 2)
+    st.divider()
+    st.markdown("### 🖼️ 2. Thumbnail Cropper & Download")
+    cur_pkg_for_thumb = st.session_state.get("active_video_pkg", {}).get("pkg", {})
+    cur_slug_thumb = re.sub(r'[^a-zA-Z0-9]+', '_', cur_pkg_for_thumb.get('hook_banner', 'reel')).strip('_').lower()
+    thumb_file = st.file_uploader("Upload Raw Thumbnail Image", type=["png", "jpg", "jpeg", "webp"], key="v91_thumb_up")
+    SAVED_THUMB_PATH = os.path.join(DATA_DIR, "saved_raw_thumb.png")
+    if thumb_file:
+        with open(SAVED_THUMB_PATH, "wb") as tf:
+            tf.write(thumb_file.read())
+    active_thumb_source = SAVED_THUMB_PATH if os.path.exists(SAVED_THUMB_PATH) else None
+
+    if active_thumb_source:
+        try:
+            tim = Image.open(active_thumb_source).convert("RGB")
+            tw, th = tim.size
+            crop_mode = st.radio(
+                "Bottom Watermark Crop",
+                ["Standard (6.5% Bottom Crop)", "Deep (12.5% Bottom Crop)"],
+                horizontal=True,
+                key="v91_crop_mode"
+            )
+            pct = 0.125 if "Deep" in crop_mode else 0.065
+            ch = th - int(th * pct)
+            cw = int(ch * (9.0 / 16.0))
+            mx = max(0, (tw - cw) // 2)
+            clean_thumb = tim.crop((mx, 0, mx + cw, ch)).resize((1080, 1920), Image.Resampling.LANCZOS)
+            st.image(clean_thumb, caption="Cleaned 9:16 Thumbnail Preview", use_container_width=True)
+            t_buf = io.BytesIO()
+            clean_thumb.save(t_buf, format="PNG", quality=98)
+            t_name = f"{target_d.replace('-','')}_{cur_slug_thumb}_thumb.png"
+            st.download_button(f"💾 Download Cropped Thumbnail ({t_name})", t_buf.getvalue(), t_name, "image/png", key="v91_thumb_dl")
+        except Exception as e:
+            st.warning(f"Could not process thumbnail: {e}")
+
+    # Rendered Video Preview, Download & Metadata (shown whenever rendered_video_path exists OR active_video_pkg is loaded)
+    has_rendered = "rendered_video_path" in st.session_state and os.path.exists(st.session_state["rendered_video_path"])
+    has_pkg = "active_video_pkg" in st.session_state
+
+    if has_rendered:
+        st.divider()
+        st.markdown("### 🎥 3. Rendered Master Reel & Download")
         vp = st.session_state["rendered_video_path"]
         st.video(vp)
-        pkg = st.session_state["active_video_pkg"]["pkg"]
-        q_ref = pkg.get("reflection_question", "")
+        slot_code = "S1" if "SLOT 1" in target_s else "S2"
+        pl_name_cur = st.session_state.get("active_video_pkg", {}).get("pkg", {}).get("playlist", "The art of moving in silence (stoic mindset)")
+        pl_code = "SILENCE" if "silence" in pl_name_cur.lower() else ("PARABLES" if "parables" in pl_name_cur.lower() else ("FINANCE" if "financial" in pl_name_cur.lower() else ("LEGACY" if "father" in pl_name_cur.lower() else "AGING")))
+        exp_name = f"{target_d}_{slot_code}_{pl_code}_{cur_slug_thumb}.mp4"
+        with open(vp, "rb") as f:
+            st.download_button(f"💾 Download Master Reel ({exp_name})", f.read(), exp_name, "video/mp4", key="v91_vid_dl")
 
-        yt_desc = f"{pkg.get('script','')}\n\n💭 {q_ref}\n\nSubscribe to {get_persistent_yt_handle()}.\n\n#mindset #lifelessons #shorts"
-        st.text_area("YouTube Description (@AJ-Echoes-of-Wisdom)", yt_desc, height=110)
-        render_copy("v9_yt", "COPY YOUTUBE DESCRIPTION", yt_desc)
+    if has_pkg:
+        pkg = st.session_state["active_video_pkg"]["pkg"]
+        pl_name = pkg.get("playlist", "The art of moving in silence (stoic mindset)")
+        q_ref = pkg.get("reflection_question", "")
+        raw_hook = pkg.get("hook_banner", "DAILY INSIGHT").title()
+        yt_title = pkg.get("youtube_title", f"⚡ {raw_hook} #shorts #mindset")
+
+        st.divider()
+        st.markdown("### 📝 4. Complete Metadata & Copy Suite")
+
+        st.text_input("YouTube Title", yt_title, key="v91_yt_title")
+        render_copy("v91_ytt", "COPY YOUTUBE TITLE", yt_title)
+
+        yt_desc = f"{pkg.get('script','')}\n\n💭 {q_ref}\n\nSubscribe to {get_persistent_yt_handle()} for daily life lessons.\n\n#mindset #lifelessons #selfgrowth #shorts"
+        st.text_area("YouTube Description (@AJ-Echoes-of-Wisdom)", yt_desc, height=115, key="v91_yt_desc")
+        render_copy("v91_ytd", "COPY YOUTUBE DESCRIPTION", yt_desc)
+
+        st.text_input("YouTube Playlist", pl_name, key="v91_yt_pl")
+        render_copy("v91_ytp", "COPY YOUTUBE PLAYLIST", pl_name)
+
+        yt_tags = pkg.get("youtube_tags", "life lessons, personal growth, mindset, emotional control, discipline, shorts")
+        st.text_input("YouTube Tags", yt_tags, key="v91_yt_tags")
+        render_copy("v91_yttg", "COPY YOUTUBE TAGS", yt_tags)
+
+        yt_pin = f"💭 {q_ref}"
+        st.text_input("YouTube Pinned Comment", yt_pin, key="v91_yt_pin")
+        render_copy("v91_ytpn", "COPY PINNED COMMENT", yt_pin)
 
         meta_cap = f"{pkg.get('caption_hook','')}\n\n{pkg.get('caption_lesson','')}\n\n💭 {q_ref}\n\n• Follow {get_persistent_meta_handle()}\n\n{pkg.get('meta_hashtags','')}"
-        st.text_area("Meta Caption (@EchoesOfWisdomOfficial)", meta_cap, height=120)
-        render_copy("v9_fb", "COPY META CAPTION", meta_cap)
+        st.text_area("Meta Caption (@EchoesOfWisdomOfficial)", meta_cap, height=130, key="v91_fb_cap")
+        render_copy("v91_fbc", "COPY META CAPTION", meta_cap)
 
-        if st.button("✅ Lock Day & Advance", type="primary"):
+        meta_first = (
+            f"🏛️ Want a structured daily system to build composure and clarity?\n\n"
+            f"Explore The 30-Day Stoic Emotional Mastery Guide here:\n"
+            f"{get_persistent_guide_url()}\n"
+            f"(Use code FIRST50 at checkout)"
+        )
+        st.text_area("Meta First Comment", meta_first, height=95, key="v91_fb_first")
+        render_copy("v91_fbf", "COPY META FIRST COMMENT", meta_first)
+
+        if st.button("✅ Lock Day & Advance", type="primary", key="v91_lock_btn"):
             p_data = st.session_state["active_video_pkg"]
-            db["scheduled_videos"].append({"date": target_d, "slot": target_s, "time": target_t, "theme_id": p_data.get("t_id"), "title": pkg.get("youtube_title")})
+            db["scheduled_videos"].append({"date": target_d, "slot": target_s, "time": target_t, "theme_id": p_data.get("t_id"), "title": yt_title})
             if p_data.get("t_id") and p_data["t_id"] not in db.get("used_theme_ids", []):
                 db.setdefault("used_theme_ids", []).append(p_data["t_id"])
             db["last_scheduled_date"], db["last_scheduled_slot"] = target_d, target_s
