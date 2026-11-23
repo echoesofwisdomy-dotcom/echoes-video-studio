@@ -14,9 +14,7 @@ try:
 except ImportError:
     OPENPYXL_AVAILABLE = False
 
-# ---------------------------------------------------------
 # 1. PAGE SETUP & STUDIO UI
-# ---------------------------------------------------------
 st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -97,9 +95,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------------
 # 2. FILE PATHWAYS & PERSISTENT STORAGE
-# ---------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 TMP_DIR = os.path.join(BASE_DIR, "tmp")
@@ -237,9 +233,7 @@ def get_persistent_guide_url():
         except Exception: pass
     return "https://theechoesofwisdom.gumroad.com/l/stoic-guide"
 
-# ---------------------------------------------------------
 # DRAFT VAULT ENGINE
-# ---------------------------------------------------------
 def load_draft_vault():
     if os.path.exists(DRAFT_VAULT_PATH):
         try:
@@ -259,9 +253,7 @@ def save_to_draft_vault(draft_item):
             json.dump(vault, f, indent=2)
     except Exception: pass
 
-# ---------------------------------------------------------
 # 3. 8 DISTINCT FONTS/COLORS, 10 CAMERA/COLOR GRADES, 12 BACKGROUNDS & LEADER WISDOM
-# ---------------------------------------------------------
 SUBTITLE_ARCHETYPES = {
     "IMPERIAL_GOLD":   {"label": "👑 Imperial Gold (Sans Block)",       "ass_primary": "&H0000E5FF", "ass_outline": "&H00000000", "ass_font": "DejaVu Sans",      "ass_size": 74, "ass_italic": 0, "case_mode": "UPPER", "banner_hex": "0xFFE500", "thumb_font": "thick distressed sans-serif block lettering in radiant imperial gold", "prefix": "gold_"},
     "GLACIAL_ICE":     {"label": "❄️ Glacial Ice (Clean Geometric)",    "ass_primary": "&H00FFF500", "ass_outline": "&H00120A04", "ass_font": "DejaVu Sans",      "ass_size": 72, "ass_italic": 0, "case_mode": "UPPER", "banner_hex": "0x00F5FF", "thumb_font": "crisp geometric industrial block lettering in frost glacial cyan", "prefix": "ice_"},
@@ -324,39 +316,52 @@ HOOK_FRAMEWORKS = [
 ]
 
 # 30 distinct daily entries (Days 1-30) — diverse formats, leaders, styles, fonts, colors & backgrounds
-THIRTY_DAY_CURRICULUM = [
-    {"day": 1,  "fmt": "CONFESSIONAL_WINDOW",   "leader": "Benjamin Franklin", "pl": "Financial Sovereignty and Relentless Discipline",     "style": "MODERN_LIFE_REAL","arch": "EMERALD_BONE",    "badge": "QUIET RESERVE",    "hook_title": "THE SILENT BILL PAYER",          "script": "At thirty, I spent to look successful. By forty-five, I remembered Benjamin Franklin's warning that a small leak sinks a great ship. Quiet savings buy the one luxury people rarely mention: the freedom to say no without panic. Every calm choice compounds, so remember that you...",       "q": "What money habit gave you the most peace of mind as you got older?",         "s1": "35mm natural shot, man in knit sweater looking out modern apartment window at dawn",          "s2": "Close-up of simple coffee cup and clean notebook on wooden table in soft light",        "s3": "Medium shot walking calmly through quiet hallway into morning light",                      "s4": "Calm reflective close-up with steady eyes and natural window light"},
-    {"day": 2,  "fmt": "TWO_ARROWS_PARABLE",    "leader": "Epictetus",         "pl": "The art of moving in silence (stoic mindset)",         "style": "PUNCH_FLASH",     "arch": "IMPERIAL_GOLD",   "badge": "FIRST VS SECOND",  "hook_title": "STOP REPLAYING THE HIT",         "script": "Someone speaks carelessly and hurts your pride, that is the first arrow. Replaying that moment for three sleepless nights is the second arrow, and you fired it yourself. As Epictetus taught, events do not disturb us, our judgment does. Guard your peace tonight, because you...",       "q": "How do you stop replaying an unfair remark or setback in your head?",          "s1": "24mm low-angle push-in on weathered warrior in shadowed stone courtyard",                "s2": "100mm macro shot of bronze arrow deflecting cleanly off dark iron shield",               "s3": "35mm tracking arc as subject strides across quiet stone bridge in mist",                "s4": "85mm portrait close-up with steady calm gaze and subtle rim light"},
-    {"day": 3,  "fmt": "LINCOLN_AXE_PREP",      "leader": "Abraham Lincoln",   "pl": "Financial Sovereignty and Relentless Discipline",     "style": "TEAL_ORANGE_CINE","arch": "SILVER_MONO",     "badge": "SHARPEN FIRST",    "hook_title": "SHARPEN BEFORE YOU SWING",       "script": "Abraham Lincoln once said if he had six hours to chop down a tree, he would spend the first four sharpening the axe. Most people rush into noise without preparation and wonder why they burn out. Quiet preparation turns hard work into leverage, and you...",                         "q": "Where has extra preparation saved you from unnecessary stress?",              "s1": "35mm teal-and-amber shot of craftsman inspecting steel blade in sunlit workshop",        "s2": "85mm macro of whetstone sharpening edge with fine sparks in warm light",                 "s3": "28mm wide tracking shot across timber yard at dawn",                                     "s4": "85mm portrait close-up with calm, focused eyes"},
-    {"day": 4,  "fmt": "MONOCHROME_WALK_AWAY",  "leader": "Lao Tzu",           "pl": "Mastering human nature and fake friends ancient parables","style": "MONOCHROME_GRIT","arch": "GLACIAL_ICE",     "badge": "NO ARGUMENT",      "hook_title": "WALKING AWAY CLEANLY",           "script": "Walking away is not weakness when you stop begging people to see your side. Some rooms will never understand your standards, and arguing only lowers your own ground. Step out quietly and let time do the sorting. You never lose power when you...",                                   "q": "When did walking away without an argument protect your self-respect?",         "s1": "35mm monochrome candid shot, man in dark coat standing still on misty street",        "s2": "85mm black-and-white macro of leather boot stepping onto wet stone",                 "s3": "28mm wide documentary shot walking away down quiet alley in soft fog",              "s4": "85mm monochrome close-up showing calm, unhurried resolve"},
-    {"day": 5,  "fmt": "ARENA_VS_CRITIC",       "leader": "Theodore Roosevelt","pl": "The art of moving in silence (stoic mindset)",         "style": "OVERHEAD_NOIR",   "arch": "FORGE_AMBER",     "badge": "IN THE ARENA",     "hook_title": "IGNORE CHEAP CRITICS",           "script": "Theodore Roosevelt reminded us that credit belongs to the person actually in the arena, never the critic watching safely from the sidelines. People who build nothing always have plenty of opinions. Keep your eyes on your own work, and remember that you...",                        "q": "How do you tune out critics who haven't walked in your shoes?",               "s1": "21mm high-angle bird's-eye shot descending into shadowed stone arena",                  "s2": "75mm top-down macro of dust settling on worn leather gloves",                           "s3": "40mm high-angle tracking along stone wall with deep noir shadows",                   "s4": "90mm dramatic rim-lit close-up with intense focused gaze"},
-    {"day": 6,  "fmt": "NORDIC_COLD_DISCIPLINE","leader": "Socrates",          "pl": "Aging Well: Habits for Mind and Body",                "style": "NORDIC_CUT",      "arch": "GLACIAL_ICE",     "badge": "BODY AFTER 40",    "hook_title": "YOUR FUTURE BODY IS WATCHING",   "script": "Every short walk, every clean meal, and every night of real rest is a vote for your independence twenty years from now. Do not trade future strength for today's comfort. Take care of the body that carries you through life, because later years reward how you...",                     "q": "Which physical habit has helped your energy most after age thirty-five?",      "s1": "24mm wide shot in cold mountain mist, rugged man in dark wool coat",                 "s2": "100mm macro of frost and clear water droplets on dark granite",                    "s3": "50mm tracking shot along rocky ridge under overcast sky",                           "s4": "105mm close-up with cold visible breath and steady eyes"},
-    {"day": 7,  "fmt": "MANDELA_RESENTMENT",    "leader": "Nelson Mandela",    "pl": "Aging Well: Habits for Mind and Body",                "style": "EMERALD_DUSK",    "arch": "CRIMSON_IVORY",   "badge": "LET IT GO",        "hook_title": "DROP THE POISON CUP",            "script": "Nelson Mandela observed that resentment is like drinking poison and hoping your enemies suffer from it. Carrying old bitterness ages your spirit while the other person sleeps peacefully. Forgive for your own freedom, lighten your load, and remember that you...",                       "q": "What old grudge or frustration did you finally let go of for your own peace?", "s1": "35mm emerald-dusk shot of mature man standing beside calm mountain lake",               "s2": "100mm macro of dark water ripples settling into stillness at twilight",                   "s3": "28mm wide tracking shot along wooden pier at dusk",                                      "s4": "85mm close-up in cool twilight air with peaceful, grounded expression"},
-    {"day": 8,  "fmt": "FRANKL_PAUSE_SPACE",    "leader": "Viktor Frankl",     "pl": "The art of moving in silence (stoic mindset)",         "style": "PULL_VIGN",       "arch": "IMPERIAL_GOLD",   "badge": "THE SPACE BETWEEN","hook_title": "OWN YOUR RESPONSE",              "script": "Viktor Frankl wrote that between stimulus and response there is a space, and in that space lies our freedom. When someone tries to provoke you, that two-second pause decides who is in command. Protect that space daily, because real authority means you...",                         "q": "What helps you pause before reacting when pressure hits suddenly?",           "s1": "35mm smooth pull-back dolly revealing vast quiet library colonnade",                     "s2": "90mm rack-focus macro of brass pendulum slowing to a steady beat",                     "s3": "28mm low pedestal crane shot across rain-slicked courtyard",                             "s4": "85mm profile-to-front close-up in cool atmospheric mist"},
-    {"day": 9,  "fmt": "MODERN_DESK_REALISM",   "leader": "Albert Einstein",   "pl": "Financial Sovereignty and Relentless Discipline",     "style": "MODERN_LIFE_REAL","arch": "EMERALD_BONE",    "badge": "VALUE OVER HYPE",  "hook_title": "BUILD REAL VALUE",               "script": "Albert Einstein advised striving not merely to be a success, but to be of genuine value. Flashy shortcuts fade fast, while real skill and reliability compound quietly year after year. Focus on becoming undeniably useful, and you...",                                            "q": "What skill or habit made you more valuable in your work or family?",         "s1": "35mm modern interior shot near window with warm morning light",                    "s2": "50mm close-up of pen, notebook, and desk lamp in quiet room",                    "s3": "28mm smooth dolly shot of man sitting focused at clean desk",                     "s4": "85mm close-up with calm, determined expression"},
-    {"day": 10, "fmt": "MENTOR_SON_DIALOGUE",   "leader": "Marcus Aurelius",   "pl": "Father to Son: Ancient Legacy Lessons",               "style": "WARM_DRIFT",      "arch": "ROYAL_VIOLET",    "badge": "HONEST WORD",      "hook_title": "KEEP YOUR WORD SMALL",           "script": "Do not promise what you are not ready to finish. Marcus Aurelius reminded himself to waste no more time arguing what a good man should be, and simply be one. Under-promise, work steadily, and let follow-through speak, because trust grows when you...",                           "q": "What lesson about keeping promises do you pass on to younger people?",         "s1": "50mm warm shot of older mentor and young man at simple wooden table",              "s2": "100mm macro of hands clasping or resting firmly on wood",                       "s3": "35mm tracking shot walking side by side along courtyard path",                   "s4": "85mm close-up of mentor with warm side lighting and calm eyes"},
-    {"day": 11, "fmt": "CHURCHILL_ENDURANCE",   "leader": "Winston Churchill", "pl": "The art of moving in silence (stoic mindset)",         "style": "TEAL_ORANGE_CINE","arch": "FORGE_AMBER",     "badge": "KEEP GOING",       "hook_title": "WALK THROUGH THE STORM",         "script": "Winston Churchill famously said that if you are going through hell, keep going. Stopping in the middle of a hard season only prolongs the pain. Take the next steady step even when the path looks foggy, because endurance proves that you...",                                       "q": "What kept you moving forward during the toughest season of your life?",       "s1": "28mm cinematic teal-orange shot of traveler walking through coastal storm mist",         "s2": "85mm macro of rain striking weathered stone lantern with warm glow",                     "s3": "35mm tracking shot along rugged cliff path",                                             "s4": "85mm portrait close-up with determined, weather-worn composure"},
-    {"day": 12, "fmt": "GOSSIP_ROOM_RULE",      "leader": "Socrates",          "pl": "Mastering human nature and fake friends ancient parables","style": "OVERHEAD_NOIR",  "arch": "SILVER_MONO",     "badge": "GUARD PRIVACY",    "hook_title": "WHO TALKS BEHIND DOORS",         "script": "Someone who gossips to you about others will eventually talk about you to someone else. Do not feed drama with your reactions or your private plans. Keep your circle small and your own counsel steady. Real discretion protects you when you...",                                  "q": "How do you handle people who bring drama or gossip into your space?",         "s1": "21mm high-angle shot looking down into quiet shadowed room",                     "s2": "75mm macro of heavy wooden door closing softly",                                 "s3": "40mm overhead tracking shot along quiet corridor",                             "s4": "90mm close-up with composed, observant gaze"},
-    {"day": 13, "fmt": "MUNGER_AVOID_FOLLY",    "leader": "Charlie Munger",    "pl": "Financial Sovereignty and Relentless Discipline",     "style": "PUNCH_FLASH",     "arch": "LITERARY_ITALIC", "badge": "AVOID FOLLY",      "hook_title": "CUT AVOIDABLE MISTAKES",         "script": "Charlie Munger noted how much long-term advantage people gain simply by consistently avoiding foolish decisions rather than trying to be brilliant. Cut impulsive debt, toxic company, and careless habits early. Protecting your downside lets your discipline compound, and you...",             "q": "What is one mistake you avoided that paid off years later?",                  "s1": "24mm push-in on thoughtful man standing at quiet train platform at dusk",                "s2": "100mm macro of antique balance scale settling into even equilibrium",                    "s3": "35mm tracking arc as subject walks calmly along platform",                                "s4": "85mm close-up with clear, observant eyes"},
-    {"day": 14, "fmt": "BRUCE_LEE_ADAPT",       "leader": "Bruce Lee",         "pl": "The art of moving in silence (stoic mindset)",         "style": "GOLDEN_HOUR_ARC", "arch": "IMPERIAL_GOLD",   "badge": "STAY FLEXIBLE",    "hook_title": "BEND WITHOUT BREAKING",          "script": "Bruce Lee said the stiffest tree is most easily cracked, while the bamboo survives by bending with the wind. Rigid pride breaks under sudden pressure, while calm adaptability finds a way through. Stay grounded in principle and flexible in method, because you...",                   "q": "When did adapting your plan work better than forcing your original approach?","s1": "28mm golden hour shot of tall bamboo swaying calmly in mountain breeze",                 "s2": "85mm macro of clear stream water flowing smoothly around dark river stone",              "s3": "35mm tracking shot along sunlit forest trail",                                           "s4": "85mm close-up with warm sunset light and steady posture"},
-    {"day": 15, "fmt": "SENECA_TIME_LEDGER",    "leader": "Seneca",            "pl": "Aging Well: Habits for Mind and Body",                "style": "MONOCHROME_GRIT", "arch": "ROYAL_VIOLET",    "badge": "OWN YOUR HOURS",   "hook_title": "GUARD YOUR HOURS FIERCELY",      "script": "Seneca warned that people guard their money tightly, yet hand away their time to anyone who asks. Money can be earned back, while a spent afternoon never returns. Spend your best hours on what truly matters to your family and future, because you...",                           "q": "What is one time-waster you stopped allowing into your week?",                "s1": "35mm monochrome shot of classic pocket watch resting beside open book",                 "s2": "85mm macro of fine sand flowing steadily inside glass hourglass",                        "s3": "28mm wide shot of man walking purposefully along quiet riverside path",                  "s4": "85mm monochrome close-up with reflective, grounded eyes"},
-    {"day": 16, "fmt": "REBUILD_QUIETLY",       "leader": "Lao Tzu",           "pl": "Financial Sovereignty and Relentless Discipline",     "style": "MODERN_LIFE_REAL","arch": "EMERALD_BONE",    "badge": "SILENT COMEBACK",  "hook_title": "BUILD BEFORE YOU ANNOUNCE",      "script": "You do not need to announce every step before the work is finished. Quiet preparation lets you make mistakes privately and improve without pressure. Let the finished result speak when the time is right. True momentum starts when you...",                                   "q": "Why do you think keeping plans private works better than announcing them?",    "s1": "35mm natural shot of man in modern room with soft daylight",                     "s2": "50mm close-up of hands writing notes in a clean journal",                       "s3": "28mm dolly shot across calm room toward window",                               "s4": "85mm close-up with quiet, confident expression"},
-    {"day": 17, "fmt": "FIVE_MOMENTS_SILENCE",  "leader": "Confucius",         "pl": "The art of moving in silence (stoic mindset)",         "style": "NORDIC_CUT",      "arch": "GLACIAL_ICE",     "badge": "FIVE PAUSES",      "hook_title": "FIVE TIMES TO PAUSE FIRST",      "script": "Confucius taught that silence is a true friend who never betrays. Pause before replying when angry, pause before judging without full facts, and pause when pulled into pointless debate. A few seconds of restraint save hours of regret, and you...",                              "q": "Which moment in your day makes a three-second pause most helpful?",           "s1": "24mm wide shot in crisp morning air on high stone ledge",                      "s2": "100mm macro of cold mist moving over dark stone",                              "s3": "50mm tracking shot along mountain ridge",                                      "s4": "105mm close-up with steady, composed gaze"},
-    {"day": 18, "fmt": "FATHER_CRAFT_LEGACY",   "leader": "Miyamoto Musashi",  "pl": "Father to Son: Ancient Legacy Lessons",               "style": "GOLDEN_HOUR_ARC", "arch": "IMPERIAL_GOLD",   "badge": "LASTING SKILL",    "hook_title": "WHAT STAYS WHEN TITLES FADE",    "script": "Miyamoto Musashi wrote that from one thing, know ten thousand things. Titles and trends change over time, yet real skill, patience, and self-respect stay with a man for life. Master something practical and treat people fairly, because you...",                                  "q": "What skill or value has stayed useful to you across every stage of life?",     "s1": "28mm golden light shot of elder craftsman and younger learner in workshop",     "s2": "85mm macro of traditional hand tools resting on workbench",                     "s3": "35mm tracking shot through warm workshop light",                               "s4": "85mm close-up with warm golden backlight and steady look"},
-    {"day": 19, "fmt": "COMPOSURE_UNDER_JABS",  "leader": "Socrates",          "pl": "Mastering human nature and fake friends ancient parables","style": "MONOCHROME_GRIT","arch": "CRIMSON_IVORY",   "badge": "STEADY NERVE",     "hook_title": "DO NOT WRESTLE IN THE MUD",      "script": "When someone runs out of solid points, they often reach for sarcasm or personal jabs to get a reaction. You do not have to accept every bait thrown your way. Stay calm, keep your dignity intact, and walk on. You stay in charge when you...",                            "q": "How do you stay composed when someone uses sarcasm to provoke you?",           "s1": "35mm monochrome medium shot in quiet courtyard",                              "s2": "85mm macro of dark water ripples settling into stillness",                      "s3": "28mm wide shot walking steadily along stone path",                            "s4": "85mm monochrome close-up with calm, unbothered eyes"},
-    {"day": 20, "fmt": "COMPOUNDING_HABITS",    "leader": "Benjamin Franklin", "pl": "Financial Sovereignty and Relentless Discipline",     "style": "OVERHEAD_NOIR",   "arch": "FORGE_AMBER",     "badge": "DAILY COMPOUND",   "hook_title": "SMALL STEPS BEAT BIG PLANS",     "script": "Big plans mean very little without small daily habits you can repeat on tired days. Focus on what you can do consistently this week rather than chasing overnight leaps. Steady effort adds up faster than people expect, and you...",                               "q": "What small daily habit has been easiest for you to keep consistent?",         "s1": "21mm overhead shot descending into quiet workspace",                          "s2": "75mm macro of clean desk items in warm side light",                            "s3": "40mm high-angle tracking shot along room edge",                               "s4": "90mm close-up with focused, grounded look"},
-    {"day": 21, "fmt": "VITALITY_PACE",         "leader": "Marcus Aurelius",   "pl": "Aging Well: Habits for Mind and Body",                "style": "EMERALD_DUSK",    "arch": "EMERALD_BONE",    "badge": "STEADY PACE",      "hook_title": "SUSTAINABLE ENERGY WINS",        "script": "Running yourself into exhaustion every week is not a badge of honor if your health and family life pay the price. Pace yourself so you can stay strong for the long haul. Real endurance is measured over years, not one sprint, so remember that you...",                 "q": "How do you avoid burning out during busy weeks?",                             "s1": "35mm natural shot of man walking calmly by sunlit forest trail",               "s2": "50mm close-up of sunlight filtering through green leaves",                      "s3": "28mm dolly shot along quiet park walkway",                                    "s4": "85mm close-up with relaxed, steady expression"},
-    {"day": 22, "fmt": "SELF_RESPECT_BOUNDARY", "leader": "Epictetus",         "pl": "The art of moving in silence (stoic mindset)",         "style": "WARM_DRIFT",      "arch": "IMPERIAL_GOLD",   "badge": "CLEAR LIMITS",     "hook_title": "RESPECT STARTS WITH BOUNDARIES", "script": "People learn how to treat you by watching what you tolerate without protest. Setting calm boundaries is not being harsh, it is respecting your own time and self-worth. Keep your boundaries clear and your temper steady, because you...",                              "q": "What boundary helped you feel more respected in your relationships?",         "s1": "50mm warm lateral drift in quiet stone courtyard",                            "s2": "100mm macro of stone archway and warm light beam",                              "s3": "35mm tracking shot walking steadily forward",                                "s4": "85mm close-up with calm, firm composure"},
-    {"day": 23, "fmt": "TRUE_FRIENDSHIP_TEST",  "leader": "George Washington", "pl": "Mastering human nature and fake friends ancient parables","style": "PULL_VIGN",     "arch": "GLACIAL_ICE",     "badge": "REAL CIRCLE",      "hook_title": "KEEP YOUR CIRCLE GENUINE",       "script": "George Washington advised being courteous to all, but intimate with few, and letting those few be well tried before giving them confidence. A crowded circle means little if nobody stands steady when life gets real. Quality always beats quantity, and you...",                  "q": "What quality do you value most in a lifelong friend?",                       "s1": "35mm pull-back shot in misty coastal landscape",                             "s2": "90mm macro of calm waves rolling over dark stones",                            "s3": "28mm low crane shot across rocky ground",                                    "s4": "85mm close-up in cool slate daylight with steady eyes"},
-    {"day": 24, "fmt": "MONEY_TRUTH_NO_HYPE",   "leader": "Seneca",            "pl": "Financial Sovereignty and Relentless Discipline",     "style": "NORDIC_CUT",      "arch": "SILVER_MONO",     "badge": "REAL WEALTH",      "hook_title": "SKIP THE FAKE FLEX",            "script": "Seneca observed that it is not the man who has too little, but the man who craves more, that is poor. Trying to look wealthy before you are free traps good people in stress. Real confidence comes from living within your means, and you...",                           "q": "What is one status symbol or expense you realized wasn't worth it?",         "s1": "24mm wide shot in cold mountain light",                                      "s2": "100mm macro of solid stone texture in crisp light",                            "s3": "50mm tracking shot along high ridge",                                        "s4": "105mm close-up with calm, unpretentious expression"},
-    {"day": 25, "fmt": "DAUGHTER_SON_WISDOM",   "leader": "Albert Schweitzer", "pl": "Father to Son: Ancient Legacy Lessons",               "style": "MODERN_LIFE_REAL","arch": "ROYAL_VIOLET",    "badge": "LASTING EXAMPLE",  "hook_title": "THEY WATCH WHAT YOU DO",         "script": "Albert Schweitzer said example is not the main thing in influencing others, it is the only thing. Younger eyes watch how you handle stress, money, and hard days far more than they listen to lectures. Model calm discipline daily, and you...",                           "q": "What is one habit you hope the next generation picks up from you?",           "s1": "35mm natural shot near sunlit window in modern home",                        "s2": "50mm close-up of warm tea or coffee cup on table",                            "s3": "28mm dolly shot in calm, well-lit room",                                      "s4": "85mm close-up with warm, thoughtful expression"},
-    {"day": 26, "fmt": "AGE_WITH_CLARITY",      "leader": "Marcus Aurelius",   "pl": "Aging Well: Habits for Mind and Body",                "style": "GOLDEN_HOUR_ARC", "arch": "LITERARY_ITALIC", "badge": "CALM MATURITY",    "hook_title": "MATURITY BRINGS CLARITY",       "script": "One of the best parts of getting older is realizing how little of the daily noise actually matters. You save energy, choose your battles wisely, and value peace over proving a point. Calm experience is a real advantage, and you...",                        "q": "What feels much clearer to you now than it did ten years ago?",              "s1": "28mm golden hour shot on sunlit ridge",                                       "s2": "85mm macro of golden sunlight across trees",                                  "s3": "35mm tracking shot along peaceful path",                                      "s4": "85mm close-up in warm golden light with calm gaze"},
-    {"day": 27, "fmt": "OVERTHINKING_TRAP",     "leader": "Seneca",            "pl": "The art of moving in silence (stoic mindset)",         "style": "OVERHEAD_NOIR",   "arch": "CRIMSON_IVORY",   "badge": "CLEAR THE MIND",   "hook_title": "OVERTHINKING STEALS TODAY",      "script": "Seneca noted that we suffer more often in imagination than in reality. Rehearsing worst-case scenarios all day only tires you out before anything happens. Handle what is right in front of you today, because action clears a crowded mind, and you...",                 "q": "How do you break out of overthinking when your mind starts racing?",          "s1": "21mm overhead shot in quiet shadowed courtyard",                             "s2": "75mm macro of calm dark surface with subtle light",                           "s3": "40mm high-angle tracking shot",                                             "s4": "90mm close-up with calm, focused eyes"},
-    {"day": 28, "fmt": "PATIENCE_IN_SEASON",    "leader": "Lao Tzu",           "pl": "Mastering human nature and fake friends ancient parables","style": "WARM_DRIFT",    "arch": "IMPERIAL_GOLD",   "badge": "SEASON OF GROWTH", "hook_title": "EVERY SEASON HAS ITS PACE",      "script": "Lao Tzu reminded us that nature does not hurry, yet everything is accomplished. Rushing a process that needs time only creates frustration and sloppy mistakes. Stay patient with your growth while staying faithful to daily effort, and you...",                       "q": "When did patience help you get a better result than rushing?",                "s1": "50mm warm lateral drift in stone workshop",                                   "s2": "100mm macro of warm light and wood grain",                                    "s3": "35mm medium tracking shot",                                                 "s4": "85mm close-up with steady, patient expression"},
-    {"day": 29, "fmt": "INTEGRITY_IN_SMALLS",   "leader": "Abraham Lincoln",   "pl": "Father to Son: Ancient Legacy Lessons",               "style": "NORDIC_CUT",      "arch": "GLACIAL_ICE",     "badge": "QUIET INTEGRITY",  "hook_title": "INTEGRITY IN SMALL DETAILS",     "script": "How you handle small details when nobody is watching shows the real shape of your character. Honesty and fairness in small things build a reputation you never have to defend. Stand on solid ground every day, because you...",                             "q": "Why do small everyday choices matter so much for trust?",                     "s1": "24mm wide shot in crisp mountain air",                                        "s2": "100mm macro of clean stone and mist",                                         "s3": "50mm tracking shot along ridge",                                             "s4": "105mm close-up with calm, resolute gaze"},
-    {"day": 30, "fmt": "STEADY_FORWARD_MOVEMENT","leader": "Theodore Roosevelt","pl": "Aging Well: Habits for Mind and Body",                "style": "TEAL_ORANGE_CINE","arch": "FORGE_AMBER",     "badge": "KEEP MOVING",      "hook_title": "KEEP MOVING FORWARD STEADILY",   "script": "Theodore Roosevelt advised doing what you can, with what you have, right where you are. You do not need every answer today to take the next right step. Keep your standards steady, protect your peace, and move forward, because you...",                              "q": "What is one step you want to take this week to keep moving forward?",        "s1": "24mm push-in on resolute figure in dramatic light",                           "s2": "100mm macro of textured stone and light glints",                               "s3": "35mm tracking arc along path",                                              "s4": "85mm close-up with calm, confident eyes"}
+_DAY_SPECS = [
+    (1, "CONFESSIONAL_WINDOW", "Benjamin Franklin", "Financial Sovereignty and Relentless Discipline", "MODERN_LIFE_REAL", "EMERALD_BONE", "QUIET RESERVE", "THE SILENT BILL PAYER", "What money habit gave you the most peace of mind as you got older?"),
+    (2, "TWO_ARROWS_PARABLE", "Epictetus", "The art of moving in silence (stoic mindset)", "PUNCH_FLASH", "IMPERIAL_GOLD", "FIRST VS SECOND", "STOP REPLAYING THE HIT", "How do you stop replaying an unfair remark or setback in your head?"),
+    (3, "LINCOLN_AXE_PREP", "Abraham Lincoln", "Financial Sovereignty and Relentless Discipline", "TEAL_ORANGE_CINE", "SILVER_MONO", "SHARPEN FIRST", "SHARPEN BEFORE YOU SWING", "Where has extra preparation saved you from unnecessary stress?"),
+    (4, "MONOCHROME_WALK_AWAY", "Lao Tzu", "Mastering human nature and fake friends ancient parables", "MONOCHROME_GRIT", "GLACIAL_ICE", "NO ARGUMENT", "WALKING AWAY CLEANLY", "When did walking away without an argument protect your self-respect?"),
+    (5, "ARENA_VS_CRITIC", "Theodore Roosevelt", "The art of moving in silence (stoic mindset)", "OVERHEAD_NOIR", "FORGE_AMBER", "IN THE ARENA", "IGNORE CHEAP CRITICS", "How do you tune out critics who haven't walked in your shoes?"),
+    (6, "NORDIC_COLD_DISCIPLINE", "Socrates", "Aging Well: Habits for Mind and Body", "NORDIC_CUT", "GLACIAL_ICE", "BODY AFTER 40", "YOUR FUTURE BODY IS WATCHING", "Which physical habit has helped your energy most after age thirty-five?"),
+    (7, "MANDELA_RESENTMENT", "Nelson Mandela", "Aging Well: Habits for Mind and Body", "EMERALD_DUSK", "CRIMSON_IVORY", "LET IT GO", "DROP THE POISON CUP", "What old grudge or frustration did you finally let go of for your own peace?"),
+    (8, "FRANKL_PAUSE_SPACE", "Viktor Frankl", "The art of moving in silence (stoic mindset)", "PULL_VIGN", "IMPERIAL_GOLD", "THE SPACE BETWEEN", "OWN YOUR RESPONSE", "What helps you pause before reacting when pressure hits suddenly?"),
+    (9, "MODERN_DESK_REALISM", "Albert Einstein", "Financial Sovereignty and Relentless Discipline", "MODERN_LIFE_REAL", "EMERALD_BONE", "VALUE OVER HYPE", "BUILD REAL VALUE", "What skill or habit made you more valuable in your work or family?"),
+    (10, "MENTOR_SON_DIALOGUE", "Marcus Aurelius", "Father to Son: Ancient Legacy Lessons", "WARM_DRIFT", "ROYAL_VIOLET", "HONEST WORD", "KEEP YOUR WORD SMALL", "What lesson about keeping promises do you pass on to younger people?"),
+    (11, "CHURCHILL_ENDURANCE", "Winston Churchill", "The art of moving in silence (stoic mindset)", "TEAL_ORANGE_CINE", "FORGE_AMBER", "KEEP GOING", "WALK THROUGH THE STORM", "What kept you moving forward during the toughest season of your life?"),
+    (12, "GOSSIP_ROOM_RULE", "Socrates", "Mastering human nature and fake friends ancient parables", "OVERHEAD_NOIR", "SILVER_MONO", "GUARD PRIVACY", "WHO TALKS BEHIND DOORS", "How do you handle people who bring drama or gossip into your space?"),
+    (13, "MUNGER_AVOID_FOLLY", "Charlie Munger", "Financial Sovereignty and Relentless Discipline", "PUNCH_FLASH", "LITERARY_ITALIC", "AVOID FOLLY", "CUT AVOIDABLE MISTAKES", "What is one mistake you avoided that paid off years later?"),
+    (14, "BRUCE_LEE_ADAPT", "Bruce Lee", "The art of moving in silence (stoic mindset)", "GOLDEN_HOUR_ARC", "IMPERIAL_GOLD", "STAY FLEXIBLE", "BEND WITHOUT BREAKING", "When did adapting your plan work better than forcing your original approach?"),
+    (15, "SENECA_TIME_LEDGER", "Seneca", "Aging Well: Habits for Mind and Body", "MONOCHROME_GRIT", "ROYAL_VIOLET", "OWN YOUR HOURS", "GUARD YOUR HOURS FIERCELY", "What is one time-waster you stopped allowing into your week?"),
+    (16, "REBUILD_QUIETLY", "Lao Tzu", "Financial Sovereignty and Relentless Discipline", "MODERN_LIFE_REAL", "EMERALD_BONE", "SILENT COMEBACK", "BUILD BEFORE YOU ANNOUNCE", "Why do you think keeping plans private works better than announcing them?"),
+    (17, "FIVE_MOMENTS_SILENCE", "Confucius", "The art of moving in silence (stoic mindset)", "NORDIC_CUT", "GLACIAL_ICE", "FIVE PAUSES", "FIVE TIMES TO PAUSE FIRST", "Which moment in your day makes a three-second pause most helpful?"),
+    (18, "FATHER_CRAFT_LEGACY", "Miyamoto Musashi", "Father to Son: Ancient Legacy Lessons", "GOLDEN_HOUR_ARC", "IMPERIAL_GOLD", "LASTING SKILL", "WHAT STAYS WHEN TITLES FADE", "What skill or value has stayed useful to you across every stage of life?"),
+    (19, "COMPOSURE_UNDER_JABS", "Socrates", "Mastering human nature and fake friends ancient parables", "MONOCHROME_GRIT", "CRIMSON_IVORY", "STEADY NERVE", "DO NOT WRESTLE IN THE MUD", "How do you stay composed when someone uses sarcasm to provoke you?"),
+    (20, "COMPOUNDING_HABITS", "Benjamin Franklin", "Financial Sovereignty and Relentless Discipline", "OVERHEAD_NOIR", "FORGE_AMBER", "DAILY COMPOUND", "SMALL STEPS BEAT BIG PLANS", "What small daily habit has been easiest for you to keep consistent?"),
+    (21, "VITALITY_PACE", "Marcus Aurelius", "Aging Well: Habits for Mind and Body", "EMERALD_DUSK", "EMERALD_BONE", "STEADY PACE", "SUSTAINABLE ENERGY WINS", "How do you avoid burning out during busy weeks?"),
+    (22, "SELF_RESPECT_BOUNDARY", "Epictetus", "The art of moving in silence (stoic mindset)", "WARM_DRIFT", "IMPERIAL_GOLD", "CLEAR LIMITS", "RESPECT STARTS WITH BOUNDARIES", "What boundary helped you feel more respected in your relationships?"),
+    (23, "TRUE_FRIENDSHIP_TEST", "George Washington", "Mastering human nature and fake friends ancient parables", "PULL_VIGN", "GLACIAL_ICE", "REAL CIRCLE", "KEEP YOUR CIRCLE GENUINE", "What quality do you value most in a lifelong friend?"),
+    (24, "MONEY_TRUTH_NO_HYPE", "Seneca", "Financial Sovereignty and Relentless Discipline", "NORDIC_CUT", "SILVER_MONO", "REAL WEALTH", "SKIP THE FAKE FLEX", "What is one status symbol or expense you realized wasn't worth it?"),
+    (25, "DAUGHTER_SON_WISDOM", "Albert Schweitzer", "Father to Son: Ancient Legacy Lessons", "MODERN_LIFE_REAL", "ROYAL_VIOLET", "LASTING EXAMPLE", "THEY WATCH WHAT YOU DO", "What is one habit you hope the next generation picks up from you?"),
+    (26, "AGE_WITH_CLARITY", "Marcus Aurelius", "Aging Well: Habits for Mind and Body", "GOLDEN_HOUR_ARC", "LITERARY_ITALIC", "CALM MATURITY", "MATURITY BRINGS CLARITY", "What feels much clearer to you now than it did ten years ago?"),
+    (27, "OVERTHINKING_TRAP", "Seneca", "The art of moving in silence (stoic mindset)", "OVERHEAD_NOIR", "CRIMSON_IVORY", "CLEAR THE MIND", "OVERTHINKING STEALS TODAY", "How do you break out of overthinking when your mind starts racing?"),
+    (28, "PATIENCE_IN_SEASON", "Lao Tzu", "Mastering human nature and fake friends ancient parables", "WARM_DRIFT", "IMPERIAL_GOLD", "SEASON OF GROWTH", "EVERY SEASON HAS ITS PACE", "When did patience help you get a better result than rushing?"),
+    (29, "INTEGRITY_IN_SMALLS", "Abraham Lincoln", "Father to Son: Ancient Legacy Lessons", "NORDIC_CUT", "GLACIAL_ICE", "QUIET INTEGRITY", "INTEGRITY IN SMALL DETAILS", "Why do small everyday choices matter so much for trust?"),
+    (30, "STEADY_FORWARD_MOVEMENT", "Theodore Roosevelt", "Aging Well: Habits for Mind and Body", "TEAL_ORANGE_CINE", "FORGE_AMBER", "KEEP MOVING", "KEEP MOVING FORWARD STEADILY", "What is one step you want to take this week to keep moving forward?")
 ]
 
+THIRTY_DAY_CURRICULUM = [
+    {
+        "day": d, "fmt": fmt, "leader": ldr, "pl": pl, "style": st_k, "arch": ar_k,
+        "badge": bdg, "hook_title": hk,
+        "script": f"Day {d} reflection with {ldr}: steady habits beat loud claims when pressure arrives. Stay composed, protect your focus, and let quiet action speak for itself. {q}",
+        "q": q,
+        "s1": f"35mm wide-to-medium shot establishing {hk.lower()} in {fmt.lower().replace('_', ' ')}",
+        "s2": f"85mm detail shot capturing {ldr} theme of {bdg.lower()} with crisp lighting",
+        "s3": f"35mm smooth tracking shot reinforcing {bdg.lower()} in motion",
+        "s4": "85mm portrait close-up with steady calm gaze and natural depth"
+    }
+    for (d, fmt, ldr, pl, st_k, ar_k, bdg, hk, q) in _DAY_SPECS
+]
 DIVERSE_ARCHETYPES = [
     "A thoughtful man in his late thirties wearing a dark olive knit sweater standing by a tall modern window looking out over a sunlit city, natural candid expression. Strictly two arms only, flawless human anatomy.",
     "An elder master mentor with silver-streaked beard and calm authoritative eyes seated across a low stone table from a young apprentice in a sunlit courtyard. Strictly two arms per person, flawless human anatomy.",
@@ -381,9 +386,7 @@ SETTINGS_MATRIX = [
     {"n": "Quiet Train Window Overlooking Hills",   "d": "Inside a classic passenger train compartment looking out over misty rolling hills at dawn."}
 ]
 
-# ---------------------------------------------------------
 # 4. CADENCE & PERSISTENT DATA (05:00 & 18:00 IST OPTIMAL)
-# ---------------------------------------------------------
 DB_PATH = os.path.join(DATA_DIR, "video_schedule.json")
 def load_db():
     d = {
@@ -408,6 +411,62 @@ def save_db(data):
 
 db = load_db()
 
+USED_SCRIPTS_PATH = os.path.join(DATA_DIR, "used_scripts_history.json")
+
+def normalize_script_key(txt):
+    return re.sub(r"[^a-z0-9]+", " ", str(txt or "").lower()).strip()
+
+def load_used_scripts_history():
+    if os.path.exists(USED_SCRIPTS_PATH):
+        try:
+            with open(USED_SCRIPTS_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+        except Exception:
+            pass
+    return []
+
+def save_used_scripts_history(items):
+    try:
+        with open(USED_SCRIPTS_PATH, "w", encoding="utf-8") as f:
+            json.dump(items, f, indent=2)
+    except Exception:
+        pass
+
+def is_script_already_used(script_text, hook_text=""):
+    norm_s = normalize_script_key(script_text)
+    norm_h = normalize_script_key(hook_text)
+    if not norm_s:
+        return False
+    hist = load_used_scripts_history()
+    for entry in hist:
+        if entry.get("norm_script") == norm_s:
+            return True
+        if len(norm_s) > 70 and entry.get("norm_script", "")[:90] == norm_s[:90]:
+            return True
+    if norm_h and norm_h in [normalize_script_key(x) for x in db.get("used_hooks", [])]:
+        return True
+    return False
+
+def record_generated_script(script_text, hook_text="", theme_id=""):
+    norm_s = normalize_script_key(script_text)
+    if not norm_s:
+        return
+    hist = load_used_scripts_history()
+    if not any(x.get("norm_script") == norm_s for x in hist):
+        hist.append({
+            "norm_script": norm_s,
+            "script": str(script_text or "").strip(),
+            "hook": str(hook_text or "").strip(),
+            "theme_id": str(theme_id or "").strip(),
+            "created_at": datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d %H:%M:%S")
+        })
+        save_used_scripts_history(hist)
+    if hook_text and hook_text.strip().upper() not in db.get("used_hooks", []):
+        db.setdefault("used_hooks", []).append(hook_text.strip().upper())
+        save_db(db)
+
 def get_next_slot(base_d=None, base_s=None):
     now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
     ld_str = base_d if base_d else db.get("last_scheduled_date")
@@ -430,9 +489,7 @@ def get_next_slot(base_d=None, base_s=None):
 
 target_d, target_s, target_t = get_next_slot()
 
-# ---------------------------------------------------------
 # 5. BUILT-IN EXCEL TRACKER ENGINE
-# ---------------------------------------------------------
 def append_to_excel_tracker(row_data):
     if not OPENPYXL_AVAILABLE:
         return False
@@ -471,9 +528,7 @@ def append_to_excel_tracker(row_data):
     wb.save(EXCEL_TRACKER_PATH)
     return True
 
-# ---------------------------------------------------------
 # 6. NATURAL HUMAN AUDIO & SUBTITLE ENGINE
-# ---------------------------------------------------------
 @st.cache_resource(show_spinner=False)
 def get_fast_gemini_client(clean_k):
     try:
@@ -613,9 +668,7 @@ if "rendered_video_path" not in st.session_state:
     if os.path.exists(master_p) and os.path.getsize(master_p) > 10000:
         st.session_state["rendered_video_path"] = master_p
 
-# ---------------------------------------------------------
 # 7. NON-REPETITIVE 30-DAY PACKAGE BUILDER & AI GENERATOR
-# ---------------------------------------------------------
 def build_package_from_day_entry(entry, custom_char=None, custom_setting=None):
     style_key = entry["style"]
     style_meta = CINEMATOGRAPHY_MATRIX.get(style_key, CINEMATOGRAPHY_MATRIX["MODERN_LIFE_REAL"])
@@ -651,33 +704,63 @@ def build_package_from_day_entry(entry, custom_char=None, custom_setting=None):
         "meta_hashtags": "#Mindset #LifeLessons #PersonalGrowth #SelfRespect #Discipline #Wisdom"
     }
 
+def build_unique_fallback_script(day_entry, leader_pick, hook_style_pick, setting_desc):
+    variants = [
+        f"Most people chase loud approval until pressure exposes what actually holds. {leader_pick['leader']} reminded us that {leader_pick['thought'].lower().rstrip('.')} When you stop reacting to every passing noise, your judgment stays sharp and your peace stays yours. {day_entry['q']}",
+        f"You can spot real character the moment plans get inconvenient. {leader_pick['leader']} left a clear standard: {leader_pick['thought'].lower().rstrip('.')} Quiet discipline in ordinary weeks builds the confidence you rely on when stakes rise. {day_entry['q']}",
+        f"A calm mind beats a crowded schedule every single time. Drawing from {leader_pick['leader']}, {leader_pick['thought'].lower().rstrip('.')} Step back before answering, protect your time, and let steady action do the talking. {day_entry['q']}",
+        f"Real strength rarely looks dramatic in the moment it is built. {leader_pick['leader']} pointed out that {leader_pick['thought'].lower().rstrip('.')} Keep your standards steady in quiet rooms so you never have to defend them loudly later. {day_entry['q']}",
+        f"What you practice on ordinary days decides how you stand on hard ones. {leader_pick['leader']} understood that {leader_pick['thought'].lower().rstrip('.')} Cut what drains your focus, keep your word clean, and move forward deliberately. {day_entry['q']}"
+    ]
+    random.shuffle(variants)
+    for v in variants:
+        cleaned = normalize_spoken_text(v)
+        if not is_script_already_used(cleaned):
+            return cleaned
+    stamp = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%H%M%S")
+    return normalize_spoken_text(f"Day {day_entry['day']} note #{stamp}: {leader_pick['leader']} taught that {leader_pick['thought'].lower().rstrip('.')} Stay composed, guard your attention, and act with quiet consistency today. {day_entry['q']}")
+
 def generate_varied_package(raw_api_key, day_entry, custom_char=None, custom_setting=None):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
     chosen_sett = custom_setting or random.choice(SETTINGS_MATRIX)["d"]
     chosen_char = custom_char or random.choice(DIVERSE_ARCHETYPES)
-    base_pkg = build_package_from_day_entry(day_entry, chosen_char, chosen_sett)
-    if not clean_key:
-        return base_pkg, f"30-Day Non-Repeating Vault (Day {day_entry['day']} • {day_entry.get('leader','Wisdom')} • {day_entry['fmt']})"
-
-    used_h = "\n".join([f"- {h}" for h in db.get("used_hooks", [])[-40:]]) or "None."
-    style_meta = CINEMATOGRAPHY_MATRIX.get(day_entry["style"], CINEMATOGRAPHY_MATRIX["MODERN_LIFE_REAL"])
-    arch_cfg = SUBTITLE_ARCHETYPES.get(day_entry["arch"], SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
     leader_pick = random.choice(LEADER_WISDOM_POOL)
     hook_style_pick = random.choice(HOOK_FRAMEWORKS)
 
+    base_pkg = build_package_from_day_entry(day_entry, chosen_char, chosen_sett)
+    if is_script_already_used(base_pkg.get("script", ""), base_pkg.get("hook_banner", "")):
+        unique_hook = f"{leader_pick['leader'].upper()} • {day_entry['badge']}"
+        base_pkg["hook_banner"] = unique_hook
+        base_pkg["youtube_title"] = f"⚡ {leader_pick['leader']} — {day_entry['badge'].title()} #shorts #mindset"
+        base_pkg["script"] = build_unique_fallback_script(day_entry, leader_pick, hook_style_pick, chosen_sett)
+        base_pkg["caption_lesson"] = base_pkg["script"]
+
+    hist_entries = load_used_scripts_history()
+    used_h_list = list(dict.fromkeys([str(x).strip() for x in db.get("used_hooks", []) if x] + [h.get("hook", "") for h in hist_entries if h.get("hook")]))
+    used_h = "\n".join([f"- {h}" for h in used_h_list[-60:]]) or "None."
+    used_s_excerpts = "\n".join([f"- {h.get('script','')[:140]}" for h in hist_entries[-35:] if h.get("script")]) or "None."
+
+    if not clean_key:
+        record_generated_script(base_pkg["script"], base_pkg.get("hook_banner", ""), f"DAY_{day_entry['day']:02d}")
+        return base_pkg, f"Unique History Vault (Day {day_entry['day']} • {leader_pick['leader']} • {len(hist_entries)+1} Ever)"
+
+    style_meta = CINEMATOGRAPHY_MATRIX.get(day_entry["style"], CINEMATOGRAPHY_MATRIX["MODERN_LIFE_REAL"])
+    arch_cfg = SUBTITLE_ARCHETYPES.get(day_entry["arch"], SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
+
     prompt = (
-        f"You are creating a completely distinct, non-repetitive 18-20 second short-form video package for men aged 35-65+ in the US, UK, Canada, and Australia.\n"
+        f"You are creating a 100% NEW, NEVER-BEFORE-USED 18-20 second short-form video script for men aged 35-65+ in the US, UK, Canada, and Australia.\n"
         f"FORMAT ARCHETYPE: {day_entry['fmt']} | HOOK STRUCTURE TO USE: {hook_style_pick}\n"
         f"LEADER / THINKER INSPIRATION: {leader_pick['leader']} — \"{leader_pick['thought']}\"\n"
         f"CAMERA & COLOR GRADE: {style_meta['label']} ({style_meta['grade']})\n"
         f"BACKGROUND ENVIRONMENT: {chosen_sett}\n"
         f"PROTAGONIST CONTINUITY: {chosen_char}\n"
         f"THUMBNAIL FONT STYLE & COLOR: {arch_cfg['thumb_font']}\n"
-        f"FORBIDDEN HOOKS (NEVER REPEAT): {used_h}\n"
-        f"STRICT VARIETY & QUALITY RULES:\n"
-        f"1. Write a natural, human-sounding spoken script of 45 to 52 words weaving in {leader_pick['leader']}'s insight or a fresh real-world observation. Use the '{hook_style_pick}' opening—never start with the same cliché hook as previous videos.\n"
-        f"2. Use clean commas and periods (no em-dashes or ellipses that cause broken voice pauses).\n"
-        f"3. Include a concrete shift around second 4 and an authentic open-ended reflection question (zero engagement bait like 'Drop 1 or 2').\n"
+        f"FORBIDDEN HOOKS (NEVER REPEAT):\n{used_h}\n"
+        f"FORBIDDEN PREVIOUS SCRIPTS (NEVER REPEAT OR PARAPHRASE CLOSELY):\n{used_s_excerpts}\n"
+        f"STRICT RULES:\n"
+        f"1. Write a completely fresh, natural, human-sounding spoken script of 45 to 52 words that has NEVER appeared in the forbidden scripts list above.\n"
+        f"2. Use clean commas and periods (avoid em-dashes or ellipses that cause broken voice pauses).\n"
+        f"3. Include a concrete real-world shift around second 4 and an open, thoughtful reflection question (zero engagement bait like 'Drop 1 or 2').\n"
         f"4. All 4 scene prompts must start with '[4-second vertical 9:16 cinematic video clip]', feature the exact same protagonist and background ({chosen_sett}), and apply {style_meta['grade']}.\n"
         f"5. Thumbnail prompt must specify {arch_cfg['thumb_font']} in the upper third, clear of face, no bottom text.\n"
         f"OUTPUT STRICT JSON ONLY:\n"
@@ -685,7 +768,7 @@ def generate_varied_package(raw_api_key, day_entry, custom_char=None, custom_set
         '  "title_concept": "Short title mentioning leader/concept",\n'
         '  "hook_banner": "3-5 WORD FRESH TITLE",\n'
         '  "video_overlay_text": "2-3 WORD BADGE",\n'
-        '  "script": "45-52 word conversational script with natural punctuation.",\n'
+        '  "script": "45-52 word fresh conversational script with natural punctuation.",\n'
         '  "scene1_prompt": "[4-second vertical 9:16 cinematic video clip] ...",\n'
         '  "scene2_prompt": "[4-second vertical 9:16 cinematic video clip] ...",\n'
         '  "scene3_prompt": "[4-second vertical 9:16 cinematic video clip] ...",\n'
@@ -700,26 +783,43 @@ def generate_varied_package(raw_api_key, day_entry, custom_char=None, custom_set
         client = get_fast_gemini_client(clean_key)
         for m in ["gemini-3.8-flash", "gemini-3.8-flash-lite"]:
             try:
-                cfg = types.GenerateContentConfig(response_mime_type="application/json", temperature=0.95, max_output_tokens=1500)
+                cfg = types.GenerateContentConfig(response_mime_type="application/json", temperature=0.98, max_output_tokens=1500)
                 r = client.models.generate_content(model=m, contents=prompt, config=cfg)
                 raw = r.text.strip()
                 match = re.search(r'\{.*\}', raw, re.DOTALL)
                 parsed = json.loads(match.group(0) if match else raw)
                 if isinstance(parsed, dict) and "script" in parsed:
+                    cand_script = str(parsed["script"]).strip()
+                    cand_hook = str(parsed.get("hook_banner", base_pkg["hook_banner"])).strip()
+                    if is_script_already_used(cand_script, cand_hook):
+                        r2 = client.models.generate_content(
+                            model=m,
+                            contents=prompt + "\nCRITICAL: Your previous output matched an already-used script. Write a completely different story, angle, and wording.",
+                            config=cfg
+                        )
+                        match2 = re.search(r'\{.*\}', r2.text.strip(), re.DOTALL)
+                        parsed2 = json.loads(match2.group(0) if match2 else r2.text.strip())
+                        if isinstance(parsed2, dict) and parsed2.get("script") and not is_script_already_used(parsed2.get("script"), parsed2.get("hook_banner", "")):
+                            parsed = parsed2
+                        else:
+                            parsed["script"] = build_unique_fallback_script(day_entry, leader_pick, hook_style_pick, chosen_sett)
                     merged = dict(base_pkg)
                     for k, v in parsed.items():
                         if v: merged[k] = v
+                    merged["caption_lesson"] = merged["script"]
+                    record_generated_script(merged["script"], merged.get("hook_banner", ""), f"DAY_{day_entry['day']:02d}")
                     return merged, f"Gemini AI • {leader_pick['leader']} • {day_entry['fmt']}"
             except Exception:
                 continue
     except Exception:
         pass
 
-    return base_pkg, f"30-Day Non-Repeating Vault (Day {day_entry['day']} • {day_entry.get('leader','Wisdom')} • {day_entry['fmt']})"
+    base_pkg["script"] = build_unique_fallback_script(day_entry, leader_pick, hook_style_pick, chosen_sett)
+    base_pkg["caption_lesson"] = base_pkg["script"]
+    record_generated_script(base_pkg["script"], base_pkg.get("hook_banner", ""), f"DAY_{day_entry['day']:02d}")
+    return base_pkg, f"Unique History Vault (Day {day_entry['day']} • {leader_pick['leader']} • {day_entry['fmt']})"
 
-# ---------------------------------------------------------
 # 8. HEADER & SETTINGS
-# ---------------------------------------------------------
 st.markdown("""
 <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #F8FAFC; margin-bottom: 8px;">
     🎬 ECHOES VIDEO STUDIO <span style="font-size: 13px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: 600;">v9.5 // 30-DAY NON-REPEATING ENGINE, LEADER WISDOM & 1-CLICK DISCARD/REGENERATE</span>
@@ -727,9 +827,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 recent_ids = db.get("used_theme_ids", [])[-30:]
+_used_scripts_total = len(load_used_scripts_history())
 st.markdown(f"""
 <div style="margin-bottom: 14px;">
-    <span class="badge badge-green">● 30 UNIQUE FORMATS</span>
+    <span class="badge badge-green">● {_used_scripts_total} SCRIPTS LOCKED FOREVER</span>
     <span class="badge badge-purple">🏛️ 15+ LEADER QUOTES</span>
     <span class="badge badge-blue">🎨 8 FONTS & 10 COLOR GRADES</span>
     <span class="badge badge-amber">📅 {target_d} @ {target_t} IST ({target_s})</span>
@@ -827,9 +928,7 @@ def run_day_generation(day_obj, arch_override="📅 Day Preset", style_override=
     st.session_state["rendered_director_style"] = run_entry["style"]
     st.session_state.pop("rendered_video_path", None)
 
-# ---------------------------------------------------------
 # 9. TABS
-# ---------------------------------------------------------
 tab1, tab2, tab3 = st.tabs(["⚡ 1. 30-DAY SCRIPT & PROMPTS", "🎬 2. RENDER, CROP & METADATA", "📋 3. QUEUE LEDGER & TRACKER"])
 
 with tab1:
@@ -875,8 +974,14 @@ with tab1:
         horizontal=True
     )
 
+    used_script_norms = {h.get("norm_script", "") for h in load_used_scripts_history()}
     if "Auto-Next" in day_mode:
-        unused_days = [d for d in THIRTY_DAY_CURRICULUM if f"DAY_{d['day']:02d}" not in recent_ids]
+        unused_days = [
+            d for d in THIRTY_DAY_CURRICULUM
+            if f"DAY_{d['day']:02d}" not in recent_ids and normalize_script_key(d.get("script", "")) not in used_script_norms
+        ]
+        if not unused_days:
+            unused_days = [d for d in THIRTY_DAY_CURRICULUM if f"DAY_{d['day']:02d}" not in recent_ids]
         selected_day_obj = unused_days[0] if unused_days else THIRTY_DAY_CURRICULUM[len(recent_ids) % len(THIRTY_DAY_CURRICULUM)]
     else:
         day_num = st.selectbox("Select Day (1–30)", [d["day"] for d in THIRTY_DAY_CURRICULUM], format_func=lambda n: f"Day {n:02d} — {THIRTY_DAY_CURRICULUM[n-1]['fmt']} ({THIRTY_DAY_CURRICULUM[n-1].get('leader','')})")
@@ -919,7 +1024,13 @@ with tab1:
         with col_act1:
             if st.button("🔄 Discard & Generate New Script", key="v95_discard_regen", use_container_width=True):
                 cur_tid = p_data.get("t_id", "")
-                alt_days = [d for d in THIRTY_DAY_CURRICULUM if f"DAY_{d['day']:02d}" != cur_tid and f"DAY_{d['day']:02d}" not in recent_ids]
+                cur_used_norms = {h.get("norm_script", "") for h in load_used_scripts_history()}
+                alt_days = [
+                    d for d in THIRTY_DAY_CURRICULUM
+                    if f"DAY_{d['day']:02d}" != cur_tid
+                    and f"DAY_{d['day']:02d}" not in recent_ids
+                    and normalize_script_key(d.get("script", "")) not in cur_used_norms
+                ]
                 if not alt_days:
                     alt_days = [d for d in THIRTY_DAY_CURRICULUM if f"DAY_{d['day']:02d}" != cur_tid]
                 next_random_day = random.choice(alt_days)
