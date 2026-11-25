@@ -17,19 +17,69 @@ st.set_page_config(page_title="Echoes Video Studio", page_icon="🎬", layout="c
 
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
     header[data-testid="stHeader"] { background: transparent !important; }
-    .stApp { background-color: #080B11 !important; color: #E2E8F0 !important; }
-    .block-container { padding-top: 3.2rem !important; padding-bottom: 3rem !important; max-width: 720px !important; }
-    div[data-testid="stExpander"] { background: #0E1626 !important; border: 1px solid rgba(56,189,248,0.25) !important; border-radius: 12px !important; }
-    .stTextInput>div>div>input, .stTextArea textarea { background-color: #0A0F1D !important; border: 1px solid rgba(56,189,248,0.25) !important; color: #F8FAFC !important; border-radius: 8px !important; }
-    .stButton>button[kind="primary"] { background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important; color: #FFF !important; border-radius: 10px !important; height: 3.3rem !important; font-weight: 700 !important; width: 100% !important; }
-    .stButton>button:not([kind="primary"]) { background: #111B30 !important; color: #E2E8F0 !important; border: 1px solid rgba(56,189,248,0.25) !important; border-radius: 8px !important; }
-    .stDownloadButton>button { background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; color: #FFF !important; border-radius: 10px !important; height: 3.2rem !important; font-weight: 700 !important; width: 100% !important; }
-    .badge { font-family: monospace; font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px; display: inline-flex; margin: 2px; }
-    .badge-green { background: rgba(16,185,129,0.12); color: #34D399; border: 1px solid rgba(52,211,153,0.25); }
-    .badge-blue { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.25); }
-    .badge-amber { background: rgba(245,158,11,0.12); color: #FBBF24; border: 1px solid rgba(251,191,36,0.25); }
-    .badge-purple { background: rgba(168,85,247,0.12); color: #C084FC; border: 1px solid rgba(168,85,247,0.25); }
+    .stApp {
+        background: radial-gradient(circle at 50% -15%, #162038 0%, #080B11 68%) !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        color: #E2E8F0 !important;
+    }
+    .block-container { padding-top: 2.8rem !important; padding-bottom: 3.5rem !important; max-width: 740px !important; }
+    div[data-testid="stExpander"] {
+        background: rgba(14, 22, 38, 0.92) !important;
+        border: 1px solid rgba(148, 163, 184, 0.18) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+    }
+    .stTextInput>div>div>input, .stTextArea textarea, .stSelectbox>div>div {
+        background-color: #0B111E !important;
+        border: 1px solid rgba(148, 163, 184, 0.22) !important;
+        color: #F8FAFC !important;
+        border-radius: 9px !important;
+        font-size: 14px !important;
+    }
+    .stButton>button[kind="primary"] {
+        background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 10px !important;
+        height: 3.35rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.02em !important;
+        width: 100% !important;
+        box-shadow: 0 6px 18px rgba(2, 132, 199, 0.28) !important;
+    }
+    .stButton>button:not([kind="primary"]) {
+        background: #10192B !important;
+        color: #E2E8F0 !important;
+        border: 1px solid rgba(148, 163, 184, 0.22) !important;
+        border-radius: 9px !important;
+        font-weight: 600 !important;
+    }
+    .stDownloadButton>button {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 10px !important;
+        height: 3.2rem !important;
+        font-weight: 700 !important;
+        width: 100% !important;
+        box-shadow: 0 6px 18px rgba(5, 150, 105, 0.24) !important;
+    }
+    .badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 11px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        margin: 2px 4px 2px 0;
+    }
+    .badge-green  { background: rgba(16,185,129,0.12); color: #34D399; border: 1px solid rgba(52,211,153,0.28); }
+    .badge-blue   { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.28); }
+    .badge-amber  { background: rgba(245,158,11,0.12); color: #FBBF24; border: 1px solid rgba(251,191,36,0.28); }
+    .badge-purple { background: rgba(168,85,247,0.12); color: #C084FC; border: 1px solid rgba(168,85,247,0.28); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -412,8 +462,7 @@ async def synthesize_speech_timed(text, audio_path, primary_voice="Edge-Christop
         pass
     subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "18.5", "-c:a", "libmp3lame", audio_path], capture_output=True)
     return [], "Ambient Timing Bed"
-
-def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
+    def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     arch_cfg = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
     events = []
     if timed_words and len(timed_words) >= 5:
@@ -496,7 +545,7 @@ def generate_varied_package(raw_api_key, day_entry, custom_setting=None):
     hist = load_used_scripts_history()
     if clean_key:
         used_s = "\n".join([f"- {h.get('script','')[:140]}" for h in hist[-35:] if h.get("script")]) or "None."
-        prompt = f"Write a fresh 45-52 word spoken script for men 35-65+ using {leader_pick['leader']} ({leader_pick['thought']}) and format {hook_style}. Never mention 'Day 1', 'Day 2', or any day number in the spoken script. Avoid these used scripts:\n{used_s}\nOutput JSON only with keys: title_concept, hook_banner, script, scene1_prompt, scene2_prompt, scene3_prompt, scene4_prompt, thumbnail_prompt, youtube_title, reflection_question."
+        prompt = f"Write a fresh 45-52 word spoken script for men 35-65+ using {leader_pick['leader']} ({leader_pick['thought']}) and format {hook_style}. Never mention 'Day 1', 'Day 2', or any day number in the spoken script. Avoid these used scripts:\n{used_s}\nOutput JSON only with keys: title_concept, hook_banner, script, scene1_prompt, scene2_prompt, scene3_prompt, scene4_prompt, thumbnail_prompt, youtube_title, youtube_tags, reflection_question."
         try:
             client = get_fast_gemini_client(clean_key)
             r = client.models.generate_content(model="gemini-3.8-flash", contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.98))
@@ -531,7 +580,7 @@ recent_ids = db.get("used_theme_ids", [])[-30:]
 _locked_total = len(load_used_scripts_history())
 
 st.markdown(f"""
-<div style="font-size:22px;font-weight:800;color:#F8FAFC;margin-bottom:8px;">🎬 ECHOES VIDEO STUDIO <span style="font-size:12px;color:#38BDF8;font-family:monospace;">v9.7</span></div>
+<div style="font-size:22px;font-weight:800;color:#F8FAFC;margin-bottom:8px;">🎬 ECHOES VIDEO STUDIO <span style="font-size:12px;color:#38BDF8;font-family:monospace;">v9.8</span></div>
 <div style="margin-bottom:12px;">
     <span class="badge badge-green">● {_locked_total} SCRIPTS LOCKED FOREVER</span>
     <span class="badge badge-purple">🏛️ 15+ LEADERS</span>
@@ -602,9 +651,10 @@ with tab1:
     with c2: chosen_style = st.selectbox("Camera & Grade", ["📅 Day Preset"] + list(CINEMATOGRAPHY_MATRIX.keys()), format_func=lambda x: "📅 Day Preset" if x == "📅 Day Preset" else CINEMATOGRAPHY_MATRIX[x]["label"])
     with c3: chosen_sett = st.selectbox("Background", ["🎲 Auto-Rotate"] + [s["n"] for s in SETTINGS_MATRIX])
 
-    voice_mode = st.radio("Voice", ["🎙️ Natural Calm Voice (Edge-TTS)", "🔊 Gemini AI Voice (Charon)"], horizontal=True)
+    voice_mode = st.radio("Voice", ["🎙️ Natural Calm Voice (Edge-TTS)", "🔊 Gemini AI Voice (Charon)"], index=1, horizontal=True)
 
     if st.button("🚀 Generate Non-Repeating Day Package & Audio", type="primary"):
+        st.session_state["locked_and_reset"] = False
         with st.spinner("⚡ Generating non-repeating script & audio..."):
             run_day_generation(selected_day, chosen_arch, chosen_style, chosen_sett, "Gemini" in voice_mode)
         st.rerun()
@@ -651,6 +701,12 @@ def get_persisted_clips():
     return sorted([os.path.join(SAVED_CLIPS_DIR, f) for f in os.listdir(SAVED_CLIPS_DIR) if f.lower().endswith((".mp4", ".mov"))])
 
 with tab2:
+    if st.session_state.get("locked_and_reset") and "active_video_pkg" not in st.session_state:
+        st.info("✓ Previous day is locked and scheduled. Switch to **⚡ 1. SCRIPT & PROMPTS** (or click below) to generate a new script.")
+        if st.button("⚡ Go to Script Generator", key="v98_go_tab1"):
+            st.session_state["locked_and_reset"] = False
+            st.rerun()
+        st.stop()
     up_clips = st.file_uploader("Upload 2+ Video Clips (Saved on Disk)", type=["mp4", "mov"], accept_multiple_files=True)
     if up_clips:
         for old_f in os.listdir(SAVED_CLIPS_DIR):
@@ -701,13 +757,36 @@ with tab2:
         with open(SAVED_THUMB_PATH, "wb") as f: f.write(up_th.read())
     if os.path.exists(SAVED_THUMB_PATH):
         tim = Image.open(SAVED_THUMB_PATH).convert("RGB")
-        pct = 0.125 if "Deep" in st.radio("Crop", ["Standard (6.5%)", "Deep (12.5%)"], horizontal=True) else 0.065
         tw, th = tim.size
-        ch = th - int(th * pct)
-        cw = int(ch * (9.0 / 16.0))
-        mx = max(0, (tw - cw) // 2)
-        clean_t = tim.crop((mx, 0, mx + cw, ch)).resize((1080, 1920), Image.Resampling.LANCZOS)
-        st.image(clean_t, use_container_width=True)
+        crop_preset = st.radio(
+            "Bottom Watermark Crop (Bottom-Only by Default)",
+            ["Deep (12.5% Bottom)", "Standard (6.5% Bottom)", "Custom Manual Crop"],
+            index=0,
+            horizontal=True,
+            key="v98_thumb_preset"
+        )
+        if crop_preset == "Deep (12.5% Bottom)":
+            bot_pct, top_pct, left_pct, right_pct = 12.5, 0.0, 0.0, 0.0
+        elif crop_preset == "Standard (6.5% Bottom)":
+            bot_pct, top_pct, left_pct, right_pct = 6.5, 0.0, 0.0, 0.0
+        else:
+            st.caption("Adjust any side/corner individually:")
+            mc1, mc2 = st.columns(2)
+            with mc1:
+                bot_pct = st.slider("Bottom Crop %", 0.0, 30.0, 12.5, 0.5, key="v98_crop_bot")
+                top_pct = st.slider("Top Crop %", 0.0, 25.0, 0.0, 0.5, key="v98_crop_top")
+            with mc2:
+                left_pct = st.slider("Left Side Crop %", 0.0, 25.0, 0.0, 0.5, key="v98_crop_left")
+                right_pct = st.slider("Right Side / Corner Crop %", 0.0, 25.0, 0.0, 0.5, key="v98_crop_right")
+
+        x0 = int(tw * (left_pct / 100.0))
+        y0 = int(th * (top_pct / 100.0))
+        x1 = int(tw * (1.0 - right_pct / 100.0))
+        y1 = int(th * (1.0 - bot_pct / 100.0))
+        x1 = max(x0 + 50, x1)
+        y1 = max(y0 + 50, y1)
+        clean_t = tim.crop((x0, y0, x1, y1)).resize((1080, 1920), Image.Resampling.LANCZOS)
+        st.image(clean_t, caption=f"Cropped Preview ({x1-x0}×{y1-y0} → 1080×1920)", use_container_width=True)
         t_buf = io.BytesIO(); clean_t.save(t_buf, format="PNG")
         st.download_button("💾 Download Cropped Thumbnail", t_buf.getvalue(), f"{target_d.replace('-','')}_thumb.png", "image/png")
 
@@ -728,6 +807,8 @@ with tab2:
         st.divider()
         st.text_input("YouTube Title", yt_title, key="yt_t_in"); render_copy("ytt", "COPY YOUTUBE TITLE", yt_title)
         st.text_area("YouTube Description", yt_desc, height=130, key="yt_d_in"); render_copy("ytd", "COPY YOUTUBE DESCRIPTION", yt_desc)
+        yt_tags_val = pkg.get("youtube_tags", "life lessons, personal growth, mindset, emotional control, discipline, daily reflection, shorts")
+        st.text_input("YouTube Tags", yt_tags_val, key="yt_tags_in"); render_copy("yttg", "COPY YOUTUBE TAGS", yt_tags_val)
         st.text_input("YouTube Playlist", pkg.get("playlist", PLAYLIST_OPTIONS[0]), key="yt_p_in"); render_copy("ytp", "COPY YOUTUBE PLAYLIST", pkg.get("playlist", PLAYLIST_OPTIONS[0]))
         st.text_area("Meta Caption", meta_cap, height=145, key="fb_c_in"); render_copy("fbc", "COPY META CAPTION", meta_cap)
         st.markdown('<a href="https://business.facebook.com/latest/reels_composer" target="_blank"><button style="width:100%;height:3rem;background:#1877F2;color:#FFF;border:none;border-radius:8px;font-weight:700;margin:10px 0;">🌐 OPEN META REELS COMPOSER</button></a>', unsafe_allow_html=True)
@@ -739,9 +820,16 @@ with tab2:
                 db.setdefault("used_theme_ids", []).append(p_data["t_id"])
             db["last_scheduled_date"], db["last_scheduled_slot"] = target_d, target_s
             save_db(db)
-            append_to_excel_tracker({"targetDate": target_d, "slot": target_s, "playlist": pkg.get("playlist",""), "titleConcept": pkg.get("title_concept",""), "hookBanner": pkg.get("hook_banner",""), "videoLink": f"{target_d}_{slug}.mp4", "ytTitle": yt_title, "ytDesc": yt_desc, "metaCaption": meta_cap})
+            append_to_excel_tracker({"targetDate": target_d, "slot": target_s, "playlist": pkg.get("playlist",""), "titleConcept": pkg.get("title_concept",""), "hookBanner": pkg.get("hook_banner",""), "videoLink": f"{target_d}_{slug}.mp4", "ytTitle": yt_title, "ytDesc": yt_desc, "ytTags": yt_tags_val, "metaCaption": meta_cap})
+            for stale_fp in [DRAFT_JSON_PATH, DRAFT_AUDIO_PATH, SAVED_THUMB_PATH, os.path.join(TMP_DIR, "master_output.mp4")]:
+                if os.path.exists(stale_fp):
+                    try: os.remove(stale_fp)
+                    except Exception: pass
+            st.session_state.pop("active_video_pkg", None)
+            st.session_state.pop("rendered_video_path", None)
+            st.session_state["locked_and_reset"] = True
             nd, ns, nt = get_next_slot(target_d, target_s)
-            st.session_state["status_banner"] = f"✓ Locked {p_data.get('t_id')}! Next: {nd} @ {nt} IST ({ns})"
+            st.session_state["status_banner"] = f"✓ Locked {p_data.get('t_id')}! Next slot: {nd} @ {nt} IST ({ns}) — Ready to generate a fresh script in Tab 1."
             st.rerun()
 
 with tab3:
