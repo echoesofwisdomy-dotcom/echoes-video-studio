@@ -56,19 +56,19 @@ USED_SCRIPTS_PATH = os.path.join(DATA_DIR, "used_scripts_history.json")
 
 @st.cache_resource(show_spinner=False)
 def ensure_studio_fonts():
-    font_urls = {
+    urls = {
         "DejaVuSans-Bold.ttf": "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans-Bold.ttf",
         "DejaVuSerif-Bold.ttf": "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSerif-Bold.ttf",
         "DejaVuSerif-Italic.ttf": "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSerif-Italic.ttf",
         "DejaVuSansMono-Bold.ttf": "https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSansMono-Bold.ttf",
     }
-    for fname, url in font_urls.items():
-        fpath = os.path.join(FONTS_DIR, fname)
-        if not os.path.exists(fpath) or os.path.getsize(fpath) < 10000:
+    for fname, url in urls.items():
+        fp = os.path.join(FONTS_DIR, fname)
+        if not os.path.exists(fp) or os.path.getsize(fp) < 10000:
             try:
                 r = requests.get(url, timeout=8)
                 if r.status_code == 200 and len(r.content) > 10000:
-                    with open(fpath, "wb") as f:
+                    with open(fp, "wb") as f:
                         f.write(r.content)
             except Exception:
                 pass
@@ -76,29 +76,29 @@ def ensure_studio_fonts():
 
 ensure_studio_fonts()
 
-def _read_pref(state_key, secret_key, file_path, fallback=""):
-    if st.session_state.get(state_key):
-        return str(st.session_state[state_key]).strip().strip('"').strip("'")
-    if secret_key in st.secrets:
-        return str(st.secrets[secret_key]).strip().strip('"').strip("'")
-    if os.getenv(secret_key):
-        return str(os.getenv(secret_key)).strip()
-    if os.path.exists(file_path):
+def _read_pref(sk, sec, fp, fb=""):
+    if st.session_state.get(sk):
+        return str(st.session_state[sk]).strip().strip('"').strip("'")
+    if sec in st.secrets:
+        return str(st.secrets[sec]).strip().strip('"').strip("'")
+    if os.getenv(sec):
+        return str(os.getenv(sec)).strip()
+    if os.path.exists(fp):
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(fp, "r", encoding="utf-8") as f:
                 v = f.read().strip()
                 if v:
                     return v
         except Exception:
             pass
-    return fallback
+    return fb
 
-def _write_pref(state_key, file_path, val):
-    clean = val.strip().strip('"').strip("'")
-    st.session_state[state_key] = clean
+def _write_pref(sk, fp, val):
+    c = val.strip().strip('"').strip("'")
+    st.session_state[sk] = c
     try:
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(clean)
+        with open(fp, "w", encoding="utf-8") as f:
+            f.write(c)
     except Exception:
         pass
 
@@ -198,13 +198,12 @@ def load_draft_vault():
 
 def save_to_draft_vault(draft_item):
     vault = load_draft_vault()
-    hook_banner = draft_item.get("pkg", {}).get("hook_banner", "")
-    vault = [v for v in vault if v.get("pkg", {}).get("hook_banner") != hook_banner]
+    hb = draft_item.get("pkg", {}).get("hook_banner", "")
+    vault = [v for v in vault if v.get("pkg", {}).get("hook_banner") != hb]
     vault.insert(0, draft_item)
-    vault = vault[:30]
     try:
         with open(DRAFT_VAULT_PATH, "w", encoding="utf-8") as f:
-            json.dump(vault, f, indent=2)
+            json.dump(vault[:30], f, indent=2)
     except Exception:
         pass
 
@@ -243,14 +242,14 @@ def append_to_excel_tracker(row_data):
     return True
 
 SUBTITLE_ARCHETYPES = {
-    "IMPERIAL_GOLD":   {"label": "👑 Imperial Gold (Sans Block)",       "ass_primary": "&H0000E5FF", "ass_outline": "&H00000000", "ass_font": "DejaVu Sans",      "ass_size": 74, "ass_italic": 0, "case_mode": "UPPER", "banner_hex": "0xFFE500", "thumb_font": "thick distressed sans-serif block lettering in radiant imperial gold"},
-    "GLACIAL_ICE":     {"label": "❄️ Glacial Ice (Clean Geometric)",    "ass_primary": "&H00FFF500", "ass_outline": "&H00120A04", "ass_font": "DejaVu Sans",      "ass_size": 72, "ass_italic": 0, "case_mode": "UPPER", "banner_hex": "0x00F5FF", "thumb_font": "crisp geometric industrial block lettering in frost glacial cyan"},
-    "FORGE_AMBER":     {"label": "🔥 Forge Amber (Heavy Slab)",         "ass_primary": "&H000099FF", "ass_outline": "&H00050510", "ass_font": "DejaVu Sans",      "ass_size": 76, "ass_italic": 0, "case_mode": "UPPER", "banner_hex": "0xFF9900", "thumb_font": "heavy chiseled slab-serif lettering in molten forge amber"},
-    "CRIMSON_IVORY":   {"label": "🩸 Crimson & Ivory (Editorial Serif)","ass_primary": "&H003838FF", "ass_outline": "&H00F8FAFC", "ass_font": "DejaVu Serif",     "ass_size": 72, "ass_italic": 0, "case_mode": "TITLE", "banner_hex": "0xFF5555", "thumb_font": "bold editorial serif condensed display lettering in deep crimson and warm ivory"},
-    "EMERALD_BONE":    {"label": "🌿 Emerald & Bone (Modern Stencil)",  "ass_primary": "&H0086EFAC", "ass_outline": "&H0006120B", "ass_font": "DejaVu Sans",      "ass_size": 74, "ass_italic": 0, "case_mode": "UPPER", "banner_hex": "0x4ADE80", "thumb_font": "tall condensed stencil display lettering in luminous emerald and bone white"},
-    "ROYAL_VIOLET":    {"label": "🔮 Violet & Gold (Classic Serif)",    "ass_primary": "&H00F5D0FE", "ass_outline": "&H002E0845", "ass_font": "DejaVu Serif",     "ass_size": 72, "ass_italic": 0, "case_mode": "TITLE", "banner_hex": "0xE879F9", "thumb_font": "high-contrast classic serif lettering in electric orchid violet and gold"},
-    "SILVER_MONO":     {"label": "⌨️ Silver & Charcoal (Typewriter)",   "ass_primary": "&H00F8FAFC", "ass_outline": "&H00111318", "ass_font": "DejaVu Sans Mono", "ass_size": 68, "ass_italic": 0, "case_mode": "UPPER", "banner_hex": "0xE2E8F0", "thumb_font": "stark typewriter monospace stencil lettering in crisp silver-white"},
-    "LITERARY_ITALIC": {"label": "📜 Warm Parchment (Literary Italic)", "ass_primary": "&H0077CCFF", "ass_outline": "&H001A0F08", "ass_font": "DejaVu Serif",     "ass_size": 72, "ass_italic": -1,"case_mode": "TITLE", "banner_hex": "0xFBBF24", "thumb_font": "refined literary italic serif lettering in warm champagne gold"}
+    "IMPERIAL_GOLD":   {"label": "👑 Imperial Gold (Sans Block)",       "ass_primary": "&H0000E5FF", "ass_outline": "&H00000000", "ass_font": "DejaVu Sans",      "ass_size": 74, "ass_italic": 0, "case_mode": "UPPER", "thumb_font": "thick distressed sans-serif block lettering in radiant imperial gold"},
+    "GLACIAL_ICE":     {"label": "❄️ Glacial Ice (Clean Geometric)",    "ass_primary": "&H00FFF500", "ass_outline": "&H00120A04", "ass_font": "DejaVu Sans",      "ass_size": 72, "ass_italic": 0, "case_mode": "UPPER", "thumb_font": "crisp geometric industrial block lettering in frost glacial cyan"},
+    "FORGE_AMBER":     {"label": "🔥 Forge Amber (Heavy Slab)",         "ass_primary": "&H000099FF", "ass_outline": "&H00050510", "ass_font": "DejaVu Sans",      "ass_size": 76, "ass_italic": 0, "case_mode": "UPPER", "thumb_font": "heavy chiseled slab-serif lettering in molten forge amber"},
+    "CRIMSON_IVORY":   {"label": "🩸 Crimson & Ivory (Editorial Serif)","ass_primary": "&H003838FF", "ass_outline": "&H00F8FAFC", "ass_font": "DejaVu Serif",     "ass_size": 72, "ass_italic": 0, "case_mode": "TITLE", "thumb_font": "bold editorial serif condensed display lettering in deep crimson and warm ivory"},
+    "EMERALD_BONE":    {"label": "🌿 Emerald & Bone (Modern Stencil)",  "ass_primary": "&H0086EFAC", "ass_outline": "&H0006120B", "ass_font": "DejaVu Sans",      "ass_size": 74, "ass_italic": 0, "case_mode": "UPPER", "thumb_font": "tall condensed stencil display lettering in luminous emerald and bone white"},
+    "ROYAL_VIOLET":    {"label": "🔮 Violet & Gold (Classic Serif)",    "ass_primary": "&H00F5D0FE", "ass_outline": "&H002E0845", "ass_font": "DejaVu Serif",     "ass_size": 72, "ass_italic": 0, "case_mode": "TITLE", "thumb_font": "high-contrast classic serif lettering in electric orchid violet and gold"},
+    "SILVER_MONO":     {"label": "⌨️ Silver & Charcoal (Typewriter)",   "ass_primary": "&H00F8FAFC", "ass_outline": "&H00111318", "ass_font": "DejaVu Sans Mono", "ass_size": 68, "ass_italic": 0, "case_mode": "UPPER", "thumb_font": "stark typewriter monospace stencil lettering in crisp silver-white"},
+    "LITERARY_ITALIC": {"label": "📜 Warm Parchment (Literary Italic)", "ass_primary": "&H0077CCFF", "ass_outline": "&H001A0F08", "ass_font": "DejaVu Serif",     "ass_size": 72, "ass_italic": -1,"case_mode": "TITLE", "thumb_font": "refined literary italic serif lettering in warm champagne gold"}
 }
 
 CINEMATOGRAPHY_MATRIX = {
@@ -292,10 +291,7 @@ LEADER_WISDOM_POOL = [
     {"leader": "Socrates",          "thought": "When the debate is lost, slander becomes the tool of the loser."}
 ]
 
-HOOK_FRAMEWORKS = [
-    "LIVED CONFESSION", "LEADER QUOTE BREAKDOWN", "CONTRARIAN REALITY CHECK",
-    "BEHAVIORAL OBSERVATION", "PROVOKING QUESTION", "QUIET PARABLE"
-]
+HOOK_FRAMEWORKS = ["LIVED CONFESSION", "LEADER QUOTE BREAKDOWN", "CONTRARIAN REALITY CHECK", "BEHAVIORAL OBSERVATION", "PROVOKING QUESTION", "QUIET PARABLE"]
 
 _DAY_SPECS = [
     (1, "CONFESSIONAL_WINDOW", "Benjamin Franklin", "Financial Sovereignty and Relentless Discipline", "MODERN_LIFE_REAL", "EMERALD_BONE", "QUIET RESERVE", "THE SILENT BILL PAYER", "What money habit gave you the most peace of mind as you got older?"),
@@ -405,7 +401,8 @@ async def synthesize_speech_timed(text, audio_path, primary_voice="Edge-Christop
         pass
     subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "18.5", "-c:a", "libmp3lame", audio_path], capture_output=True)
     return [], "Ambient Timing Bed"
-    def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
+
+def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     arch_cfg = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
     events = []
     if timed_words and len(timed_words) >= 5:
