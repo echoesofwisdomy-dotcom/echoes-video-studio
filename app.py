@@ -462,7 +462,8 @@ async def synthesize_speech_timed(text, audio_path, primary_voice="Edge-Christop
         pass
     subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", "18.5", "-c:a", "libmp3lame", audio_path], capture_output=True)
     return [], "Ambient Timing Bed"
-    def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
+
+def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key="IMPERIAL_GOLD"):
     arch_cfg = SUBTITLE_ARCHETYPES.get(arch_key, SUBTITLE_ARCHETYPES["IMPERIAL_GOLD"])
     events = []
     if timed_words and len(timed_words) >= 5:
@@ -545,7 +546,7 @@ def generate_varied_package(raw_api_key, day_entry, custom_setting=None):
     hist = load_used_scripts_history()
     if clean_key:
         used_s = "\n".join([f"- {h.get('script','')[:140]}" for h in hist[-35:] if h.get("script")]) or "None."
-        prompt = f"Write a fresh 45-52 word spoken script for men 35-65+ using {leader_pick['leader']} ({leader_pick['thought']}) and format {hook_style}. Never mention 'Day 1', 'Day 2', or any day number in the spoken script. Avoid these used scripts:\n{used_s}\nOutput JSON only with keys: title_concept, hook_banner, script, scene1_prompt, scene2_prompt, scene3_prompt, scene4_prompt, thumbnail_prompt, youtube_title, youtube_tags, reflection_question."
+        prompt = f"Write a fresh 45-52 word spoken script for men 35-65+ using {leader_pick['leader']} ({leader_pick['thought']}) and format {hook_style}. Avoid these used scripts:\n{used_s}\nOutput JSON only with keys: title_concept, hook_banner, script, scene1_prompt, scene2_prompt, scene3_prompt, scene4_prompt, thumbnail_prompt, youtube_title, youtube_tags, reflection_question."
         try:
             client = get_fast_gemini_client(clean_key)
             r = client.models.generate_content(model="gemini-3.8-flash", contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.98))
@@ -580,7 +581,7 @@ recent_ids = db.get("used_theme_ids", [])[-30:]
 _locked_total = len(load_used_scripts_history())
 
 st.markdown(f"""
-<div style="font-size:22px;font-weight:800;color:#F8FAFC;margin-bottom:8px;">🎬 ECHOES VIDEO STUDIO <span style="font-size:12px;color:#38BDF8;font-family:monospace;">v9.8</span></div>
+<div style="font-size:22px;font-weight:800;color:#F8FAFC;margin-bottom:8px;">🎬 ECHOES VIDEO STUDIO <span style="font-size:12px;color:#38BDF8;font-family:monospace;">v9.6</span></div>
 <div style="margin-bottom:12px;">
     <span class="badge badge-green">● {_locked_total} SCRIPTS LOCKED FOREVER</span>
     <span class="badge badge-purple">🏛️ 15+ LEADERS</span>
