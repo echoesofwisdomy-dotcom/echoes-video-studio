@@ -326,9 +326,18 @@ _DAY_SPECS = [
     (30, "STEADY_FORWARD_MOVEMENT", "Theodore Roosevelt", "Aging Well: Habits for Mind and Body", "TEAL_ORANGE_CINE", "FORGE_AMBER", "KEEP MOVING", "KEEP MOVING FORWARD STEADILY", "What is one step you want to take this week to keep moving forward?")
 ]
 
+_NATURAL_OPENERS = [
+    "Most people chase loud approval until pressure exposes what actually holds.",
+    "You can spot real character the moment plans get inconvenient.",
+    "A calm mind beats a crowded schedule every single time.",
+    "Real strength rarely looks dramatic in the moment it is built.",
+    "What you practice on ordinary days decides how you stand on hard ones.",
+    "Steady habits beat loud claims the moment real pressure arrives."
+]
+
 THIRTY_DAY_CURRICULUM = [
     {"day": d, "fmt": fmt, "leader": ldr, "pl": pl, "style": st_k, "arch": ar_k, "badge": bdg, "hook_title": hk,
-     "script": f"Day {d} reflection with {ldr}: steady habits beat loud claims when pressure arrives. Stay composed, protect your focus, and let quiet action speak for itself. {q}",
+     "script": f"{_NATURAL_OPENERS[d % len(_NATURAL_OPENERS)]} {ldr} reminded us that staying composed, protecting your focus, and letting quiet action speak builds lasting respect. {q}",
      "q": q,
      "s1": f"35mm wide shot establishing {hk.lower()} in {fmt.lower().replace('_', ' ')}",
      "s2": f"85mm close detail capturing {ldr} theme of {bdg.lower()}",
@@ -363,7 +372,9 @@ def get_fast_gemini_client(clean_k):
         return genai.Client(api_key=clean_k)
 
 def normalize_spoken_text(text):
-    t = text.replace("...", ".").replace("…", ".").replace("—", ", ").replace("–", ", ").replace(" / ", ", ")
+    t = str(text or "")
+    t = re.sub(r"^(?:Day\s+\d+\s*(?:reflection|note|script)?(?:\s+with\s+[^:]+)?\s*:\s*)", "", t, flags=re.IGNORECASE)
+    t = t.replace("...", ".").replace("…", ".").replace("—", ", ").replace("–", ", ").replace(" / ", ", ")
     return re.sub(r"\s+", " ", t).strip()
 
 async def synthesize_speech_timed(text, audio_path, primary_voice="Edge-Christopher", api_key="", use_gemini_tts=False):
@@ -448,7 +459,7 @@ def build_unique_fallback_script(day_entry, leader_pick):
         c = normalize_spoken_text(v)
         if not is_script_already_used(c):
             return c
-    return normalize_spoken_text(f"{leader_pick['leader']} note: {leader_pick['thought'].lower().rstrip('.')} Stay steady today. {day_entry['q']}")
+    return normalize_spoken_text(f"When pressure rises, {leader_pick['thought'].lower().rstrip('.')} Stay grounded and let your actions do the talking. {day_entry['q']}")
 
 def generate_varied_package(raw_api_key, day_entry, custom_setting=None):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
@@ -485,7 +496,7 @@ def generate_varied_package(raw_api_key, day_entry, custom_setting=None):
     hist = load_used_scripts_history()
     if clean_key:
         used_s = "\n".join([f"- {h.get('script','')[:140]}" for h in hist[-35:] if h.get("script")]) or "None."
-        prompt = f"Write a fresh 45-52 word spoken script for men 35-65+ using {leader_pick['leader']} ({leader_pick['thought']}) and format {hook_style}. Avoid these used scripts:\n{used_s}\nOutput JSON only with keys: title_concept, hook_banner, script, scene1_prompt, scene2_prompt, scene3_prompt, scene4_prompt, thumbnail_prompt, youtube_title, reflection_question."
+        prompt = f"Write a fresh 45-52 word spoken script for men 35-65+ using {leader_pick['leader']} ({leader_pick['thought']}) and format {hook_style}. Never mention 'Day 1', 'Day 2', or any day number in the spoken script. Avoid these used scripts:\n{used_s}\nOutput JSON only with keys: title_concept, hook_banner, script, scene1_prompt, scene2_prompt, scene3_prompt, scene4_prompt, thumbnail_prompt, youtube_title, reflection_question."
         try:
             client = get_fast_gemini_client(clean_key)
             r = client.models.generate_content(model="gemini-3.8-flash", contents=prompt, config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.98))
@@ -520,7 +531,7 @@ recent_ids = db.get("used_theme_ids", [])[-30:]
 _locked_total = len(load_used_scripts_history())
 
 st.markdown(f"""
-<div style="font-size:22px;font-weight:800;color:#F8FAFC;margin-bottom:8px;">🎬 ECHOES VIDEO STUDIO <span style="font-size:12px;color:#38BDF8;font-family:monospace;">v9.6</span></div>
+<div style="font-size:22px;font-weight:800;color:#F8FAFC;margin-bottom:8px;">🎬 ECHOES VIDEO STUDIO <span style="font-size:12px;color:#38BDF8;font-family:monospace;">v9.7</span></div>
 <div style="margin-bottom:12px;">
     <span class="badge badge-green">● {_locked_total} SCRIPTS LOCKED FOREVER</span>
     <span class="badge badge-purple">🏛️ 15+ LEADERS</span>
