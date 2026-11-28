@@ -20,66 +20,104 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
     header[data-testid="stHeader"] { background: transparent !important; }
     .stApp {
-        background: radial-gradient(circle at 50% -15%, #162038 0%, #080B11 68%) !important;
+        background: linear-gradient(180deg, #0D1424 0%, #070A12 100%) !important;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        color: #F1F5F9 !important;
+    }
+    .block-container {
+        padding-top: 2.5rem !important;
+        padding-bottom: 3.5rem !important;
+        max-width: 760px !important;
+    }
+    /* High-contrast labels, radio text, and headings */
+    label, [data-testid="stWidgetLabel"] p, .stRadio label p, .stRadio div[role="radiogroup"] label span, .stCheckbox label span {
         color: #E2E8F0 !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
     }
-    .block-container { padding-top: 2.8rem !important; padding-bottom: 3.5rem !important; max-width: 740px !important; }
-    div[data-testid="stExpander"] {
-        background: rgba(14, 22, 38, 0.92) !important;
-        border: 1px solid rgba(148, 163, 184, 0.18) !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
-    }
-    .stTextInput>div>div>input, .stTextArea textarea, .stSelectbox>div>div {
-        background-color: #0B111E !important;
-        border: 1px solid rgba(148, 163, 184, 0.22) !important;
+    h1, h2, h3, h4, .stMarkdown p {
         color: #F8FAFC !important;
+    }
+    /* Tabs styling with crisp contrast */
+    button[data-baseweb="tab"] {
+        color: #CBD5E1 !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #38BDF8 !important;
+    }
+    /* Expanders */
+    div[data-testid="stExpander"] {
+        background: #10192D !important;
+        border: 1px solid rgba(125, 211, 252, 0.24) !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stExpander"] summary, div[data-testid="stExpander"] summary span, div[data-testid="stExpander"] summary p {
+        color: #E0F2FE !important;
+        font-weight: 700 !important;
+    }
+    /* Inputs, textareas & selectboxes */
+    .stTextInput input, .stTextArea textarea {
+        background-color: #111A2E !important;
+        border: 1px solid rgba(148, 163, 184, 0.35) !important;
+        color: #FFFFFF !important;
         border-radius: 9px !important;
         font-size: 14px !important;
     }
-    .stButton>button[kind="primary"] {
-        background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%) !important;
+    div[data-baseweb="select"] > div {
+        background-color: #111A2E !important;
+        border: 1px solid rgba(148, 163, 184, 0.35) !important;
         color: #FFFFFF !important;
-        border: none !important;
+        border-radius: 9px !important;
+    }
+    div[data-baseweb="select"] span, div[data-baseweb="select"] div {
+        color: #F8FAFC !important;
+    }
+    /* Primary & secondary buttons */
+    .stButton>button[kind="primary"] {
+        background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(125, 211, 252, 0.35) !important;
         border-radius: 10px !important;
-        height: 3.35rem !important;
+        height: 3.3rem !important;
         font-weight: 700 !important;
-        letter-spacing: 0.02em !important;
         width: 100% !important;
-        box-shadow: 0 6px 18px rgba(2, 132, 199, 0.28) !important;
+    }
+    .stButton>button[kind="primary"] p, .stButton>button[kind="primary"] span {
+        color: #FFFFFF !important;
     }
     .stButton>button:not([kind="primary"]) {
-        background: #10192B !important;
-        color: #E2E8F0 !important;
-        border: 1px solid rgba(148, 163, 184, 0.22) !important;
+        background: #131E36 !important;
+        color: #F1F5F9 !important;
+        border: 1px solid rgba(148, 163, 184, 0.32) !important;
         border-radius: 9px !important;
         font-weight: 600 !important;
     }
     .stDownloadButton>button {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
         color: #FFFFFF !important;
         border: none !important;
         border-radius: 10px !important;
         height: 3.2rem !important;
         font-weight: 700 !important;
         width: 100% !important;
-        box-shadow: 0 6px 18px rgba(5, 150, 105, 0.24) !important;
     }
     .badge {
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px;
         font-weight: 600;
         padding: 5px 11px;
-        border-radius: 999px;
+        border-radius: 8px;
         display: inline-flex;
         align-items: center;
         margin: 2px 4px 2px 0;
     }
-    .badge-green  { background: rgba(16,185,129,0.12); color: #34D399; border: 1px solid rgba(52,211,153,0.28); }
-    .badge-blue   { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.28); }
-    .badge-amber  { background: rgba(245,158,11,0.12); color: #FBBF24; border: 1px solid rgba(251,191,36,0.28); }
-    .badge-purple { background: rgba(168,85,247,0.12); color: #C084FC; border: 1px solid rgba(168,85,247,0.28); }
+    .badge-green  { background: rgba(16,185,129,0.16); color: #6EE7B7 !important; border: 1px solid rgba(52,211,153,0.35); }
+    .badge-blue   { background: rgba(14,165,233,0.16); color: #7DD3FC !important; border: 1px solid rgba(56,189,248,0.35); }
+    .badge-amber  { background: rgba(245,158,11,0.16); color: #FCD34D !important; border: 1px solid rgba(251,191,36,0.35); }
+    .badge-purple { background: rgba(168,85,247,0.16); color: #D8B4FE !important; border: 1px solid rgba(168,85,247,0.35); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -210,11 +248,20 @@ def is_script_already_used(script_text, hook_text=""):
     norm_h = normalize_script_key(hook_text)
     if not norm_s:
         return False
+    words_s = set(norm_s.split())
     for entry in load_used_scripts_history():
-        if entry.get("norm_script") == norm_s:
+        prev_s = entry.get("norm_script", "")
+        if not prev_s:
+            continue
+        if prev_s == norm_s:
             return True
-        if len(norm_s) > 70 and entry.get("norm_script", "")[:90] == norm_s[:90]:
+        if len(norm_s) > 70 and prev_s[:90] == norm_s[:90]:
             return True
+        words_p = set(prev_s.split())
+        if words_s and words_p:
+            overlap = len(words_s & words_p) / float(len(words_s | words_p))
+            if overlap > 0.62:
+                return True
     if norm_h and norm_h in [normalize_script_key(x) for x in db.get("used_hooks", [])]:
         return True
     return False
@@ -324,23 +371,35 @@ PLAYLIST_OPTIONS = [
 ]
 
 LEADER_WISDOM_POOL = [
-    {"leader": "Abraham Lincoln",   "thought": "Preparation beats last-minute panic—sharpen your axe before you swing."},
-    {"leader": "Marcus Aurelius",   "thought": "You have power over your mind, not outside events; realize this and find strength."},
-    {"leader": "Winston Churchill", "thought": "Success is moving from failure to failure without losing your resolve."},
-    {"leader": "Nelson Mandela",    "thought": "Holding onto resentment is like drinking poison and hoping your enemy suffers."},
-    {"leader": "Theodore Roosevelt","thought": "Credit belongs to the person actually in the arena, not the critic watching from the stands."},
-    {"leader": "Benjamin Franklin", "thought": "Beware of little expenses; a small leak will sink a great ship."},
-    {"leader": "Albert Einstein",   "thought": "Strive not to be a success, but rather to be of value."},
-    {"leader": "Bruce Lee",         "thought": "Be water—adapt to the obstacle without breaking your core."},
-    {"leader": "Seneca",            "thought": "We suffer more often in imagination than in reality."},
-    {"leader": "Epictetus",         "thought": "It is not what happens to you, but how you react to it that matters."},
-    {"leader": "Viktor Frankl",     "thought": "Between stimulus and response there is a space, and in that space lies your freedom."},
-    {"leader": "Charlie Munger",    "thought": "It is remarkable how much long-term advantage people get by simply trying not to be stupid."},
-    {"leader": "Miyamoto Musashi",  "thought": "Do nothing that is of no use; master the rhythm of patience and timing."},
-    {"leader": "Lao Tzu",           "thought": "Those who know do not boast; those who boast do not know."},
-    {"leader": "Socrates",          "thought": "When the debate is lost, slander becomes the tool of the loser."}
+    {"leader": "Abraham Lincoln",    "thought": "Preparation beats last-minute panic—sharpen your axe before you swing."},
+    {"leader": "Marcus Aurelius",    "thought": "You command your own mind, never outside events; real strength starts within."},
+    {"leader": "Winston Churchill",  "thought": "Keep walking forward through setbacks without losing your resolve."},
+    {"leader": "Nelson Mandela",     "thought": "Holding onto bitterness harms only the person carrying it; release it to move free."},
+    {"leader": "Theodore Roosevelt", "thought": "Real standing belongs to the person inside the arena, never the critic in the stands."},
+    {"leader": "Benjamin Franklin",  "thought": "Small daily leaks in spending and time sink great ships over time."},
+    {"leader": "Albert Einstein",    "thought": "Aim to build real value rather than chasing temporary applause."},
+    {"leader": "Bruce Lee",          "thought": "Stay adaptable like water; rigid pride cracks under sudden pressure."},
+    {"leader": "Seneca",             "thought": "People suffer far more in imagination than in actual reality."},
+    {"leader": "Epictetus",          "thought": "Events themselves do not shake us; our reaction to them sets the weight."},
+    {"leader": "Viktor Frankl",      "thought": "Between stimulus and response sits a pause where your freedom lives."},
+    {"leader": "Charlie Munger",     "thought": "Long-term advantage comes from avoiding obvious, avoidable mistakes."},
+    {"leader": "Miyamoto Musashi",   "thought": "Cut what serves no purpose and master steady rhythm and timing."},
+    {"leader": "Lao Tzu",            "thought": "Nature never rushes, yet every season finishes its work on time."},
+    {"leader": "Socrates",           "thought": "When someone loses a fair point, personal jabs become their fallback."},
+    {"leader": "George Washington",  "thought": "Be courteous to everyone, close with few, and test loyalty before trusting deeply."},
+    {"leader": "Confucius",          "thought": "Measured silence often protects dignity better than a rushed reply."},
+    {"leader": "Albert Schweitzer",  "thought": "Quiet example teaches far more than speeches ever will."},
+    {"leader": "Cato the Younger",   "thought": "Integrity means holding the same standard in private that you claim in public."},
+    {"leader": "Zeno of Citium",     "thought": "We have two ears and one mouth so we listen twice as much as we speak."},
+    {"leader": "Musonius Rufus",   "thought": "Practicing self-restraint on small comforts prepares you for hard days."},
+    {"leader": "Dwight Eisenhower",  "thought": "Urgent noise rarely matches what actually matters over a decade."},
+    {"leader": "Naval Ravikant",     "thought": "Long-term peace comes from learning to sit quietly with yourself."},
+    {"leader": "Katharine Graham",   "thought": "Courage is deciding something matters more than fear of disapproval."},
+    {"leader": "Mahatma Gandhi",     "thought": "Your actions in ordinary moments reveal what you truly value."},
+    {"leader": "Richard Feynman",    "thought": "Admit what you do not know quickly so you learn without ego."},
+    {"leader": "Harriet Tubman",     "thought": "Keep moving one steady step at a time when doubt tries to stop you."},
+    {"leader": "Thich Nhat Hanh",    "thought": "Slowing your breath gives you room to respond instead of reacting."}
 ]
-
 HOOK_FRAMEWORKS = ["LIVED CONFESSION", "LEADER QUOTE BREAKDOWN", "CONTRARIAN REALITY CHECK", "BEHAVIORAL OBSERVATION", "PROVOKING QUESTION", "QUIET PARABLE"]
 
 _DAY_SPECS = [
@@ -376,18 +435,22 @@ _DAY_SPECS = [
     (30, "STEADY_FORWARD_MOVEMENT", "Theodore Roosevelt", "Aging Well: Habits for Mind and Body", "TEAL_ORANGE_CINE", "FORGE_AMBER", "KEEP MOVING", "KEEP MOVING FORWARD STEADILY", "What is one step you want to take this week to keep moving forward?")
 ]
 
-_NATURAL_OPENERS = [
-    "Most people chase loud approval until pressure exposes what actually holds.",
-    "You can spot real character the moment plans get inconvenient.",
-    "A calm mind beats a crowded schedule every single time.",
-    "Real strength rarely looks dramatic in the moment it is built.",
-    "What you practice on ordinary days decides how you stand on hard ones.",
-    "Steady habits beat loud claims the moment real pressure arrives."
-]
+def _craft_distinct_day_script(d, ldr, bdg, hk, q):
+    core = ldr_thought = next((x["thought"] for x in LEADER_WISDOM_POOL if x["leader"] == ldr), "Steady action builds lasting respect.")
+    core_clean = core.lower().rstrip(".")
+    patterns = [
+        f"Chasing loud approval gets expensive fast. {core_clean.capitalize()} When you keep your word quiet and your standards steady, people notice without you saying a word. {q}",
+        f"Watch what happens when plans get inconvenient. {ldr} put it plainly: {core_clean} Hold your ground calmly and let your results answer for you. {q}",
+        f"A calm mind beats a crowded schedule every single time. {core_clean.capitalize()} Step back before answering, guard your attention, and keep moving forward. {q}",
+        f"Most people react first and regret it later. In {ldr}'s view, {core_clean} A brief pause before speaking keeps you in charge of the room. {q}",
+        f"Noise fades, yet steady habits stay. {core_clean.capitalize()} Focus on what is yours to control today and leave the rest alone. {q}",
+        f"Real confidence rarely looks loud. {ldr} focused on this truth: {core_clean} Build your strength in quiet hours so pressure cannot shake you. {q}"
+    ]
+    return patterns[d % len(patterns)]
 
 THIRTY_DAY_CURRICULUM = [
     {"day": d, "fmt": fmt, "leader": ldr, "pl": pl, "style": st_k, "arch": ar_k, "badge": bdg, "hook_title": hk,
-     "script": f"{_NATURAL_OPENERS[d % len(_NATURAL_OPENERS)]} {ldr} reminded us that staying composed, protecting your focus, and letting quiet action speak builds lasting respect. {q}",
+     "script": _craft_distinct_day_script(d, ldr, bdg, hk, q),
      "q": q,
      "s1": f"35mm wide shot establishing {hk.lower()} in {fmt.lower().replace('_', ' ')}",
      "s2": f"85mm close detail capturing {ldr} theme of {bdg.lower()}",
@@ -499,17 +562,21 @@ def build_ass_subtitles(timed_words, script_text, ass_path, total_dur, arch_key=
         f.write(ass_doc)
 
 def build_unique_fallback_script(day_entry, leader_pick):
+    t_low = leader_pick['thought'].lower().rstrip('.')
     variants = [
-        f"Most people chase loud approval until pressure exposes what holds. {leader_pick['leader']} reminded us that {leader_pick['thought'].lower().rstrip('.')} Guard your focus and let quiet action speak. {day_entry['q']}",
-        f"Real character shows up when plans get inconvenient. {leader_pick['leader']} left a clear standard: {leader_pick['thought'].lower().rstrip('.')} Keep your discipline steady in ordinary weeks. {day_entry['q']}",
-        f"A calm mind beats a crowded schedule every time. Drawing from {leader_pick['leader']}, {leader_pick['thought'].lower().rstrip('.')} Pause before answering and protect your peace. {day_entry['q']}"
+        f"Chasing loud approval gets expensive fast. {t_low.capitalize()} When you keep your word quiet and your standards steady, people notice without you saying a word. {day_entry['q']}",
+        f"Watch what happens when plans get inconvenient. {leader_pick['leader']} put it plainly: {t_low} Hold your ground calmly and let your results answer for you. {day_entry['q']}",
+        f"A calm mind beats a crowded schedule every time. {t_low.capitalize()} Step back before answering, guard your attention, and keep moving forward. {day_entry['q']}",
+        f"Most people react first and regret it later. In {leader_pick['leader']}'s view, {t_low} A brief pause before speaking keeps you in charge of the room. {day_entry['q']}",
+        f"Noise fades, yet steady habits stay. {t_low.capitalize()} Focus on what is yours to control today and leave the rest alone. {day_entry['q']}"
     ]
     random.shuffle(variants)
     for v in variants:
         c = normalize_spoken_text(v)
         if not is_script_already_used(c):
             return c
-    return normalize_spoken_text(f"When pressure rises, {leader_pick['thought'].lower().rstrip('.')} Stay grounded and let your actions do the talking. {day_entry['q']}")
+    stamp = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%H%M%S")
+    return normalize_spoken_text(f"In {leader_pick['leader']}'s words, {t_low} Stay steady on your own path #{stamp}. {day_entry['q']}")
 
 def generate_varied_package(raw_api_key, day_entry, custom_setting=None):
     clean_key = raw_api_key.strip().strip('"').strip("'") if raw_api_key else ""
